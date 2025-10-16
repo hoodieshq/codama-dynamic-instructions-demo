@@ -1,0 +1,2190 @@
+{
+    "kind": "rootNode",
+    "standard": "codama",
+    "version": "1.3.0",
+    "program": {
+        "kind": "programNode",
+        "name": "stakeProgram",
+        "publicKey": "GB1MrbwXyGR3gqTYpfEpa2Mx9avAxv3dQpzVQ5nWJctu",
+        "version": "0.1.0",
+        "origin": "anchor",
+        "docs": [],
+        "accounts": [
+            {
+                "kind": "accountNode",
+                "name": "config",
+                "size": 130,
+                "docs": ["* Initialize"],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "9b0caae01efacc82",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "isInitialized",
+                            "docs": [],
+                            "type": {
+                                "kind": "booleanTypeNode",
+                                "size": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "isActive",
+                            "docs": [],
+                            "type": {
+                                "kind": "booleanTypeNode",
+                                "size": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "admin",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "guardian",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "pauser",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "noticePeriods",
+                            "docs": [],
+                            "type": {
+                                "kind": "arrayTypeNode",
+                                "item": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u64",
+                                    "endian": "le"
+                                },
+                                "count": {
+                                    "kind": "fixedCountNode",
+                                    "value": 3
+                                }
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "nominatedAuthorities",
+                "docs": [],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "0cdeb7c665b436f8",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "admin",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "guardian",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "pauser",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "pool",
+                "size": 145,
+                "docs": [],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "f19a6d0411b16dbc",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "isInitialized",
+                            "docs": [],
+                            "type": {
+                                "kind": "booleanTypeNode",
+                                "size": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "mint",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "cMints",
+                            "docs": [],
+                            "type": {
+                                "kind": "arrayTypeNode",
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "count": {
+                                    "kind": "fixedCountNode",
+                                    "value": 3
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "limit",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "withdrawal",
+                "size": 128,
+                "docs": [],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "0a2dd3b681eb5a52",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "withdrawer",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "mint",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "cMint",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "id",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "withdrawDate",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "amount",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "delgation",
+                "docs": ["* Create Delegation"],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "f5c4129aea6f307c",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "delegation",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "authority",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            }
+        ],
+        "instructions": [
+            {
+                "kind": "instructionNode",
+                "name": "initialize",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "admin",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "guardian",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "pauser",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "afaf6d1f0d989bed",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "noticePeriods",
+                        "docs": [],
+                        "type": {
+                            "kind": "arrayTypeNode",
+                            "item": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            },
+                            "count": {
+                                "kind": "fixedCountNode",
+                                "value": 3
+                            }
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "nominatePauser",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "cc8f0f9c52aab489",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "pauser",
+                        "docs": [],
+                        "type": {
+                            "kind": "publicKeyTypeNode"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "acceptPauserNomination",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "116a373084e02843",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "nominateGuardian",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "7bdfd6a0b09a1eb8",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "guardian",
+                        "docs": [],
+                        "type": {
+                            "kind": "publicKeyTypeNode"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "acceptGuardianNomination",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "863a60f803f5a495",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "nominateAdmin",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "860b1ff4144d8a79",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "admin",
+                        "docs": [],
+                        "type": {
+                            "kind": "publicKeyTypeNode"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "acceptAdminNomination",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nominatedAuth",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "bea4c6cf111b98cb",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "pause",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": false,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "d316ddfb4a79c12f",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "unpause",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": false,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "a99004260a8dbcff",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "updateNotices",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": false,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "1e5756a02f2e8d0b",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "noticePeriods",
+                        "docs": [],
+                        "type": {
+                            "kind": "arrayTypeNode",
+                            "item": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            },
+                            "count": {
+                                "kind": "fixedCountNode",
+                                "value": 3
+                            }
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "createPool",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "pool",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "poolVault",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mint",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint1",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint2",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint3",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "associatedTokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "tokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            "identifier": "splToken"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "authority",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "identityValueNode"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "e992d18ecf6840bc",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "limit",
+                        "docs": [],
+                        "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u64",
+                            "endian": "le"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "deposit",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mint",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mintAccount",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "poolVault",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMintAccount",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "pool",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "associatedTokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "tokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            "identifier": "splToken"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "f223c68952e1f2b6",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "amount",
+                        "docs": [],
+                        "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u64",
+                            "endian": "le"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "withdraw",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mint",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMintAccount",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "pool",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "withdrawal",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "associatedTokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "tokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            "identifier": "splToken"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "b712469c946da122",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "amount",
+                        "docs": [],
+                        "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u64",
+                            "endian": "le"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "id",
+                        "docs": [],
+                        "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u64",
+                            "endian": "le"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "claim",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mint",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "mintAccount",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "cMint",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "pool",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "poolVault",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "withdrawal",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "associatedTokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "tokenProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            "identifier": "splToken"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "3ec6d6c1d59f6cd2",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "withdrawalId",
+                        "docs": [],
+                        "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u64",
+                            "endian": "le"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "createDelegation",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "delegation",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "b1a55d37e3a33daf",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "address",
+                        "docs": [],
+                        "type": {
+                            "kind": "publicKeyTypeNode"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "resetDelegation",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "delegation",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "8548f33548c5795a",
+                            "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "updateDelegation",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "delegation",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "config",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "payer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "payerValueNode"
+                        }
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "splSystem"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "575b822a12259b46",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "address",
+                        "docs": [],
+                        "type": {
+                            "kind": "publicKeyTypeNode"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            }
+        ],
+        "definedTypes": [],
+        "pdas": [],
+        "errors": [
+            {
+                "kind": "errorNode",
+                "name": "mathOverflow",
+                "code": 6000,
+                "message": "Math error",
+                "docs": ["MathOverflow: Math error"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "notAllowed",
+                "code": 6001,
+                "message": "Operation is not allowed",
+                "docs": ["NotAllowed: Operation is not allowed"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "programIsAlreadyInitialized",
+                "code": 6002,
+                "message": "Program is already initialized",
+                "docs": ["ProgramIsAlreadyInitialized: Program is already initialized"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "programIsNotInitialized",
+                "code": 6003,
+                "message": "Program is not initialized",
+                "docs": ["ProgramIsNotInitialized: Program is not initialized"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "poolAlreadyInitialized",
+                "code": 6004,
+                "message": "Pool is not initialized",
+                "docs": ["PoolAlreadyInitialized: Pool is not initialized"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "poolIsNotReady",
+                "code": 6005,
+                "message": "Pool is not ready",
+                "docs": ["PoolIsNotReady: Pool is not ready"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "poolIsFull",
+                "code": 6006,
+                "message": "Pool is full",
+                "docs": ["PoolIsFull: Pool is full"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "depositExceedsMaximum",
+                "code": 6007,
+                "message": "Deposit exceeds possible amount",
+                "docs": ["DepositExceedsMaximum: Deposit exceeds possible amount"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "noticePeriodNotSupported",
+                "code": 6008,
+                "message": "Notice period is not supported",
+                "docs": ["NoticePeriodNotSupported: Notice period is not supported"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "noticePeriodNotEnded",
+                "code": 6009,
+                "message": "Notice period is not ended",
+                "docs": ["NoticePeriodNotEnded: Notice period is not ended"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "notEnoughTokens",
+                "code": 6010,
+                "message": "Not enough tokens",
+                "docs": ["NotEnoughTokens: Not enough tokens"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "forbiddenAccess",
+                "code": 6011,
+                "message": "Access is forbidden",
+                "docs": ["ForbiddenAccess: Access is forbidden"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "invalidAuthority",
+                "code": 6012,
+                "message": "Authority not nominated",
+                "docs": ["InvalidAuthority: Authority not nominated"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "notNominatedAuthority",
+                "code": 6013,
+                "message": "Invalid authority",
+                "docs": ["NotNominatedAuthority: Invalid authority"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "alreadyNominatedAuthority",
+                "code": 6014,
+                "message": "Authority is already nominated",
+                "docs": ["AlreadyNominatedAuthority: Authority is already nominated"]
+            },
+            {
+                "kind": "errorNode",
+                "name": "programIsDisabled",
+                "code": 6015,
+                "message": "Program is disabled",
+                "docs": ["ProgramIsDisabled: Program is disabled"]
+            }
+        ]
+    },
+    "additionalPrograms": []
+}
