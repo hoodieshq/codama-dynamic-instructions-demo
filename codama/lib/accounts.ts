@@ -1,6 +1,11 @@
 import { Address, address } from "@solana/addresses";
 import { AccountMeta, AccountRole } from "@solana/instructions";
-import { InstructionAccountNode, InstructionNode, isNode,RootNode } from "codama";
+import {
+  InstructionAccountNode,
+  InstructionNode,
+  isNode,
+  RootNode,
+} from "codama";
 import { AccountMeta as AccountWeb3jsMeta, PublicKey } from "@solana/web3.js";
 import { AccountsInput, ArgumentsInput } from "./types";
 import { AccountError } from "./errors";
@@ -12,51 +17,53 @@ type ResolvedAccount = {
   role: AccountRole;
   address: Address | null;
   optional: boolean;
-}
+};
 
 export async function resolveAccountMetas(
   root: RootNode,
   ixNode: InstructionNode,
   argumentsInput: ArgumentsInput = {},
-  accountsInput: AccountsInput = {},
+  accountsInput: AccountsInput = {}
 ): Promise<AccountMeta[]> {
   const resolvedAccounts = await Promise.all(
     ixNode.accounts.map<Promise<ResolvedAccount>>(async (ixAccountNode) => {
       const accountAddressInput = accountsInput?.[ixAccountNode.name];
-  
+
       // Double check required account is provided
       if (!accountAddressInput && isIxAccountRequired(ixAccountNode)) {
         throw new AccountError(`Account not provided: ${ixAccountNode.name}`);
       }
 
       let resolvedAccountAddress: Address | null;
-      if (!accountAddressInput)  {
+      if (!accountAddressInput) {
         resolvedAccountAddress = await resolveAccountAddress(
           root,
           ixNode,
           ixAccountNode,
           argumentsInput,
-          accountsInput,
+          accountsInput
         );
       }
 
       return {
         role: getAccountRole(ixAccountNode),
         optional: Boolean(ixAccountNode.isOptional),
-        address: accountAddressInput || resolvedAccountAddress
+        address: accountAddressInput || resolvedAccountAddress,
       };
     })
   );
 
-  return resolvedAccounts
-  // omitted optional accounts
-  .filter(acc => acc.address !== null)
-  .map(acc => {
-    return {
-      role: acc.role,
-      address: acc.address as Address,
-    }
-  })
+  return (
+    resolvedAccounts
+      // omitted optional accounts
+      .filter((acc) => acc.address !== null)
+      .map((acc) => {
+        return {
+          role: acc.role,
+          address: acc.address as Address,
+        };
+      })
+  );
 }
 
 // Optional accounts can be omitted
@@ -70,8 +77,8 @@ async function resolveAccountAddress(
   ixNode: InstructionNode,
   ixAccountNode: InstructionAccountNode,
   argumentsInput: ArgumentsInput = {},
-  accountsInput: AccountsInput = {},
-): Promise<Address|null> {
+  accountsInput: AccountsInput = {}
+): Promise<Address | null> {
   const accountAddressInput = accountsInput?.[ixAccountNode.name];
   // Undefined optional accounts are handled according on optionalAccountStrategy
   // With "programId" optionalStrategy, optional accounts are resolved to programId
@@ -84,17 +91,28 @@ async function resolveAccountAddress(
       case "programId":
         return address(root.program.publicKey);
       default:
-        throw new AccountError(`Cannot resolve optional account: ${ixAccountNode.name} with strategy: ${ixNode.optionalAccountStrategy}`);
+        throw new AccountError(
+          `Cannot resolve optional account: ${ixAccountNode.name} with strategy: ${ixNode.optionalAccountStrategy}`
+        );
     }
   }
 
   if (!ixAccountNode.defaultValue) {
-    throw new AccountError(`Account doesn't have default value: ${ixAccountNode.name}`);
+    throw new AccountError(
+      `Account doesn't have default value: ${ixAccountNode.name}`
+    );
   }
 
   switch (ixAccountNode.defaultValue.kind) {
+    // QUESTION(internal):
     case "pdaValueNode": {
-      const pda = await derivePDA(root, ixNode, ixAccountNode, argumentsInput, accountsInput);
+      const pda = await derivePDA(
+        root,
+        ixNode,
+        ixAccountNode,
+        argumentsInput,
+        accountsInput
+      );
       return pda[0];
     }
     case "publicKeyValueNode": {
@@ -132,17 +150,23 @@ async function resolveAccountAddress(
   }
 }
 
-export function toLegacyAccountMeta(accountMeta: AccountMeta): AccountWeb3jsMeta {
+export function toLegacyAccountMeta(
+  accountMeta: AccountMeta
+): AccountWeb3jsMeta {
   return {
     pubkey: new PublicKey(accountMeta.address),
-    isSigner: accountMeta.role === AccountRole.WRITABLE_SIGNER || accountMeta.role === AccountRole.READONLY_SIGNER,
-    isWritable: accountMeta.role === AccountRole.WRITABLE_SIGNER || accountMeta.role === AccountRole.WRITABLE,
-  }
+    isSigner:
+      accountMeta.role === AccountRole.WRITABLE_SIGNER ||
+      accountMeta.role === AccountRole.READONLY_SIGNER,
+    isWritable:
+      accountMeta.role === AccountRole.WRITABLE_SIGNER ||
+      accountMeta.role === AccountRole.WRITABLE,
+  };
 }
 
 export function validateAccountsInput(
   ixNode: InstructionNode,
-  accountsInput: AccountsInput = {},
+  accountsInput: AccountsInput = {}
 ) {
   if (!ixNode.accounts.length) return;
 
@@ -170,5 +194,5 @@ function getAccountRole(acc: InstructionAccountNode): AccountRole {
   if (!acc.isWritable && acc.isSigner) {
     return AccountRole.READONLY_SIGNER;
   }
-  return AccountRole.READONLY
+  return AccountRole.READONLY;
 }

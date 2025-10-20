@@ -1,20 +1,49 @@
-import { Address, ProgramDerivedAddress, address, getAddressEncoder, getProgramDerivedAddress } from "@solana/addresses";
-import { BytesEncoding, ConstantPdaSeedNode, InstructionAccountNode, InstructionNode, isNode, PdaNode, PdaSeedValueNode, PdaValueNode, ProgramIdValueNode, RegisteredPdaSeedNode, RootNode, StandaloneValueNode, VariablePdaSeedNode } from "codama";
+import {
+  Address,
+  ProgramDerivedAddress,
+  address,
+  getAddressEncoder,
+  getProgramDerivedAddress,
+} from "@solana/addresses";
+import {
+  BytesEncoding,
+  ConstantPdaSeedNode,
+  InstructionAccountNode,
+  InstructionNode,
+  isNode,
+  PdaNode,
+  PdaSeedValueNode,
+  PdaValueNode,
+  ProgramIdValueNode,
+  RegisteredPdaSeedNode,
+  RootNode,
+  StandaloneValueNode,
+  VariablePdaSeedNode,
+} from "codama";
 import { AccountsInput, ArgumentsInput } from "./types";
 import { AccountError } from "./errors";
 import { invariant } from "./util";
 import { getNodeCodec } from "@codama/dynamic-codecs";
-import { getBase16Codec, getBase58Codec, getBase64Codec, getUtf8Codec, ReadonlyUint8Array, getBooleanCodec } from "@solana/codecs";
+import {
+  getBase16Codec,
+  getBase58Codec,
+  getBase64Codec,
+  getUtf8Codec,
+  ReadonlyUint8Array,
+  getBooleanCodec,
+} from "@solana/codecs";
 
 export async function derivePDA(
   root: RootNode,
   ixNode: InstructionNode,
   ixAccountNode: InstructionAccountNode,
   argumentsInput: ArgumentsInput = {},
-  accountsInput: AccountsInput = {},
+  accountsInput: AccountsInput = {}
 ): Promise<ProgramDerivedAddress | null> {
   const programId = address(root.program.publicKey);
-  const pdaDefaultValue = ixAccountNode.defaultValue as PdaValueNode | undefined;
+  const pdaDefaultValue = ixAccountNode.defaultValue as
+    | PdaValueNode
+    | undefined;
   if (!pdaDefaultValue || !isNode(pdaDefaultValue, "pdaValueNode")) {
     throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
   }
@@ -24,14 +53,17 @@ export async function derivePDA(
   const seedValues = pdaNode.seeds.map((seedNode) => {
     if (seedNode.kind === "constantPdaSeedNode") {
       return resolveConstantPdaSeed(seedNode, programId);
-    }
-    else if (seedNode.kind === "variablePdaSeedNode") {
+    } else if (seedNode.kind === "variablePdaSeedNode") {
       // Handle variable seeds that depend on instruction arguments or accounts
       const variableSeedValueNodes = pdaDefaultValue.seeds;
       const seedName = seedNode.name;
-      const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);
+      const variableSeedValueNode = variableSeedValueNodes.find(
+        (node) => node.name === seedName
+      );
       if (!variableSeedValueNode) {
-        throw new AccountError(`PDA Node: ${pdaNode.name}. Variable PDA seed value node not found: ${seedName}`);
+        throw new AccountError(
+          `PDA Node: ${pdaNode.name}. Variable PDA seed value node not found: ${seedName}`
+        );
       }
       return resolveVariablePdaSeed(
         root,
@@ -39,24 +71,33 @@ export async function derivePDA(
         seedNode,
         variableSeedValueNode,
         accountsInput,
-        argumentsInput,
+        argumentsInput
       );
     }
-    
-    throw new AccountError(`PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as unknown as any)?.kind}`);
+
+    throw new AccountError(
+      `PDA node: ${pdaNode.name}. Unsupported seed kind ${
+        (seedNode as unknown as any)?.kind
+      }`
+    );
   });
 
   return getProgramDerivedAddress({
     programAddress: programId,
-    seeds: seedValues
+    seeds: seedValues,
   });
 }
 
-function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode {
+function resolvePdaNode(
+  pdaDefaultValue: PdaValueNode,
+  pdas: PdaNode[]
+): PdaNode {
   if (isNode(pdaDefaultValue.pda, "pdaLinkNode")) {
-    const linkedPda = pdas.find(p => p.name === pdaDefaultValue.pda.name);
+    const linkedPda = pdas.find((p) => p.name === pdaDefaultValue.pda.name);
     if (!linkedPda) {
-      throw new AccountError(`Linked PDA node not found: ${pdaDefaultValue.pda.name}`);
+      throw new AccountError(
+        `Linked PDA node not found: ${pdaDefaultValue.pda.name}`
+      );
     }
     return linkedPda;
   } else if (isNode(pdaDefaultValue.pda, "pdaNode")) {
@@ -70,9 +111,12 @@ function resolveVariablePdaSeed(
   seedNode: VariablePdaSeedNode, // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/pdaSeedNodes/VariablePdaSeedNode.md
   variableSeedValueNode: PdaSeedValueNode, // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/PdaSeedValueNode.md
   accountsInput: AccountsInput = {},
-  argumentsInput: ArgumentsInput = {},
+  argumentsInput: ArgumentsInput = {}
 ): ReadonlyUint8Array {
-  invariant(seedNode.name === variableSeedValueNode.name, `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`);
+  invariant(
+    seedNode.name === variableSeedValueNode.name,
+    `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`
+  );
 
   // variable seed value can be either from account or argument or value
   switch (variableSeedValueNode.value.kind) {
@@ -83,12 +127,15 @@ function resolveVariablePdaSeed(
     }
     case "argumentValueNode": {
       // pda derived from some argument
-      const ixArgumentNode = ix.arguments.find(arg => arg.name === seedNode.name);
+      const ixArgumentNode = ix.arguments.find(
+        (arg) => arg.name === seedNode.name
+      );
       const codec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
       const argInput = argumentsInput[seedNode.name];
       return codec.encode(argInput);
     }
-  
+
+    // QUESTION(internal): is there a better way to support different node types we do not see?
     // TODO: to be supported
     // These are ValueNodes https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/valueNodes/README.md
     case "arrayValueNode":
@@ -106,19 +153,27 @@ function resolveVariablePdaSeed(
     case "structValueNode":
     case "tupleValueNode":
     default: {
-      throw new AccountError(`Unsupported variable PDA seed value node: ${variableSeedValueNode.value.kind}`);
+      throw new AccountError(
+        `Unsupported variable PDA seed value node: ${variableSeedValueNode.value.kind}`
+      );
     }
   }
 }
 
-function resolveConstantPdaSeed(seed: RegisteredPdaSeedNode, programId: Address): ReadonlyUint8Array {
+function resolveConstantPdaSeed(
+  seed: RegisteredPdaSeedNode,
+  programId: Address
+): ReadonlyUint8Array {
   if (seed.kind !== "constantPdaSeedNode") {
     throw new AccountError(`Not a constant PDA seed node: ${seed.kind}`);
   }
   return encodeConstantSeedValue(seed.value, programId);
 }
 
-function encodeConstantSeedValue(valueNode: ConstantPdaSeedNode["value"], programId: Address): ReadonlyUint8Array {
+function encodeConstantSeedValue(
+  valueNode: ConstantPdaSeedNode["value"],
+  programId: Address
+): ReadonlyUint8Array {
   switch (valueNode.kind) {
     case "programIdValueNode": {
       return getAddressEncoder().encode(programId);
@@ -126,9 +181,11 @@ function encodeConstantSeedValue(valueNode: ConstantPdaSeedNode["value"], progra
     case "publicKeyValueNode": {
       return getAddressEncoder().encode(address(valueNode.publicKey));
     }
-  
+
     case "bytesValueNode": {
-      return getCodecFromBytesEncoding(valueNode.encoding).encode(valueNode.data);
+      return getCodecFromBytesEncoding(valueNode.encoding).encode(
+        valueNode.data
+      );
     }
     case "booleanValueNode": {
       return getBooleanCodec().encode(valueNode.boolean);
@@ -150,7 +207,9 @@ function encodeConstantSeedValue(valueNode: ConstantPdaSeedNode["value"], progra
     case "structValueNode":
     case "tupleValueNode":
     default:
-      throw new AccountError(`Unsupported constant PDA seed value node: ${valueNode.kind}`);
+      throw new AccountError(
+        `Unsupported constant PDA seed value node: ${valueNode.kind}`
+      );
   }
 }
 
@@ -158,13 +217,13 @@ function encodeConstantSeedValue(valueNode: ConstantPdaSeedNode["value"], progra
 // https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L356
 function getCodecFromBytesEncoding(encoding: BytesEncoding) {
   switch (encoding) {
-    case 'base16':
+    case "base16":
       return getBase16Codec();
-    case 'base58':
+    case "base58":
       return getBase58Codec();
-    case 'base64':
+    case "base64":
       return getBase64Codec();
-    case 'utf8':
+    case "utf8":
       return getUtf8Codec();
     default:
       throw new AccountError(`Unsupported bytes encoding: ${encoding}`);

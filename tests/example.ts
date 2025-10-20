@@ -4,7 +4,13 @@ import * as web3 from "@solana/web3.js";
 import { getBase58Encoder } from "@solana/codecs";
 import { Example } from "../target/types/example";
 import { sleep } from "../codama/lib/util";
-import { createSolanaClient, createTransaction, generateKeyPairSigner, getProgramDerivedAddress, Instruction, KeyPairSigner, lamports, lamportsToSol, SolanaClient, signTransactionMessageWithSigners } from "gill";
+import {
+  createSolanaClient,
+  generateKeyPairSigner,
+  getProgramDerivedAddress,
+  KeyPairSigner,
+  lamports,
+} from "gill";
 import { createFromJson } from "codama";
 import example_idl_json from "../codama/idls/example-idl.json";
 import { createIxBuilder, createWeb3JsIxBuilder } from "../codama/lib";
@@ -12,34 +18,7 @@ import { expect } from "chai";
 import { address } from "@solana/addresses";
 import { Keypair } from "@solana/web3.js";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
-
-async function sendTx(rpcClient: SolanaClient, ix: Instruction, payer: KeyPairSigner) {
-  const { rpc, sendAndConfirmTransaction } = rpcClient;
-  const balance = await rpc.getBalance(payer.address).send();
-
-  // Ensure non zero balance
-  if (balance.value <= lamports(BigInt(0))) {
-    const amount = lamports(BigInt(1e9)); // 1 SOL
-    await rpc.requestAirdrop(payer.address, amount).send();
-    await sleep(500);
-  }
-
-  const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-  const transaction = createTransaction({
-    version: "legacy", // or `0` if using address lookup tables
-    feePayer: payer,
-    instructions: [ix],
-    latestBlockhash,
-  });
-
-  const sig = await sendAndConfirmTransaction(transaction)
-  .catch(err => {
-    console.log("Transaction failed:", err);
-    throw new Error("Transaction failed");
-  });
-  return { transaction, sig };
-}
-
+import { sendTx } from "../src/shared/test-send-tx";
 
 describe("example", () => {
   // Configure the client to use the local cluster.
@@ -56,7 +35,7 @@ describe("example", () => {
   const rpcClient = createSolanaClient({
     urlOrMoniker: rpcEndpoint,
   });
-  
+
   before(async () => {
     // payer = await generateKeyPairSigner();
     payer = await createKeyPairSignerFromBytes(web3Payer.secretKey);
@@ -68,7 +47,10 @@ describe("example", () => {
   });
 
   it("PubkeySeedIx", async () => {
-  const buildPubkeySeedIx = await createIxBuilder(root, root.program.instructions.find(ix => ix.name === "pubkeySeedIx")!);
+    const buildPubkeySeedIx = await createIxBuilder(
+      root,
+      root.program.instructions.find((ix) => ix.name === "pubkeySeedIx")!
+    );
 
     // const builder = new InstructionBuilder(root, root.program.instructions[0]);
     // const ix = await builder
@@ -88,7 +70,7 @@ describe("example", () => {
         signer: payer.address,
         // signer: "123123131231232133232232323232323232323232323232" as Address,
         // singer: address,
-      },
+      }
     );
 
     // console.log(ix);
@@ -97,26 +79,32 @@ describe("example", () => {
     console.log("Transaction signature:", sig);
   });
 
-
   it("UpdateOptionalInput", async () => {
     const signer = await generateKeyPairSigner();
-    await rpcClient.rpc.requestAirdrop(signer.address, lamports(BigInt(1e9))).send();
+    await rpcClient.rpc
+      .requestAirdrop(signer.address, lamports(BigInt(1e9)))
+      .send();
     await sleep(200);
 
-    const buildPubkeySeedIx = await createIxBuilder(root, root.program.instructions.find(ix => ix.name === "pubkeySeedIx")!);
+    const buildPubkeySeedIx = await createIxBuilder(
+      root,
+      root.program.instructions.find((ix) => ix.name === "pubkeySeedIx")!
+    );
     const ix0 = await buildPubkeySeedIx(
       {
         input: 42,
       },
       {
         signer: signer.address,
-      },
+      }
     );
 
     await sendTx(rpcClient, ix0, signer);
 
-
-    const buildUpdateOptionalInputIx = await createIxBuilder(root, root.program.instructions.find(ix => ix.name === "updateOptionalInput")!);
+    const buildUpdateOptionalInputIx = await createIxBuilder(
+      root,
+      root.program.instructions.find((ix) => ix.name === "updateOptionalInput")!
+    );
 
     // Test case 1: With optional input
     const optionalAddress = (await generateKeyPairSigner()).address;
@@ -131,10 +119,12 @@ describe("example", () => {
     );
     // console.log(ix1);
 
-    const accAddresss = (await getProgramDerivedAddress({
-      programAddress,
-      seeds: [Buffer.from("seed"), getBase58Encoder().encode(signer.address)],
-    }))[0];
+    const accAddresss = (
+      await getProgramDerivedAddress({
+        programAddress,
+        seeds: [Buffer.from("seed"), getBase58Encoder().encode(signer.address)],
+      })
+    )[0];
 
     let { sig } = await sendTx(rpcClient, ix1, signer);
     console.log("Transaction signature (with provided optional input):", sig);
@@ -168,7 +158,12 @@ describe("example", () => {
   });
 
   it("UpdateOptionalAccount", async () => {
-    const buildUpdateOptionalAccountIx = await createIxBuilder(root, root.program.instructions.find(ix => ix.name === "updateOptionalAccount")!);
+    const buildUpdateOptionalAccountIx = await createIxBuilder(
+      root,
+      root.program.instructions.find(
+        (ix) => ix.name === "updateOptionalAccount"
+      )!
+    );
 
     // Test case 1: With optional account
     const optionalAddress = (await generateKeyPairSigner()).address;
@@ -197,17 +192,17 @@ describe("example", () => {
   });
 
   it("NoArguments", async () => {
-    const buildIx = await createWeb3JsIxBuilder(root, root.program.instructions.find(ix => ix.name === "noArguments")!);
+    const buildIx = await createWeb3JsIxBuilder(
+      root,
+      root.program.instructions.find((ix) => ix.name === "noArguments")!
+    );
 
     // Test case 1: With optional account
     const kp = Keypair.generate();
-    let ix = await buildIx(
-      undefined,
-      {
-        signer: payer.address,
-        acc: address(kp.publicKey.toBase58()),
-      }
-    );
+    let ix = await buildIx(undefined, {
+      signer: payer.address,
+      acc: address(kp.publicKey.toBase58()),
+    });
     // console.log(ix);
 
     const tx = new web3.Transaction().add(ix);
@@ -220,7 +215,7 @@ describe("example", () => {
       program.provider.connection,
       tx,
       [web3Payer, kp],
-      { commitment: "confirmed" },
+      { commitment: "confirmed" }
     );
 
     console.log("Transaction signature", sig);
