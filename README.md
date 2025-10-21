@@ -17,6 +17,8 @@ anchor t
 
 ### Questions
 
+- What do you think if we wrap the client generation in the browser?
+
 - Are there reference programs with IDLs to test out our builder? 
 	- reference implementation for pure Codama
 		- we could build a reference program; what API should we cover?
@@ -42,12 +44,15 @@ anchor t
 		- Could you suggest any existing way to create those validators? We investigating "getValidationtemsVisitor"
     		- Could getResolvedInstructionInputsVisitor from visitors-core help?
   
-
 - Derivation for PDA accounts.
 	- What could you suggest? Do we have existing mechanism in the core library we can use?
 	- Current approach: try to resolve by type. Error prone ( ./codama/lib/pda.ts #L36 )
 
+https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/values.ts
+
 - Encode instruction arguments
 	- What could you suggest? Is there a visitor we can use, or a helper that is able to produce a codec, better than getNodeCodec?
 	- Current approach: use "getNodeCodec" and applying it according the InstructionArgumentNode.defaultValue.kind
+
+
 

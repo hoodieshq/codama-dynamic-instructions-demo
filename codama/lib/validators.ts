@@ -63,6 +63,9 @@ export function getValidationItemsForTypeNode(
   // definedTypes: DefinedTypeNode[]
 ): Readonly<ValidationItem[]> {
   const validation = getValidationItemsVisitor();
+
+  // do not rely on the validators
+
   // console.log({ validation });
 
   const validationItems = visit(node, validation);
