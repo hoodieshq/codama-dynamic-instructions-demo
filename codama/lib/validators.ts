@@ -1,34 +1,91 @@
 import { isAddress } from "@solana/addresses";
-import { ArrayTypeNode, CountNode, DefinedTypeNode, InstructionAccountNode, InstructionArgumentNode, SetTypeNode, TypeNode } from "@codama/nodes";
-import { object, define, boolean, Struct, number, array, size, intersection, string, tuple } from "superstruct";
+import {
+  ArrayTypeNode,
+  CountNode,
+  DefinedTypeNode,
+  InstructionAccountNode,
+  InstructionArgumentNode,
+  SetTypeNode,
+  TypeNode,
+} from "@codama/nodes";
+import { visit } from "codama";
+import { getValidationItemsVisitor, ValidationItem } from "@codama/validators";
+import {
+  object,
+  define,
+  boolean,
+  Struct,
+  number,
+  array,
+  size,
+  intersection,
+  string,
+  tuple,
+} from "superstruct";
 
-export function createIxAccountsValidator(ixAccountNodes: InstructionAccountNode[]): Struct {
+export function createIxAccountsValidator(
+  ixAccountNodes: InstructionAccountNode[]
+): Struct {
   return object(
     ixAccountNodes.reduce((acc, node) => {
       // if node is optional, then validate only if it's provided
       // if node has default value, then consider it as optional and validate only if it's provided. Otherwise it will be resolved from default value
-      acc[node.name] = node.isOptional || node.defaultValue ? OptionalSolanaAddressValidator : SolanaAddressValidator;
+      acc[node.name] =
+        node.isOptional || node.defaultValue
+          ? OptionalSolanaAddressValidator
+          : SolanaAddressValidator;
       return acc;
-    }, {}),
-  )
+    }, {})
+  );
 }
 
-export function createIxArgumentsValidator(ixNodeName: string, ixArgumentNodes: InstructionArgumentNode[], definedTypes: DefinedTypeNode[]): Struct {
+export function createIxArgumentsValidator(
+  ixNodeName: string,
+  ixArgumentNodes: InstructionArgumentNode[],
+  definedTypes: DefinedTypeNode[]
+): Struct {
+  // console.log({ ixNodeName, ixArgumentNodes });
   return object(
     ixArgumentNodes.reduce((acc, argumentNode, index) => {
-      acc[argumentNode.name] = createValidatorForTypeNode(`${ixNodeName}_${argumentNode.name}_${index}`, argumentNode.type, definedTypes);
+      acc[argumentNode.name] = createValidatorForTypeNode(
+        `${ixNodeName}_${argumentNode.name}_${index}`,
+        argumentNode.type,
+        definedTypes
+      );
       return acc;
-    }, {}),
-  )
+    }, {})
+  );
 }
 
-function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTypes: DefinedTypeNode[]): Struct {
+export function getValidationItemsForTypeNode(
+  // nodeName: string,
+  node: TypeNode
+  // definedTypes: DefinedTypeNode[]
+): Readonly<ValidationItem[]> {
+  const validation = getValidationItemsVisitor();
+  // console.log({ validation });
+
+  const validationItems = visit(node, validation);
+
+  return validationItems;
+}
+
+function createValidatorForTypeNode(
+  nodeName: string,
+  node: TypeNode,
+  definedTypes: DefinedTypeNode[]
+): Struct {
+  // const validation = getValidationItemsVisitor();
+  // console.log({ validation });
+
   switch (node.kind) {
     case "arrayTypeNode": {
       return arrayValidator(`${nodeName}_array`, node, definedTypes);
-    } case "booleanTypeNode": {
+    }
+    case "booleanTypeNode": {
       return boolean();
-    } case "numberTypeNode": {
+    }
+    case "numberTypeNode": {
       return number();
     }
     case "publicKeyTypeNode": {
@@ -36,7 +93,10 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     }
     case "setTypeNode": {
       // array of unique items
-      return intersection([UniqueItemsValidator, arrayValidator(`${nodeName}_set`, node, definedTypes)]);
+      return intersection([
+        UniqueItemsValidator,
+        arrayValidator(`${nodeName}_set`, node, definedTypes),
+      ]);
     }
     case "stringTypeNode": {
       // TODO: may be check encoding?
@@ -44,29 +104,53 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
       return string();
     }
     case "fixedSizeTypeNode": {
-      const itemValidator = createValidatorForTypeNode(`${nodeName}_fixed_size`, node.type, definedTypes);
+      const itemValidator = createValidatorForTypeNode(
+        `${nodeName}_fixed_size`,
+        node.type,
+        definedTypes
+      );
       return size(array(itemValidator), node.size);
     }
     case "bytesTypeNode": {
       return number(); // raw bytes as array of numbers
     }
     case "dateTimeTypeNode": {
-      return createValidatorForTypeNode(`${nodeName}_date_time`, node.number, definedTypes);
+      return createValidatorForTypeNode(
+        `${nodeName}_date_time`,
+        node.number,
+        definedTypes
+      );
     }
     case "definedTypeLinkNode": {
       // Reference to common defined type
-      const definedType = definedTypes.find(d => d.name === node.name);
+      const definedType = definedTypes.find((d) => d.name === node.name);
       if (!definedType) {
         throw new Error(`Undefined type: ${node.name} ${node.kind}`);
       }
-      return createValidatorForTypeNode(`${nodeName}_defined_type`, definedType.type, definedTypes);
+      return createValidatorForTypeNode(
+        `${nodeName}_defined_type`,
+        definedType.type,
+        definedTypes
+      );
     }
     case "mapTypeNode": {
-      const keyValidator = createValidatorForTypeNode(`${nodeName}_map_key_${node.key}`, node.key, definedTypes);
-      const valueValidator = createValidatorForTypeNode(`${nodeName}_map_value_${node.key}`, node.value, definedTypes);
+      const keyValidator = createValidatorForTypeNode(
+        `${nodeName}_map_key_${node.key}`,
+        node.key,
+        definedTypes
+      );
+      const valueValidator = createValidatorForTypeNode(
+        `${nodeName}_map_value_${node.key}`,
+        node.value,
+        definedTypes
+      );
       const sizeValidator = MapCountValidator(node.count);
       // node.
-      const keyValueValidator = KeyValueValidator(nodeName, keyValidator, valueValidator);
+      const keyValueValidator = KeyValueValidator(
+        nodeName,
+        keyValidator,
+        valueValidator
+      );
       if (sizeValidator) {
         return intersection([keyValueValidator, sizeValidator]);
       }
@@ -75,21 +159,41 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     case "structTypeNode": {
       return object(
         node.fields.reduce((acc, node) => {
-          acc[node.name] = createValidatorForTypeNode(`${nodeName}_struct_${node.name}`, node.type, definedTypes);
+          acc[node.name] = createValidatorForTypeNode(
+            `${nodeName}_struct_${node.name}`,
+            node.type,
+            definedTypes
+          );
           return acc;
         }, {})
-      )
+      );
     }
     case "tupleTypeNode": {
-      const validators = node.items.map((typeNode, index) => createValidatorForTypeNode(`${nodeName}_tuple${typeNode.kind}_${index}`, typeNode, definedTypes))
-      return tuple(validators as [Struct<unknown, unknown>, ...Struct<unknown, unknown>[]]);
+      const validators = node.items.map((typeNode, index) =>
+        createValidatorForTypeNode(
+          `${nodeName}_tuple${typeNode.kind}_${index}`,
+          typeNode,
+          definedTypes
+        )
+      );
+      return tuple(
+        validators as [Struct<unknown, unknown>, ...Struct<unknown, unknown>[]]
+      );
     }
     case "zeroableOptionTypeNode": {
-      return createValidatorForTypeNode(`${nodeName}_zeroeable_option`, node.item, definedTypes);
+      return createValidatorForTypeNode(
+        `${nodeName}_zeroeable_option`,
+        node.item,
+        definedTypes
+      );
     }
     case "optionTypeNode": {
       // TODO: Check and add handling node.fixed and node.prefix if necessary https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/OptionTypeNode.md#attributes
-      const SomeValueValidator = createValidatorForTypeNode(`${nodeName}_option_item`, node.item, definedTypes);
+      const SomeValueValidator = createValidatorForTypeNode(
+        `${nodeName}_option_item`,
+        node.item,
+        definedTypes
+      );
       return OptionValueValidator(`${nodeName}_option`, SomeValueValidator);
     }
     // TODO: check and handle later
@@ -98,13 +202,40 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     case "solAmountTypeNode": // equivalent to amountTypeNode with 9 decimals
     case "hiddenPrefixTypeNode":
     case "hiddenSuffixTypeNode":
-    case "remainderOptionTypeNode":
+    case "remainderOptionTypeNode": {
+      // console.log({ nodeName, node, definedTypes });
+
+      // const validationItems = visit(node, validation);
+
+      // FIXME: it seems that _index is wrong for the PMP::write::write_data_1
+      // it should be 2, but have 1
+      // Looks like createIxArgumentsValidator does not respect discriminator
+
+      // Remainder option is optional bytes that consume the rest of the buffer
+      // When present, it should be an array of bytes (numbers 0-255)
+      const BytesArrayValidator = define(
+        `${nodeName}_bytes_array`,
+        (value: unknown) => {
+          if (!Array.isArray(value)) return false;
+          return value.every(
+            (byte) => typeof byte === "number" && byte >= 0 && byte <= 255
+          );
+        }
+      );
+
+      return OptionValueValidator(
+        `${nodeName}_remainder_option`,
+        BytesArrayValidator
+      );
+    }
     case "sentinelTypeNode":
     case "postOffsetTypeNode":
     case "preOffsetTypeNode":
     case "sizePrefixTypeNode":
     case "enumTypeNode":
-      throw new Error(`Unsupported argument type: ${nodeName} of type ${node.kind}`);
+      throw new Error(
+        `Unsupported argument type: ${nodeName} of type ${node.kind}`
+      );
   }
 }
 
@@ -113,21 +244,27 @@ const SolanaAddressValidator = define("SolanaAddress", (value: unknown) => {
   return isAddress(value);
 });
 
-const OptionalSolanaAddressValidator = define("OptionalSolanaAddress", (value: unknown) => {
-  if (value === undefined || value === null) return true;
-  const result = SolanaAddressValidator.validate(value);
-  return !result[0]; // [error|undefined, data|undefined]
-});
+const OptionalSolanaAddressValidator = define(
+  "OptionalSolanaAddress",
+  (value: unknown) => {
+    if (value === undefined || value === null) return true;
+    const result = SolanaAddressValidator.validate(value);
+    return !result[0]; // [error|undefined, data|undefined]
+  }
+);
 
 // Validates value only if it is not null or undefined (i.e. if it's provided)
 // SomeValueValidator validates the provided value (i.e. Some(value))
-function OptionValueValidator(name: string, SomeValueValidator: Struct): Struct {
+function OptionValueValidator(
+  name: string,
+  SomeValueValidator: Struct
+): Struct {
   return define(`${name}_OptionValueValidator`, (value: unknown) => {
     // Do not validate None value
     if (value === null || value === undefined) return true;
     // if value was provided, then validate it
     return !SomeValueValidator.validate(value)[0]; // error | undefined
-  })
+  });
 }
 
 // Checks that all items in the array are unique
@@ -141,16 +278,20 @@ const UniqueItemsValidator = define("UniqueItems", (value: unknown) => {
 // Validates every value of an object according to ValueValidator
 // Used in MapTypeNode, where the keys and valuse are of the same type
 // DOCS: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/MapTypeNode.md
-function KeyValueValidator(name: string, KeyValidator: Struct, ValueValidator: Struct): Struct {
+function KeyValueValidator(
+  name: string,
+  KeyValidator: Struct,
+  ValueValidator: Struct
+): Struct {
   return define(`${name}_KeyValueValidator`, (value: Record<any, unknown>) => {
-    const isValidKeys = Object.keys(value).every(key => {
+    const isValidKeys = Object.keys(value).every((key) => {
       return !KeyValidator.validate(key)[0]; // [error|undefined, data|undefined]
-    })
-    const isValidValues = Object.values(value).every(value => {
+    });
+    const isValidValues = Object.values(value).every((value) => {
       return !ValueValidator.validate(value)[0]; // [error|undefined, data|undefined]
-    })
+    });
     return isValidKeys && isValidValues;
-  })
+  });
 }
 
 function MapCountValidator(node: CountNode): Struct | null {
@@ -182,9 +323,17 @@ function KeysLengthValidator(count: number): Struct {
 }
 
 // Handles both fixed-size and variable-size arrays
-function arrayValidator(nodeName: string, node: ArrayTypeNode | SetTypeNode, definedTypes: DefinedTypeNode[]): Struct {
+function arrayValidator(
+  nodeName: string,
+  node: ArrayTypeNode | SetTypeNode,
+  definedTypes: DefinedTypeNode[]
+): Struct {
   // First define a validator for every array item
-  const itemValidator = createValidatorForTypeNode(nodeName, node.item, definedTypes);
+  const itemValidator = createValidatorForTypeNode(
+    nodeName,
+    node.item,
+    definedTypes
+  );
   // Then validate CountNode representing array size:
   // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/ArrayTypeNode.md
   switch (node.count.kind) {
@@ -200,7 +349,9 @@ function arrayValidator(nodeName: string, node: ArrayTypeNode | SetTypeNode, def
       // node.count.prefix.kind
     }
     default: {
-      throw new Error(`Node: ${nodeName}. Unsupported array count type: ${node.count.kind}`);
+      throw new Error(
+        `Node: ${nodeName}. Unsupported array count type: ${node.count.kind}`
+      );
     }
   }
 }

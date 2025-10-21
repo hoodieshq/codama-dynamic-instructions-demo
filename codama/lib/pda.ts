@@ -135,7 +135,7 @@ function resolveVariablePdaSeed(
       return codec.encode(argInput);
     }
 
-    // QUESTION(internal): is there a better way to support different node types we do not see?
+    // [ ] QUESTION(internal): is there a better way to support different node types we do not see?
     // TODO: to be supported
     // These are ValueNodes https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/valueNodes/README.md
     case "arrayValueNode":

@@ -104,7 +104,6 @@ async function resolveAccountAddress(
   }
 
   switch (ixAccountNode.defaultValue.kind) {
-    // QUESTION(internal):
     case "pdaValueNode": {
       const pda = await derivePDA(
         root,
@@ -118,6 +117,7 @@ async function resolveAccountAddress(
     case "publicKeyValueNode": {
       return address(ixAccountNode.defaultValue.publicKey);
     }
+    // QUESTION(internal)
     // TODO: here we want to (or may be don't want to) create address from other types of default values (InstructionAccountNode)
     // DOCS: InstructionAccountNode => InstructionInputValueNode
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionAccountNode.md

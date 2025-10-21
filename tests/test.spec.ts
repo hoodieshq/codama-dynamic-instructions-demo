@@ -28,6 +28,10 @@ import { address } from "@solana/addresses";
 import { Keypair } from "@solana/web3.js";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
 import { sendTx } from "../src/shared/test-send-tx";
+import {
+  getResolvedInstructionInputsVisitor,
+  getInstructionDependencies,
+} from "@codama/visitors-core";
 
 /**
  *  Example for building a visitor that do the search for instruction by name
@@ -42,8 +46,6 @@ import { sendTx } from "../src/shared/test-send-tx";
  *  Possible improvement: Build a Visitor (with use of extendVisitor) that allows to wrap up each instruction with "createIxBuilder"
  */
 function instructionVisitFactoryByName(name: InstructionNode["name"]) {
-  // QUESTION: find a better way to specify Tkind
-  // InstructionNode expect us to specify exact instruction
   const visitor: Visitor<null | ProgramNode["instructions"][number], any> = {
     visitProgram: (node: ProgramNode) => {
       const instruction = node.instructions.find((ix) => ix.name === name);
@@ -107,7 +109,7 @@ describe("===\r\nSpecs with visitor\r\n===", () => {
     console.log("Transaction signature:", sig);
   });
 });
-return;
+
 describe("===\r\nSpecs with visitor for Codama\r\n===", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
@@ -140,18 +142,34 @@ describe("===\r\nSpecs with visitor for Codama\r\n===", () => {
       instructionVisitFactoryByName(camelCase("write"))
     );
 
+    const resolvedInputs = visit(
+      instruction,
+      getResolvedInstructionInputsVisitor({
+        includeDataArgumentValueNodes: true,
+      })
+    );
+
+    // PROBLEM: resolvedInputs does not match the "write" instruction arguments
+
+    console.log(
+      { resolvedInputs },
+      "TYPES:",
+      resolvedInputs.map((a) => {
+        return a.type ? a.type : null;
+      })
+    );
+
     const buildPubkeySeedIx = await createIxBuilder(root, instruction!);
 
     // QUESTION(api): is existing api for the builder sufficient?
     // another way: anchor-like api (.method["NAME"].accounts().signers().instruction()) ../codama/lib/builders.ts #L55
     const ix = await buildPubkeySeedIx(
       {
-        input: 42,
+        // offset: 0,
       },
       {
-        signer: payer.address,
-        // signer: "123123131231232133232232323232323232323232323232" as Address,
-        // singer: address,
+        buffer: address(Keypair.generate().publicKey.toString()),
+        authority: payer.address,
       }
     );
 
