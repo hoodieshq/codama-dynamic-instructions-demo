@@ -8,11 +8,15 @@ Build a **visitor-based** system to invoke Solana program instructions at runtim
 const program = createProgramClient(tokenMetadataIdl);
 
 // Step 1: Calculate PDA address using standard Solana tools
-// Initially, use @solana/addresses or similar:
-import { getProgramDerivedAddress } from '@solana/addresses';
-const [metadataAddress] = await getProgramDerivedAddress({
+// Initially, use getProgramDerivedAddress from @solana/addresses:
+import { getProgramDerivedAddress, getUtf8Encoder, getAddressEncoder } from '@solana/addresses';
+const { address: metadataAddress } = await getProgramDerivedAddress({
   programAddress: TOKEN_METADATA_PROGRAM_ID,
-  seeds: ['metadata', TOKEN_METADATA_PROGRAM_ID, mintAddress],
+  seeds: [
+    getUtf8Encoder().encode('metadata'),
+    getAddressEncoder().encode(TOKEN_METADATA_PROGRAM_ID),
+    getAddressEncoder().encode(mintAddress),
+  ],
 });
 
 // Step 2 (future): When optional PDA API is implemented, use convenience helper instead:
@@ -25,12 +29,51 @@ const ix = await program.createMetadataAccountV3(
 );
 ```
 
-**Key Design Principle**: The instruction builder requires **all accounts to be explicitly provided**. The `program.pda.*` helpers are an **optional convenience API** (Phase 1.5) for calculating PDA addresses, but they are separate from instruction building. Users can:
-1. Use standard Solana tools (`@solana/addresses`, `getProgramDerivedAddress`) - **required initially**
-2. Use `program.pda.*` helpers when implemented - **optional future convenience**
-3. Use pre-known addresses directly
+**Key Design Principles**:
 
-This explicit approach avoids hidden magic and makes the data flow clear.
+1. **Explicit Accounts**: The instruction builder requires **all accounts to be explicitly provided**. The `program.pda.*` helpers are an **optional convenience API** (Phase 1.5) for calculating PDA addresses, but they are separate from instruction building.
+
+2. **Type Compatibility**: The library uses `@solana/kit` internally but accepts both legacy and modern types:
+   - Accepts: `Address` (from `@solana/addresses`) or `PublicKey` (from `@solana/web3.js`)
+   - Internally converts `PublicKey` → `Address` using kit helpers
+   - Returns: `@solana/kit` types (e.g., `Address`, `IInstruction`)
+
+```typescript
+// Example: Accept both Address and PublicKey
+import { Address, address } from '@solana/addresses';
+import { PublicKey } from '@solana/web3.js';
+
+type AddressInput = Address | PublicKey;
+
+function toAddress(input: AddressInput): Address {
+  if (typeof input === 'string') return input as Address;
+  if ('toBase58' in input) return address(input.toBase58());
+  return input;
+}
+
+// Usage - both work:
+program.createMetadataAccountV3(args, {
+  mint: mintAddress,           // Address type
+  payer: legacyPublicKey,      // PublicKey type - auto-converted
+});
+```
+
+This approach allows gradual migration from `@solana/web3.js` to `@solana/kit`.
+
+## Scope
+
+**Important**: This project scope covers building **the instruction-building tool only**. The deliverable is a library that can dynamically construct Solana program instructions from Codama IDLs at runtime.
+
+**What is included**:
+- Visitor-based instruction builder with PDA address calculation helpers
+- Runtime API: `program.<instruction>(args, accounts)` and `program.pda.<name>(seeds)`
+- Support for System Program, Token Program, Token-2022, ATA, Token Metadata, and Program Metadata
+- E2E tests against local validator
+
+**What is NOT included**:
+- Integration with the Explorer 
+
+This is a **standalone library**. Integration into Explorer should be done as a separate task.
 
 ## Problem We're Solving
 
@@ -374,8 +417,8 @@ We may need to work within a fork of Codama, but want to **minimize reliance on 
 | Phase | Description | Min | Max | Notes |
 |-------|-------------|-----|-----|-------|
 | **Phase 0** | Project Setup | 1 day | 2 days | pnpm workspace + local validator |
-| **Phase 1** | Visitor Foundation + System Program | 4 days | 6 days | Core architecture, most complex phase |
-| **Phase 1.5** | PDA Auto-Derivation Spike | 2 days | 3 days | Investigate ATA, Token Metadata, Program Metadata |
+| **Phase 1** | Visitor Foundation + System Program | 8 days | 12 days | Core architecture, most complex phase |
+| **Phase 1.5** | PDA Auto-Derivation Spike | 4 days | 6 days | Investigate ATA, Token Metadata, Program Metadata |
 | **Phase 2** | Token Program (SPL) | 1 day | 2 days | Extend discriminator handling |
 | **Phase 3** | Token-2022 Program | 1 day | 2 days | Similar to Phase 2, add extensions |
 | **Phase 4** | Associated Token Program | 1 day | 2 days | Cross-program PDA derivation |
@@ -385,8 +428,8 @@ We may need to work within a fork of Codama, but want to **minimize reliance on 
 | **Phase 8** | Validation (Optional/Pluggable) | 1 day | 2 days | Pluggable validator interface |
 | **Phase 9** | Polish & Refactor | 2 days | 4 days | Refactoring, type safety, cleanup |
 | | | | | |
-| **Total (Mandatory)** | Phases 0-1.5, 2-5, 7, 9 | **14 days** | **26 days** | ~3-5 weeks |
-| **Total (With Optional)** | All phases | **16 days** | **30 days** | ~3-6 weeks |
+| **Total (Mandatory)** | Phases 0-1.5, 2-5, 7, 9 | **20 days** | **35 days** | ~4-7 weeks |
+| **Total (With Optional)** | All phases | **22 days** | **39 days** | ~4-8 weeks |
 
 ### Assumptions
 - Single developer working on the project
