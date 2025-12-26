@@ -116,11 +116,11 @@ Codama represents programs as a **tree of nodes** (instructions, arguments, acco
 - [ ] 0.6 Document environment setup for contributors
 
 ### Phase 1: Visitor Foundation + System Program
-- [ ] 1.1 Create `DefaultValueEncoderVisitor` in `codama/lib/visitors/`
-- [ ] 1.2 Create `PdaSeedValueVisitor` in `codama/lib/visitors/`
-- [ ] 1.3 Create `AccountDefaultValueVisitor` in `codama/lib/visitors/`
+- [ ] 1.1 Create `DefaultValueEncoderVisitor` in `packages/dynamic-instructions/src/entities/visitors/`
+- [ ] 1.2 Create `PdaSeedValueVisitor` in `packages/dynamic-instructions/src/entities/visitors/`
+- [ ] 1.3 Create `AccountDefaultValueVisitor` in `packages/dynamic-instructions/src/entities/visitors/`
 - [ ] 1.4 Create PDA Derivation API (`program.pda.<name>(seeds)`)
-- [ ] 1.5 Create `createProgramClient()` factory in `codama/lib/client.ts`
+- [ ] 1.5 Create `createProgramClient()` factory in `packages/dynamic-instructions/src/features/program-client/create-program-client.ts`
 - [ ] 1.6 Add `@solana-program/system` dependency
 - [ ] 1.7 Create `tests/system-program.spec.ts` with E2E tests (local validator)
 
@@ -388,7 +388,7 @@ We may need to work within a fork of Codama, but want to **minimize reliance on 
 - Continue using `superstruct` for validation (see `validators.ts`)
 - Validation can be enabled/disabled by users
 
-### Code TODOs in `codama/lib/`
+### Code TODOs in `packages/dynamic-instructions/src/`
 
 **`pda.ts`** - PDA Seed Resolution:
 - Currently supports: `accountValueNode`, `argumentValueNode`
