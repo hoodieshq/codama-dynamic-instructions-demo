@@ -1,20 +1,21 @@
-import { address } from '@solana/addresses';
 import type { Address } from '@solana/addresses';
-import { AccountRole } from '@solana/instructions';
+import { address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
+import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
-import { AccountError } from '../../shared/errors';
-import { createIxAccountsValidator } from './validators';
-import { assert } from 'superstruct';
 import type { StructError } from 'superstruct';
-import { derivePDA } from './pda';
+import { assert } from 'superstruct';
+
 import { toAddress } from '../../shared/address';
+import { AccountError } from '../../shared/errors';
+import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import { derivePDA } from './pda';
+import { createIxAccountsValidator } from './validators';
 
 type ResolvedAccount = {
-    role: AccountRole;
     address: Address | null;
     optional: boolean;
+    role: AccountRole;
 };
 
 export async function resolveAccountMetas(
@@ -45,11 +46,15 @@ export async function resolveAccountMetas(
             }
 
             return {
-                role: getAccountRole(ixAccountNode),
-                optional: Boolean(ixAccountNode.isOptional),
                 // Important: treat `null` the same as "not provided" so the IDL's
-                // optionalAccountStrategy can decide whether to omit or substitute programId.
-                address: isAccountProvided ? toAddress(accountAddressInput) : resolvedAccountAddress,
+// optionalAccountStrategy can decide whether to omit or substitute programId.
+address: isAccountProvided ? toAddress(accountAddressInput) : resolvedAccountAddress,
+                
+
+optional: Boolean(ixAccountNode.isOptional),
+                
+                
+                role: getAccountRole(ixAccountNode),
             };
         })
     );
@@ -60,8 +65,8 @@ export async function resolveAccountMetas(
             .filter(acc => acc.address !== null)
             .map(acc => {
                 return {
+                    address: acc.address,
                     role: acc.role,
-                    address: acc.address as Address,
                 };
             })
     );
@@ -149,7 +154,7 @@ export function validateAccountsInput(ixNode: InstructionNode, accountsInput: Ac
     try {
         assert(accountsInput, AccountsInputValidator);
     } catch (error) {
-        let { key, value, message } = error as StructError;
+        const { key, value, message } = error as StructError;
         // TODO: ensure this error is user friendly
         if (!value) {
             throw new AccountError(`Missing required account: ${key}. ${message}`);

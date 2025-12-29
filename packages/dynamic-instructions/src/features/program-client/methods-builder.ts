@@ -1,5 +1,5 @@
-import type { InstructionNode, RootNode } from 'codama';
 import type { Instruction } from '@solana/instructions';
+import type { InstructionNode, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput } from '../../shared/types';
 import { createIxBuilder } from '../instruction-encoding/instructions';
@@ -22,6 +22,6 @@ export class MethodsBuilder {
 
     async instruction(): Promise<Instruction> {
         const build = await createIxBuilder(this.root, this.ixNode);
-        return build(this.args, this._accounts);
+        return await build(this.args, this._accounts);
     }
 }

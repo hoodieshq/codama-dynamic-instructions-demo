@@ -1,13 +1,14 @@
-import type { ReadonlyUint8Array } from '@solana/codecs';
-import { visitOrElse } from 'codama';
-import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
-import type { ArgumentsInput } from '../../shared/types';
 import { getNodeCodec } from '@codama/dynamic-codecs';
-import { ArgumentError, ValidationError } from '../../shared/errors';
-import { createIxArgumentsValidator } from './validators';
-import { assert } from 'superstruct';
+import type { ReadonlyUint8Array } from '@solana/codecs';
+import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
+import { visitOrElse } from 'codama';
 import type { StructError } from 'superstruct';
+import { assert } from 'superstruct';
+
 import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
+import { ArgumentError, ValidationError } from '../../shared/errors';
+import type { ArgumentsInput } from '../../shared/types';
+import { createIxArgumentsValidator } from './validators';
 
 export function encodeInstructionArguments(
     root: RootNode,
@@ -68,7 +69,7 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     try {
         assert(argumentsInput, ArgumentsInputValidator);
     } catch (error) {
-        let { failures } = error as StructError;
+        const { failures } = error as StructError;
         const message = failures().map(failure => {
             return `Invalid argument "${failure.key}", "value": ${failure.value}. Message: ${failure.message}\n`;
         });

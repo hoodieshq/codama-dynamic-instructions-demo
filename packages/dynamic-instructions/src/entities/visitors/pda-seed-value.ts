@@ -1,20 +1,21 @@
-import { address, getAddressEncoder } from '@solana/addresses';
+import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address } from '@solana/addresses';
-import { getBase16Codec, getBase58Codec, getBase64Codec, getBooleanCodec, getUtf8Codec } from '@solana/codecs';
+import { address, getAddressEncoder } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
+import { getBase16Codec, getBase58Codec, getBase64Codec, getBooleanCodec, getUtf8Codec } from '@solana/codecs';
 import type { Visitor } from 'codama';
 import type { BytesEncoding, InstructionNode, RootNode } from 'codama';
-import { getNodeCodec } from '@codama/dynamic-codecs';
-import { AccountError } from '../../shared/errors';
+
 import { toAddress } from '../../shared/address';
+import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput } from '../../shared/types';
 
 type PdaSeedValueVisitorContext = {
-    root: RootNode;
-    ix: InstructionNode;
-    programId: Address;
     accountsInput?: AccountsInput;
     argumentsInput?: ArgumentsInput;
+    ix: InstructionNode;
+    programId: Address;
+    root: RootNode;
 };
 
 /**
@@ -30,14 +31,7 @@ export function createPdaSeedValueVisitor(
     ctx: PdaSeedValueVisitorContext
 ): Visitor<
     ReadonlyUint8Array,
-    | 'accountValueNode'
-    | 'argumentValueNode'
-    | 'programIdValueNode'
-    | 'publicKeyValueNode'
-    | 'bytesValueNode'
-    | 'booleanValueNode'
-    | 'numberValueNode'
-    | 'stringValueNode'
+    'accountValueNode' | 'argumentValueNode' | 'booleanValueNode' | 'bytesValueNode' | 'numberValueNode' | 'programIdValueNode' | 'publicKeyValueNode' | 'stringValueNode'
 > {
     const { root, ix, programId } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
@@ -62,14 +56,19 @@ export function createPdaSeedValueVisitor(
             return codec.encode(argInput);
         },
 
-        // Constant / standalone value nodes.
-        visitProgramIdValue: () => getAddressEncoder().encode(programId),
-        visitPublicKeyValue: (node: any) => getAddressEncoder().encode(address(node.publicKey)),
-        visitBytesValue: (node: any) => getCodecFromBytesEncoding(node.encoding as BytesEncoding).encode(node.data),
+        
         visitBooleanValue: (node: any) => getBooleanCodec().encode(node.boolean),
+        
+visitBytesValue: (node: any) => getCodecFromBytesEncoding(node.encoding as BytesEncoding).encode(node.data),
+        
+// Keep behavior compatible with existing implementation in `pda.ts`.
+visitNumberValue: (node: any) => new Uint8Array([node.number]),
+        
+// Constant / standalone value nodes.
+visitProgramIdValue: () => getAddressEncoder().encode(programId),
 
-        // Keep behavior compatible with existing implementation in `pda.ts`.
-        visitNumberValue: (node: any) => new Uint8Array([node.number]),
+        
+        visitPublicKeyValue: (node: any) => getAddressEncoder().encode(address(node.publicKey)),
         visitStringValue: (node: any) => getUtf8Codec().encode(node.string),
     };
 }

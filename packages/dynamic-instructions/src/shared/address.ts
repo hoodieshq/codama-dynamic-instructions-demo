@@ -1,5 +1,5 @@
-import { address } from '@solana/addresses';
 import type { Address } from '@solana/addresses';
+import { address } from '@solana/addresses';
 
 /**
  * Accept both modern Address strings and legacy PublicKey-like objects.
@@ -7,7 +7,7 @@ import type { Address } from '@solana/addresses';
  */
 export type PublicKeyLike = { toBase58(): string };
 
-export type AddressInput = Address | string | PublicKeyLike;
+export type AddressInput = Address | PublicKeyLike | string;
 
 export function isPublicKeyLike(value: unknown): value is PublicKeyLike {
     return (

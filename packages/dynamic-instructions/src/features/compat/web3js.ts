@@ -2,11 +2,11 @@ import type { AccountLookupMeta, AccountMeta, Instruction } from '@solana/instru
 import { AccountRole } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
 
-export function toLegacyAccountMeta(accountMeta: AccountMeta | AccountLookupMeta): web3.AccountMeta {
+export function toLegacyAccountMeta(accountMeta: AccountLookupMeta | AccountMeta): web3.AccountMeta {
     return {
-        pubkey: new web3.PublicKey(accountMeta.address),
         isSigner: accountMeta.role === AccountRole.WRITABLE_SIGNER || accountMeta.role === AccountRole.READONLY_SIGNER,
         isWritable: accountMeta.role === AccountRole.WRITABLE_SIGNER || accountMeta.role === AccountRole.WRITABLE,
+        pubkey: new web3.PublicKey(accountMeta.address),
     };
 }
 
@@ -16,16 +16,16 @@ export function toLegacyAccountMeta(accountMeta: AccountMeta | AccountLookupMeta
  */
 export function toLegacyTransactionInstruction(instruction: Instruction): web3.TransactionInstruction {
     return new web3.TransactionInstruction({
-        programId: new web3.PublicKey(instruction.programAddress),
         data: Buffer.from(instruction.data ?? []),
         keys: (instruction.accounts ?? []).map(toLegacyAccountMeta),
+        programId: new web3.PublicKey(instruction.programAddress),
     });
 }
 
 export type ToVersionedTransactionOptions = {
+    addressLookupTableAccounts?: web3.AddressLookupTableAccount[];
     payerKey: web3.PublicKey;
     recentBlockhash: string;
-    addressLookupTableAccounts?: web3.AddressLookupTableAccount[];
 };
 
 /**
@@ -42,9 +42,9 @@ export function toVersionedTransaction(
     const legacyIxs = ixs.map(toLegacyTransactionInstruction);
 
     const messageV0 = new web3.TransactionMessage({
+        instructions: legacyIxs,
         payerKey: options.payerKey,
         recentBlockhash: options.recentBlockhash,
-        instructions: legacyIxs,
     }).compileToV0Message(options.addressLookupTableAccounts);
 
     return new web3.VersionedTransaction(messageV0);

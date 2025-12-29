@@ -1,14 +1,15 @@
-import { createFromJson } from 'codama';
-import type { InstructionNode, RootNode } from 'codama';
-import { address } from '@solana/addresses';
 import type { Address } from '@solana/addresses';
-import { toAddress } from '../../shared/address';
-import type { AddressInput } from '../../shared/address';
-import { MethodsBuilder } from './methods-builder';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import { address } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
+import type { InstructionNode, RootNode } from 'codama';
+import { createFromJson } from 'codama';
 
-export type IdlInput = string | object;
+import type { AddressInput } from '../../shared/address';
+import { toAddress } from '../../shared/address';
+import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import { MethodsBuilder } from './methods-builder';
+
+export type IdlInput = object | string;
 
 export type CreateProgramClientOptions = {
     /**
@@ -19,14 +20,14 @@ export type CreateProgramClientOptions = {
 };
 
 export type ProgramClient = {
-    /** Parsed Codama root node for advanced use-cases. */
-    root: RootNode;
-    /** Program id as an `Address`. */
-    programAddress: Address;
     /** Quick lookup by instruction name. */
     instructions: Map<string, InstructionNode>;
     /** Anchor-like facade namespace for building instructions. */
     methods: Record<string, (args?: ArgumentsInput) => ProgramMethodBuilder>;
+    /** Program id as an `Address`. */
+    programAddress: Address;
+    /** Parsed Codama root node for advanced use-cases. */
+    root: RootNode;
 };
 
 export type ProgramMethodBuilder = {
@@ -62,9 +63,9 @@ export function createProgramClient(idl: IdlInput, options: CreateProgramClientO
     ) as ProgramClient['methods'];
 
     return {
-        root,
-        programAddress,
         instructions,
         methods,
+        programAddress,
+        root,
     };
 }

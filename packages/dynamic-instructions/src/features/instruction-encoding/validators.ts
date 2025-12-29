@@ -1,4 +1,3 @@
-import { isAddress } from '@solana/addresses';
 import type {
     ArrayTypeNode,
     CountNode,
@@ -8,7 +7,9 @@ import type {
     SetTypeNode,
     TypeNode,
 } from '@codama/nodes';
-import { object, define, boolean, Struct, number, array, size, intersection, string, tuple } from 'superstruct';
+import { isAddress } from '@solana/addresses';
+import { array, boolean, define, intersection, number, object, size, string, Struct, tuple } from 'superstruct';
+
 import { isPublicKeyLike } from '../../shared/address';
 
 export function createIxAccountsValidator(ixAccountNodes: InstructionAccountNode[]): Struct {

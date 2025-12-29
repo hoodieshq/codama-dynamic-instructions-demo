@@ -1,6 +1,6 @@
-import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
-import { isNode, visitOrElse } from 'codama';
+import { address, getProgramDerivedAddress } from '@solana/addresses';
+import type { ReadonlyUint8Array } from '@solana/codecs';
 import type {
     InstructionAccountNode,
     InstructionNode,
@@ -11,11 +11,12 @@ import type {
     RootNode,
     VariablePdaSeedNode,
 } from 'codama';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
-import { AccountError } from '../../shared/errors';
-import { invariant } from '../../shared/util';
-import type { ReadonlyUint8Array } from '@solana/codecs';
+import { isNode, visitOrElse } from 'codama';
+
 import { createPdaSeedValueVisitor } from '../../entities/visitors';
+import { AccountError } from '../../shared/errors';
+import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import { invariant } from '../../shared/util';
 
 export async function derivePDA(
     root: RootNode,
@@ -30,7 +31,7 @@ export async function derivePDA(
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
     }
 
-    let pdaNode = resolvePdaNode(pdaDefaultValue, root.program.pdas);
+    const pdaNode = resolvePdaNode(pdaDefaultValue, root.program.pdas);
 
     const seedValues = pdaNode.seeds.map(seedNode => {
         if (seedNode.kind === 'constantPdaSeedNode') {
@@ -53,7 +54,7 @@ export async function derivePDA(
         );
     });
 
-    return getProgramDerivedAddress({
+    return await getProgramDerivedAddress({
         programAddress: programId,
         seeds: seedValues,
     });
@@ -86,11 +87,11 @@ function resolveVariablePdaSeed(
 
     const programId = address(root.program.publicKey);
     const visitor = createPdaSeedValueVisitor({
-        root,
-        ix,
-        programId,
         accountsInput,
         argumentsInput,
+        ix,
+        programId,
+        root,
     });
 
     return visitOrElse(variableSeedValueNode.value, visitor, node => {
@@ -107,7 +108,7 @@ function resolveConstantPdaSeed(
     if (seed.kind !== 'constantPdaSeedNode') {
         throw new AccountError(`Not a constant PDA seed node: ${seed.kind}`);
     }
-    const visitor = createPdaSeedValueVisitor({ root, ix, programId });
+    const visitor = createPdaSeedValueVisitor({ ix, programId, root });
     return visitOrElse(seed.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
     });

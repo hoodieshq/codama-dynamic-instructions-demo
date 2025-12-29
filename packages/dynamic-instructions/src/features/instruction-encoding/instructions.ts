@@ -1,6 +1,7 @@
-import type { InstructionNode, RootNode } from 'codama';
-import type { AccountsInput, ArgumentsInput, BuildIxFn } from '../../shared/types';
 import { address } from '@solana/addresses';
+import type { InstructionNode, RootNode } from 'codama';
+
+import type { AccountsInput, ArgumentsInput, BuildIxFn } from '../../shared/types';
 import { resolveAccountMetas, validateAccountsInput } from './accounts';
 import { encodeInstructionArguments, validateArgumentsInput } from './arguments';
 
@@ -21,9 +22,9 @@ export async function createIxBuilder(root: RootNode, ixNode: InstructionNode): 
         );
 
         return {
-            programAddress,
-            data: argumentsData,
             accounts: accountsData,
+            data: argumentsData,
+            programAddress,
         };
     };
 }
@@ -46,5 +47,5 @@ export async function resolveInstructionData(
 
     const accountsData = await resolveAccountMetas(root, instructionNode, argumentsInput, accountsInput);
 
-    return { argumentsData, accountsData };
+    return { accountsData, argumentsData };
 }
