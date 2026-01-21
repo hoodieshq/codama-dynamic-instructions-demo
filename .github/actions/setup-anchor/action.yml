@@ -1,0 +1,43 @@
+name: Setup Anchor CLI
+description: Install a pinned Anchor CLI version via AVM with caching for CI.
+
+inputs:
+  anchor-version:
+    description: Anchor CLI version to install (e.g. 0.32.1)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Anchor toolchain (AVM + Anchor versions)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.avm
+          ~/.cargo/bin/avm
+        key: ${{ runner.os }}-anchor-${{ inputs.anchor-version }}
+        restore-keys: |
+          ${{ runner.os }}-anchor-
+
+    - name: Install Anchor (pinned)
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        echo "$HOME/.avm/bin" >> "$GITHUB_PATH"
+        export PATH="$HOME/.cargo/bin:$HOME/.avm/bin:$PATH"
+
+        desired="${{ inputs.anchor-version }}"
+
+        # Install AVM if needed.
+        if ! command -v avm >/dev/null 2>&1; then
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked
+        fi
+
+        # Ensure the desired Anchor version exists and is active.
+        avm install "$desired"
+        avm use "$desired"
+
+        anchor --version
