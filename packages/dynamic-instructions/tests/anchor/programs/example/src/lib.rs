@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::{token::{Token, Mint, TokenAccount},associated_token::AssociatedToken};
 
 declare_id!("5xjPsgMHuoj4MrAPJVBrTomk5UAZvCxVtAdcWwgheoZs");
 
@@ -32,6 +33,9 @@ pub mod example {
         Ok(())
     }
     pub fn no_arguments(ctx: Context<NoArguments>) -> Result<()> {
+        Ok(())
+    }
+    pub fn external_programs(ctx: Context<ExternalProgramsIx>) -> Result<()> {
         Ok(())
     }
 }
@@ -97,6 +101,43 @@ pub struct NoArguments<'info> {
     )]
     pub acc: Account<'info, StoreOptionalAccount>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ExternalProgramsIx<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    
+    // mint and token_account are to check that accounts with external program should be auto-derived
+    #[account(
+        init,
+        payer = signer,
+        mint::decimals = 9,
+        mint::authority = signer,
+    )]
+    pub mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = signer,
+    )]
+    pub token_account: Account<'info, TokenAccount>,
+
+    // dependent_account is to check that it can be automatically derived from both: signer (accountInput) and token_account (another auto-derived account)
+    #[account(
+        init, 
+        payer = signer, 
+        space = 8 + 8 + 1 + 32 + 1,
+        seeds = [b"signer_and_ata", signer.key().as_ref(), token_account.key().as_ref()], 
+        bump
+    )]
+    pub dependent_account: Account<'info, DataAccount1>,
+    
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[account]
