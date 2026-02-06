@@ -1,0 +1,9 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "lib": []
+    },
+    "display": "@codama-monorepo-test/dynamic-instructions",
+    "extends": "../../tsconfig.json",
+    "include": ["src", "tests"]
+}
