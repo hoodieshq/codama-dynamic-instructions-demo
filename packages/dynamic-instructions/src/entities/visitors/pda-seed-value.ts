@@ -31,7 +31,7 @@ export function createPdaSeedValueVisitor(
     ctx: PdaSeedValueVisitorContext
 ): Visitor<
     ReadonlyUint8Array,
-    'accountValueNode' | 'argumentValueNode' | 'booleanValueNode' | 'bytesValueNode' | 'numberValueNode' | 'programIdValueNode' | 'publicKeyValueNode' | 'stringValueNode'
+    'accountValueNode' | 'argumentValueNode' | 'booleanValueNode' | 'bytesValueNode' | 'identityValueNode' | 'numberValueNode' | 'payerValueNode' | 'programIdValueNode' | 'publicKeyValueNode' | 'stringValueNode'
 > {
     const { root, ix, programId } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
@@ -40,11 +40,8 @@ export function createPdaSeedValueVisitor(
     return {
         // Contextual seed values.
         visitAccountValue: (node: any) => {
-            const input = (accountsInput as any)[node.name];
-            if (input === undefined || input === null) {
-                throw new AccountError(`Missing required account for PDA seed: ${node.name}`);
-            }
-            return getAddressEncoder().encode(toAddress(input));
+            // FIXME: dependent account can be another auto-derived PDA account.
+            return getAccountAddressFromInput(node, accountsInput);
         },
         visitArgumentValue: (node: any) => {
             const ixArgumentNode = ix.arguments.find(arg => arg.name === node.name);
@@ -59,18 +56,32 @@ export function createPdaSeedValueVisitor(
         
         visitBooleanValue: (node: any) => getBooleanCodec().encode(node.boolean),
         
-visitBytesValue: (node: any) => getCodecFromBytesEncoding(node.encoding as BytesEncoding).encode(node.data),
+        visitBytesValue: (node: any) => getCodecFromBytesEncoding(node.encoding as BytesEncoding).encode(node.data),
         
-// Keep behavior compatible with existing implementation in `pda.ts`.
-visitNumberValue: (node: any) => new Uint8Array([node.number]),
+        // Keep behavior compatible with existing implementation in `pda.ts`.
+        visitNumberValue: (node: any) => new Uint8Array([node.number]),
         
-// Constant / standalone value nodes.
-visitProgramIdValue: () => getAddressEncoder().encode(programId),
+        // Constant / standalone value nodes.
+        visitProgramIdValue: () => getAddressEncoder().encode(programId),
+            visitPublicKeyValue: (node: any) => getAddressEncoder().encode(address(node.publicKey)),
+            visitStringValue: (node: any) => getUtf8Codec().encode(node.string),
 
-        
-        visitPublicKeyValue: (node: any) => getAddressEncoder().encode(address(node.publicKey)),
-        visitStringValue: (node: any) => getUtf8Codec().encode(node.string),
+        visitIdentityValue: (node: any) => {
+            return getAccountAddressFromInput(node, accountsInput);
+        },
+        visitPayerValue: (node: any) => {
+            return getAccountAddressFromInput(node, accountsInput);
+        }
     };
+    
+}
+
+function getAccountAddressFromInput(node: any, accountsInput: PdaSeedValueVisitorContext["accountsInput"]) {
+    const input = (accountsInput)[node.name];
+    if (input === undefined || input === null) {
+        throw new AccountError(`Missing required account for PDA seed: ${node.name}`);
+    }
+    return getAddressEncoder().encode(toAddress(input));
 }
 
 // TODO: check if this can be replaced

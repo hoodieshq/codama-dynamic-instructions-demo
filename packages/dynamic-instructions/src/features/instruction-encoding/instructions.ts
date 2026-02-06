@@ -10,7 +10,7 @@ import { encodeInstructionArguments, validateArgumentsInput } from './arguments'
  * const buildix = createIxBuilder(root, root.program.instructions[0]);
  * const ix = await buildix({ id: 1, input: [1,2,3,4,5,6,7,8] }, { signer: signerPubkey });
  */
-export async function createIxBuilder(root: RootNode, ixNode: InstructionNode): Promise<BuildIxFn> {
+export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildIxFn {
     const programAddress = address(root.program.publicKey);
 
     return async (argumentsInput, accountsInput) => {

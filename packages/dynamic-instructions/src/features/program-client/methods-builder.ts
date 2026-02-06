@@ -21,7 +21,7 @@ export class MethodsBuilder {
     }
 
     async instruction(): Promise<Instruction> {
-        const build = await createIxBuilder(this.root, this.ixNode);
+        const build = createIxBuilder(this.root, this.ixNode);
         return await build(this.args, this._accounts);
     }
 }
