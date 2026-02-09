@@ -1,0 +1,214 @@
+import { address, type Address } from '@solana/addresses';
+import type { Instruction } from '@solana/instructions';
+import * as web3 from '@solana/web3.js';
+import { FailedTransactionMetadata, LiteSVM } from 'litesvm';
+
+import { toLegacyTransactionInstruction } from '../src';
+
+/**
+ * Encoded account data returned from SVM.
+ */
+export type EncodedAccount = {
+    readonly lamports: bigint;
+    readonly owner: Address;
+    readonly data: Uint8Array;
+    readonly executable: boolean;
+    readonly rentEpoch?: bigint;
+};
+
+/**
+ * Test context that encapsulates LiteSVM and provides a clean Solana Kit API.
+ *
+ * Purpose:
+ * - Hides legacy web3.js types and LiteSVM implementation details
+ * - Exposes only modern Solana Kit types (Address, Instruction)
+ * - Manages account lifecycle and signing internally
+ * - Provides declarative test helpers (fundAccount, sendInstruction)
+ *
+ * Tests work exclusively with Address types while the context handles
+ * keypair management and transaction building behind the scenes.
+ */
+export class SvmTestContext {
+    private readonly svm: LiteSVM;
+    private readonly accounts: Map<Address, web3.Keypair>;
+    private currentSlot: bigint;
+
+    constructor() {
+        this.svm = new LiteSVM();
+        this.accounts = new Map();
+        this.currentSlot = BigInt(0);
+    }
+
+    /** Creates a new keypair, stores it in the context, and returns its address. */
+    createAccount(): Address {
+        const keypair = web3.Keypair.generate();
+        const addr = address(keypair.publicKey.toBase58());
+        this.accounts.set(addr, keypair);
+        return addr;
+    }
+
+    /** Creates an account and airdrops the given lamports to it. */
+    createFundedAccount(lamports: bigint = BigInt(10e9)): Address {
+        const addr = this.createAccount();
+        const keypair = this.accounts.get(addr);
+        this.svm.airdrop(keypair.publicKey, lamports);
+        return addr;
+    }
+
+    /** Derives an address from base + seed + programId (createWithSeed). Does not store a keypair. */
+    async createAccountWithSeed(base: Address, seed: string, programId: Address): Promise<Address> {
+        const derived = await web3.PublicKey.createWithSeed(
+            new web3.PublicKey(base),
+            seed,
+            new web3.PublicKey(programId),
+        );
+        return address(derived.toBase58());
+    }
+
+    /** Airdrops lamports to an account. Account must have been created via this context. */
+    airdrop(account: Address, lamports: bigint = BigInt(1e9)): void {
+        const keypair = this.accounts.get(account);
+        if (!keypair) {
+            throw new Error(`Account ${account} not found in context`);
+        }
+        this.svm.airdrop(keypair.publicKey, lamports);
+    }
+
+    /** Returns the account's lamport balance, or null if the account is unknown to the SVM. */
+    getBalance(account: Address): bigint | null {
+        const keypair = this.accounts.get(account);
+        if (!keypair) {
+            return this.svm.getBalance(new web3.PublicKey(account));
+        }
+        return this.svm.getBalance(keypair.publicKey);
+    }
+
+    /** Same as getBalance but returns 0n when the account is missing. */
+    getBalanceOrZero(account: Address): bigint {
+        return this.getBalance(account) ?? BigInt(0);
+    }
+
+    /** Fetches full account data (lamports, owner, data, executable). Returns null if not found. */
+    fetchEncodedAccount(account: Address): EncodedAccount | null {
+        const keypair = this.accounts.get(account);
+        const pubkey = keypair ? keypair.publicKey : new web3.PublicKey(account);
+        const accountInfo = this.svm.getAccount(pubkey);
+
+        if (!accountInfo) {
+            return null;
+        }
+
+        return {
+            lamports: BigInt(accountInfo.lamports),
+            owner: address(accountInfo.owner.toBase58()),
+            data: accountInfo.data,
+            executable: accountInfo.executable,
+            rentEpoch: accountInfo.rentEpoch !== undefined ? BigInt(accountInfo.rentEpoch) : undefined,
+        };
+    }
+
+    /** Like fetchEncodedAccount but throws if the account does not exist. */
+    requireEncodedAccount(account: Address): EncodedAccount {
+        const encodedAccount = this.fetchEncodedAccount(account);
+        if (!encodedAccount) {
+            throw new Error(`Account ${account} does not exist`);
+        }
+        return encodedAccount;
+    }
+
+    /** Builds, signs, and sends a transaction with a single instruction. Signers must be context-owned. */
+    sendInstruction(instruction: Instruction, signers: Address[]): void {
+        if (signers.length === 0) {
+            throw new Error('At least one signer is required');
+        }
+
+        const keypairs = signers.map(addr => {
+            const keypair = this.accounts.get(addr);
+            if (!keypair) {
+                throw new Error(`Signer ${addr} not found in context`);
+            }
+            return keypair;
+        });
+
+        const legacyIx = toLegacyTransactionInstruction(instruction);
+        const transaction = new web3.Transaction().add(legacyIx);
+        transaction.feePayer = keypairs[0].publicKey;
+        transaction.recentBlockhash = this.svm.latestBlockhash();
+        transaction.sign(...keypairs);
+
+        const result = this.svm.sendTransaction(transaction);
+        if (result instanceof FailedTransactionMetadata) {
+            throw new Error(`Transaction failed: ${result.toString()}`);
+        }
+    }
+
+    /** Builds, signs, and sends a transaction with multiple instructions. Signers must be context-owned. */
+    sendInstructions(instructions: Instruction[], signers: Address[]): void {
+        if (signers.length === 0) {
+            throw new Error('At least one signer is required');
+        }
+
+        const keypairs = signers.map(addr => {
+            const keypair = this.accounts.get(addr);
+            if (!keypair) {
+                throw new Error(`Signer ${addr} not found in context`);
+            }
+            return keypair;
+        });
+
+        const transaction = new web3.Transaction();
+        for (const instruction of instructions) {
+            const legacyIx = toLegacyTransactionInstruction(instruction);
+            transaction.add(legacyIx);
+        }
+
+        transaction.feePayer = keypairs[0].publicKey;
+        transaction.recentBlockhash = this.svm.latestBlockhash();
+        transaction.sign(...keypairs);
+
+        const result = this.svm.sendTransaction(transaction);
+        if (result instanceof FailedTransactionMetadata) {
+            throw new Error(`Transaction failed: ${result.toString()}`);
+        }
+    }
+
+    /** Warps the SVM to the specified slot. */
+    warpToSlot(slot: bigint): void {
+        this.currentSlot = slot;
+        this.svm.warpToSlot(slot);
+    }
+
+    /** Advances the SVM by the specified number of slots (default: 1). */
+    advanceSlots(count: bigint = BigInt(1)): void {
+        this.currentSlot += count;
+        this.svm.warpToSlot(this.currentSlot);
+        this.svm.expireBlockhash();
+    }
+
+    /** Loads a Solana program from a .so file. */
+    loadProgram(programAddress: Address, programPath: string): void {
+        const programId = new web3.PublicKey(programAddress);
+        this.svm.addProgramFromFile(programId, programPath);
+    }
+
+    /** Derives a Program Derived Address (PDA) from seeds and program ID. */
+    findProgramAddress(
+        seeds: Array<{ readonly type: 'string' | 'bytes' | 'address'; readonly value: string | Uint8Array | Address }>,
+        programId: Address,
+    ): Address {
+        const seedBuffers = seeds.map(seed => {
+            if (seed.type === 'string') return Buffer.from(seed.value as string, 'utf8');
+            if (seed.type === 'bytes') return Buffer.from(seed.value as Uint8Array);
+            return new web3.PublicKey(seed.value as Address).toBuffer();
+        });
+
+        const [pdaKey] = web3.PublicKey.findProgramAddressSync(seedBuffers, new web3.PublicKey(programId));
+
+        return address(pdaKey.toBase58());
+    }
+
+    /** Returns the underlying LiteSVM instance for direct use when needed. Consider using the public methods instead. */
+    getSvm(): LiteSVM {
+        return this.svm;
+    }
+}

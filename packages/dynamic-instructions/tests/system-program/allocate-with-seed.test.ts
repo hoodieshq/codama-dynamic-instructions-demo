@@ -1,0 +1,61 @@
+import { beforeEach, describe, expect, test } from 'vitest';
+
+import { createTestProgramClient, SvmTestContext } from '../test-utils';
+
+describe('System Program: allocateWithSeed', () => {
+    const programClient = createTestProgramClient('system-program-idl.json');
+    let ctx: SvmTestContext;
+
+    beforeEach(() => {
+        ctx = new SvmTestContext();
+    });
+
+    test('should allocate space for a seed-derived account', async () => {
+        const payerAccount = ctx.createFundedAccount();
+        const baseAccount = ctx.createFundedAccount();
+
+        const seed = 'storage';
+        const newAccount = await ctx.createAccountWithSeed(baseAccount, seed, programClient.programAddress);
+
+        const fundingLamports = 5_000_000;
+        const createIx = await programClient.methods
+            .createAccountWithSeed({
+                base: baseAccount,
+                seed,
+                amount: fundingLamports,
+                space: 0,
+                programAddress: programClient.programAddress,
+            })
+            .accounts({
+                payer: payerAccount,
+                newAccount,
+                baseAccount,
+            })
+            .instruction();
+
+        ctx.sendInstruction(createIx, [payerAccount, baseAccount]);
+
+        const space = 96;
+        const allocateIx = await programClient.methods
+            .allocateWithSeed({
+                base: baseAccount,
+                seed,
+                space,
+                programAddress: programClient.programAddress,
+            })
+            .accounts({
+                newAccount,
+                baseAccount,
+            })
+            .instruction();
+
+        ctx.sendInstruction(allocateIx, [baseAccount]);
+
+        const accountAfter = ctx.requireEncodedAccount(newAccount);
+
+        expect(accountAfter).toMatchObject({
+            owner: programClient.programAddress,
+            data: new Uint8Array(space),
+        });
+    });
+});

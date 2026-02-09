@@ -20,24 +20,24 @@ export function createIxAccountsValidator(ixAccountNodes: InstructionAccountNode
             acc[node.name] =
                 node.isOptional || node.defaultValue ? OptionalSolanaAddressValidator : SolanaAddressValidator;
             return acc;
-        }, {})
+        }, {}),
     );
 }
 
 export function createIxArgumentsValidator(
     ixNodeName: string,
     ixArgumentNodes: InstructionArgumentNode[],
-    definedTypes: DefinedTypeNode[]
+    definedTypes: DefinedTypeNode[],
 ): Struct {
     return object(
         ixArgumentNodes.reduce((acc, argumentNode, index) => {
             acc[argumentNode.name] = createValidatorForTypeNode(
                 `${ixNodeName}_${argumentNode.name}_${index}`,
                 argumentNode.type,
-                definedTypes
+                definedTypes,
             );
             return acc;
-        }, {})
+        }, {}),
     );
 }
 
@@ -88,7 +88,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             const valueValidator = createValidatorForTypeNode(
                 `${nodeName}_map_value_${node.key}`,
                 node.value,
-                definedTypes
+                definedTypes,
             );
             const sizeValidator = MapCountValidator(node.count);
             // node.
@@ -104,15 +104,15 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
                     acc[node.name] = createValidatorForTypeNode(
                         `${nodeName}_struct_${node.name}`,
                         node.type,
-                        definedTypes
+                        definedTypes,
                     );
                     return acc;
-                }, {})
+                }, {}),
             );
         }
         case 'tupleTypeNode': {
             const validators = node.items.map((typeNode, index) =>
-                createValidatorForTypeNode(`${nodeName}_tuple${typeNode.kind}_${index}`, typeNode, definedTypes)
+                createValidatorForTypeNode(`${nodeName}_tuple${typeNode.kind}_${index}`, typeNode, definedTypes),
             );
             return tuple(validators as [Struct<unknown, unknown>, ...Struct<unknown, unknown>[]]);
         }
@@ -134,7 +134,12 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         case 'sentinelTypeNode':
         case 'postOffsetTypeNode':
         case 'preOffsetTypeNode':
-        case 'sizePrefixTypeNode':
+        case 'sizePrefixTypeNode': {
+            // Size-prefixed type (e.g. length-prefixed string); validate the inner type only
+            // Cast to access the type property which exists on sizePrefixTypeNode
+            const sizePrefixNode = node as TypeNode & { type: TypeNode };
+            return createValidatorForTypeNode(`${nodeName}_size_prefix`, sizePrefixNode.type, definedTypes);
+        }
         case 'enumTypeNode':
             throw new Error(`Unsupported argument type: ${nodeName} of type ${node.kind}`);
     }
