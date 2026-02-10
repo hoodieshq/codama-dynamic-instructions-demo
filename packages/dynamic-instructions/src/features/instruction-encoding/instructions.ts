@@ -2,7 +2,7 @@ import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput, BuildIxFn } from '../../shared/types';
-import { resolveAccountMetas, validateAccountsInput } from './accounts';
+import { resolveAccountMeta, validateAccountsInput } from './accounts';
 import { encodeInstructionArguments, validateArgumentsInput } from './arguments';
 
 /**
@@ -45,7 +45,7 @@ export async function resolveInstructionData(
     // Encodes arguments into buffer
     const argumentsData = encodeInstructionArguments(root, instructionNode, argumentsInput);
 
-    const accountsData = await resolveAccountMetas(root, instructionNode, argumentsInput, accountsInput);
+    const accountsData = await resolveAccountMeta(root, instructionNode, argumentsInput, accountsInput);
 
     return { accountsData, argumentsData };
 }
