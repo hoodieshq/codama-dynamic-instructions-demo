@@ -198,7 +198,6 @@ export async function resolveConditionalValueNodeCondition(
         );
     });
 
-    // Determine which branch to take
     if (requiredValueNode) {
         // If provided, the condition must be equal to required value
         const valueVisitor = createValueNodeVisitor({ accountsInput, argumentsInput });
@@ -210,7 +209,6 @@ export async function resolveConditionalValueNodeCondition(
         // FIXME: Deep equality check for complex types, like maps, structs, arrays, etc.
         return requiredValue.value === providedValue ? ifTrue : ifFalse;
     } else {
-        // Otherwise, the condition must simply exist (truthy)
         return providedValue ? ifTrue : ifFalse;
     }
 }
