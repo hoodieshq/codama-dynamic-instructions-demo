@@ -7,7 +7,7 @@ import type {
     RootNode,
 } from 'codama';
 
-import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/reslove-account-address';
+import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput } from '../../shared/types';
 

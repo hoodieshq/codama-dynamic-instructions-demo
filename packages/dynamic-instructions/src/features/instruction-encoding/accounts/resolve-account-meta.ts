@@ -6,7 +6,7 @@ import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput, ArgumentsInput } from '../../../shared/types';
-import { resolveAccountAddress } from '../accounts/reslove-account-address';
+import { resolveAccountAddress } from './resolve-account-address';
 
 type ResolvedAccount = {
     address: Address | null;
