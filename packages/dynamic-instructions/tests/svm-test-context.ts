@@ -17,6 +17,16 @@ export type EncodedAccount = {
 };
 
 /**
+ * Configuration options for the SVM test context.
+ */
+export type SvmTestContextConfig = {
+    /** Include standard SPL programs (Token, Token-2022, ATA, etc.). Default: false. */
+    readonly defaultPrograms?: boolean;
+    /** Include standard precompiles (ed25519, secp256k1). Default: false. */
+    readonly precompiles?: boolean;
+};
+
+/**
  * Test context that encapsulates LiteSVM and provides a clean Solana Kit API.
  *
  * Purpose:
@@ -27,14 +37,24 @@ export type EncodedAccount = {
  *
  * Tests work exclusively with Address types while the context handles
  * keypair management and transaction building behind the scenes.
+ *
+ * By default, the context includes standard builtins (system program, etc.)
+ * and sysvars. Use the config parameter to include additional programs.
  */
 export class SvmTestContext {
     private readonly svm: LiteSVM;
     private readonly accounts: Map<Address, web3.Keypair>;
     private currentSlot: bigint;
 
-    constructor() {
-        this.svm = new LiteSVM();
+    constructor(config: SvmTestContextConfig = {}) {
+        let svm = new LiteSVM();
+        if (config.defaultPrograms) {
+            svm = svm.withDefaultPrograms();
+        }
+        if (config.precompiles) {
+            svm = svm.withPrecompiles();
+        }
+        this.svm = svm;
         this.accounts = new Map();
         this.currentSlot = BigInt(0);
     }
