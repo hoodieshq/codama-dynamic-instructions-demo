@@ -88,7 +88,9 @@ pnpm lint
 Typecheck only (in the library package):
 
 ```bash
-cd packages/dynamic-instructions && pnpm test:types
+cd packages/dynamic-instructions
+pnpm test:setup        # or: pnpm generate-program-types
+pnpm test:types
 ```
 
 ## Features
