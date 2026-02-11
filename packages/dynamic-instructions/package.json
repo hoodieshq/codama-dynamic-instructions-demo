@@ -42,12 +42,13 @@
         "lint": "eslint . && prettier --check .",
         "lint:fix": "eslint --fix . && prettier --write .",
         "test": "pnpm test:setup && pnpm test:types && pnpm build && pnpm test:treeshakability && pnpm test:unit",
-        "test:setup": "pnpm test:anchor:build && pnpm generate-idl-from-anchor",
+        "test:setup": "pnpm test:anchor:build && pnpm generate-idl-from-anchor && pnpm generate-program-types",
         "test:anchor:build": "cd tests/anchor && anchor build",
         "test:treeshakability": "for file in dist/index.*.mjs; do test -f \"$file\" || (echo \"Missing build output: $file\" && exit 1); agadoo \"$file\"; done",
         "test:types": "tsc --noEmit",
         "test:unit": "vitest run --pool=threads",
-        "generate-idl-from-anchor": "node ./tests/anchor/utils/generate-idl-from-anchor.mjs"
+        "generate-idl-from-anchor": "node --experimental-transform-types ./scripts/generate-idl-from-anchor.mts",
+        "generate-program-types": "node --experimental-transform-types ./scripts/generate-program-client-types.mts"
     },
     "dependencies": {
         "@codama/dynamic-codecs": "^1.1.23",

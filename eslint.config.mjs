@@ -3,10 +3,10 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     {
-        ignores: ['**/dist/**'],
+        ignores: ['**/dist/**', '**/generated/**', '**/target/**'],
     },
     {
         files: ['**/*.ts', '**/*.(c|m)?js'],
         extends: [solanaConfig],
-    }
+    },
 ]);

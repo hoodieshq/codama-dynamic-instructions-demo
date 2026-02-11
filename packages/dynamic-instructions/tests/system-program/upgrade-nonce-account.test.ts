@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
+import type { SystemProgramClient } from '../generated/system-program-idl-types';
 import { createTestProgramClient, SvmTestContext } from '../test-utils';
 
 /**
@@ -14,7 +15,7 @@ import { createTestProgramClient, SvmTestContext } from '../test-utils';
  * accounts in the test environment.
  */
 describe('System Program: upgradeNonceAccount', () => {
-    const programClient = createTestProgramClient('system-program-idl.json');
+    const programClient = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
     let ctx: SvmTestContext;
 
     beforeEach(() => {

@@ -14,6 +14,8 @@ type ResolvedAccount = {
     role: AccountRole;
 };
 
+type ResolvedAccountWithAddress = ResolvedAccount & { address: Address };
+
 /**
  * Resolves the AccountMeta for each account in the instruction by evaluating their default values.
  * Handles optional accounts based on the instruction's optionalAccountStrategy.
@@ -35,7 +37,7 @@ export async function resolveAccountMeta(
                 throw new AccountError(`Account not provided: ${ixAccountNode.name}`);
             }
 
-            let resolvedAccountAddress: Address | null;
+            let resolvedAccountAddress: Address | null = null;
             if (!isAccountProvided) {
                 resolvedAccountAddress = await resolveAccountAddress(
                     root,
@@ -62,7 +64,7 @@ export async function resolveAccountMeta(
     return (
         resolvedAccounts
             // omitted optional accounts
-            .filter(acc => acc.address !== null)
+            .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null)
             .map(acc => {
                 return {
                     address: acc.address,

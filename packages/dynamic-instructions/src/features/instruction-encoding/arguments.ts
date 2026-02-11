@@ -21,8 +21,14 @@ export function encodeInstructionArguments(
         let encodedValue: ReadonlyUint8Array;
         if (isIxArgumentOmitted(ixArgumentNode)) {
             // Omitted argument means it must always use the default value (e.g discriminator)
+            const defaultValue = ixArgumentNode.defaultValue;
+            if (defaultValue === undefined) {
+                throw new ArgumentError(
+                    `Omitted argument ${ixArgumentNode.name} has no default value`
+                );
+            }
             const visitor = createDefaultValueEncoderVisitor(codec);
-            encodedValue = visitOrElse(ixArgumentNode.defaultValue, visitor, node => {
+            encodedValue = visitOrElse(defaultValue, visitor, node => {
                 throw new ArgumentError(
                     `Not supported encoding for ${ixArgumentNode.name} argument of "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`
                 );

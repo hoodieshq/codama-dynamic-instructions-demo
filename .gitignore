@@ -9,3 +9,6 @@ clients
 
 # turbo
 .turbo
+
+# generated types
+**/generated/

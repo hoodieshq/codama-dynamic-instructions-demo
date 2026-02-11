@@ -14,9 +14,17 @@ export function loadIdl(idlFileName: string, baseDir?: string): IdlInput {
     return idlJson as IdlInput;
 }
 
-export function createTestProgramClient(idlFileName: string): ProgramClient {
+/**
+ * Creates a program client for tests. Pass a generated client type for full type safety:
+ * ```ts
+ * import type { SystemProgramClient } from '../generated/system-program-idl-types';
+ * const client = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
+ * // client.methods.advanceNonceAccount etc. are now typed, no non-null assertions needed
+ * ```
+ */
+export function createTestProgramClient<T = ProgramClient>(idlFileName: string): T {
     const idl = loadIdl(idlFileName);
-    return createProgramClient(idl);
+    return createProgramClient(idl) as unknown as T;
 }
 
 export { SvmTestContext, type EncodedAccount } from './svm-test-context';
