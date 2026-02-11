@@ -272,9 +272,8 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             return needsParens ? `(${itemType})[]` : `${itemType}[]`;
         }
         case 'mapTypeNode': {
-            const k = codamaTypeToTS(type.key, definedTypes);
             const v = codamaTypeToTS(type.value, definedTypes);
-            return `Map<${k}, ${v}>`;
+            return `Record<string, ${v}>`;
         }
         case 'definedTypeLinkNode': {
             if (!type.name) return 'unknown';
