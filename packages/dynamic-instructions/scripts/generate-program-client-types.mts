@@ -126,9 +126,8 @@ import type { Instruction } from '@solana/instructions';
  * Method builder interface.
  */
 export type MethodBuilder<TAccounts> = {
-    accounts(accounts: TAccounts): {
-        instruction(): Promise<Instruction>;
-    };
+    accounts(accounts: TAccounts): MethodBuilder<TAccounts>;
+    instruction(): Promise<Instruction>;
 };
 
 `;
