@@ -162,7 +162,7 @@ const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('Op
 
 /** Accepts both number and bigint for u64/u128/i64/i128 instruction args. */
 const NumberOrBigintValidator: StructUnknown = /* @__PURE__ */ define('NumberOrBigint', (value: unknown) => {
-    if (typeof value === 'number') return Number.isInteger(value);
+    if (typeof value === 'number') return Number.isSafeInteger(value);
     if (typeof value === 'bigint') return true;
     return false;
 });
