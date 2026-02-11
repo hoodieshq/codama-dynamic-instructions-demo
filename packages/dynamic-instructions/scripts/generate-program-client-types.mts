@@ -152,7 +152,7 @@ export type MethodBuilder<TAccounts> = {
         }
 
         // Build accounts interface
-        const accountFields = ix.accounts.filter(acc => !acc.defaultValue);
+        const accountFields = ix.accounts.filter(acc => acc.defaultValue == null);
         const accountsInterfaceName = `${typeName}Accounts`;
         if (accountFields.length > 0) {
             output += `export type ${accountsInterfaceName} = {\n`;
