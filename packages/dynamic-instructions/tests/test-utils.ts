@@ -24,7 +24,7 @@ export function loadIdl(idlFileName: string, baseDir?: string): IdlInput {
  */
 export function createTestProgramClient<T = ProgramClient>(idlFileName: string): T {
     const idl = loadIdl(idlFileName);
-    return createProgramClient(idl) as unknown as T;
+    return createProgramClient<T>(idl);
 }
 
 export { SvmTestContext, type EncodedAccount } from './svm-test-context';
