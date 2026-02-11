@@ -5,7 +5,7 @@ import { visitOrElse } from 'codama';
 
 import { createAccountDefaultValueVisitor } from '../../../entities/visitors';
 import { AccountError } from '../../../shared/errors';
-import { AccountsInput, ArgumentsInput } from '../../../types';
+import type { AccountsInput, ArgumentsInput } from '../../../shared/types';
 
 /**
  * Resolves the address of an instruction account node by evaluating its default value

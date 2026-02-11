@@ -10,11 +10,12 @@ export type PublicKeyLike = { toBase58(): string };
 export type AddressInput = Address | PublicKeyLike | string;
 
 export function isPublicKeyLike(value: unknown): value is PublicKeyLike {
+    const obj = value as Record<string, unknown>;
     return (
         typeof value === 'object' &&
         value !== null &&
-        'toBase58' in (value as any) &&
-        typeof (value as any).toBase58 === 'function'
+        'toBase58' in obj &&
+        typeof obj.toBase58 === 'function'
     );
 }
 

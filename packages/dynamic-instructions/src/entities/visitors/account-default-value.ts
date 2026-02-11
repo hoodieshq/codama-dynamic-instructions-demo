@@ -19,14 +19,15 @@ import type {
 import { visitOrElse } from 'codama';
 
 import { derivePDA } from '../../features/instruction-encoding/pda';
-import { AddressInput, toAddress } from '../../shared/address';
+import type { AddressInput } from '../../shared/address';
+import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput } from '../../shared/types';
 import { createConditionNodeValueVisitor } from './condition-node-value';
 import { createValueNodeVisitor } from './value-node-value';
 
 type AccountDefaultValueVisitorContext = {
-    accountAddressInput: AddressInput;
+    accountAddressInput: AddressInput | null | undefined;
     accountsInput?: AccountsInput;
     argumentsInput?: ArgumentsInput;
     ixAccountNode: InstructionAccountNode;
@@ -127,6 +128,11 @@ export function createAccountDefaultValueVisitor(
                 accountsInput,
             )
 
+            if (resolvedInputValueNode === undefined) {
+                throw new AccountError(
+                    `Conditional branch resolved to undefined in account ${ixAccountNode.name} of ${ixNode.name} instruction`
+                );
+            }
             // Recursively resolve the chosen branch
             const visitor = createAccountDefaultValueVisitor(ctx);
             const addressValue = await visitOrElse(resolvedInputValueNode, visitor, (innerNode: { kind: string }) => {
@@ -138,15 +144,28 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitIdentityValue: async (_node: IdentityValueNode) => {
+            if (accountAddressInput === undefined || accountAddressInput === null) {
+                throw new AccountError(
+                    `Cannot resolve identity value for ${ixAccountNode.name}: account address not provided`
+                );
+            }
             return await Promise.resolve(toAddress(accountAddressInput));
         },
 
         visitPayerValue: async (_node: PayerValueNode) => {
+            if (accountAddressInput === undefined || accountAddressInput === null) {
+                throw new AccountError(
+                    `Cannot resolve payer value for ${ixAccountNode.name}: account address not provided`
+                );
+            }
             return await Promise.resolve(toAddress(accountAddressInput));
         },
 
         visitPdaValue: async (_node: PdaValueNode) => {
             const pda = await derivePDA(root, ixNode, ixAccountNode, argumentsInput, accountsInput);
+            if (pda === null) {
+                throw new AccountError(`Cannot derive PDA for account ${ixAccountNode.name}`);
+            }
             return pda[0];
         },
 

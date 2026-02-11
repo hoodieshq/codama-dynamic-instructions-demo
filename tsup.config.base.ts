@@ -1,7 +1,7 @@
 import { env } from 'node:process';
 
 import browsersListToEsBuild from 'browserslist-to-esbuild';
-import { Format, Options as TsupConfig } from 'tsup';
+import type { Format, Options as TsupConfig } from 'tsup';
 
 type Platform = 'browser' | 'node' | 'react-native';
 

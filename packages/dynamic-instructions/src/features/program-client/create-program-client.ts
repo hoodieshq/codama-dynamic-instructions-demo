@@ -35,7 +35,16 @@ export type ProgramMethodBuilder = {
     instruction(): Promise<Instruction>;
 };
 
-export function createProgramClient(idl: IdlInput, options: CreateProgramClientOptions = {}): ProgramClient {
+/**
+ * Creates a program client from a Codama IDL.
+ *
+ * For type safety, generate types with `pnpm generate-program-types` and pass as a generic:
+ * ```typescript
+ * import type { MyProgramClient } from './generated/my-program-types';
+ * const client = createProgramClient<MyProgramClient>(idl);
+ * ```
+ */
+export function createProgramClient<TClient = ProgramClient>(idl: IdlInput, options: CreateProgramClientOptions = {}): TClient {
     const json = typeof idl === 'string' ? idl : JSON.stringify(idl);
     const root = createFromJson(json).getRoot();
 
@@ -67,5 +76,5 @@ export function createProgramClient(idl: IdlInput, options: CreateProgramClientO
         methods,
         programAddress,
         root,
-    };
+    } as unknown as TClient;
 }

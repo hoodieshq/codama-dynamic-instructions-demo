@@ -8,12 +8,12 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { createProgramClient } from '../../../src';
 import { loadIdl, SvmTestContext } from '../../test-utils';
+import type { ExampleProgramClient } from '../../generated/example-idl-types';
 
 describe('anchor-example', () => {
-    const prebuiltIdlsDir = path.resolve(__dirname, '..', 'prebuilt-idls');
-    const idl = loadIdl('example-idl.json', prebuiltIdlsDir);
+    const idl = loadIdl('example-idl.json');
 
-    const programClient = createProgramClient(idl);
+    const programClient = createProgramClient<ExampleProgramClient>(idl);
 
     const programSoPath = path.resolve(__dirname, '..', 'target', 'deploy', 'example.so');
 

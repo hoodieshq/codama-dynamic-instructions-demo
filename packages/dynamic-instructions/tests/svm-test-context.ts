@@ -71,6 +71,9 @@ export class SvmTestContext {
     createFundedAccount(lamports: bigint = BigInt(10e9)): Address {
         const addr = this.createAccount();
         const keypair = this.accounts.get(addr);
+        if (!keypair) {
+            throw new Error(`Account ${addr} not found after createAccount`);
+        }
         this.svm.airdrop(keypair.publicKey, lamports);
         return addr;
     }
@@ -123,7 +126,7 @@ export class SvmTestContext {
             owner: address(accountInfo.owner.toBase58()),
             data: accountInfo.data,
             executable: accountInfo.executable,
-            rentEpoch: accountInfo.rentEpoch !== undefined ? BigInt(accountInfo.rentEpoch) : undefined,
+            ...(accountInfo.rentEpoch !== undefined && { rentEpoch: BigInt(accountInfo.rentEpoch) }),
         };
     }
 
@@ -152,7 +155,9 @@ export class SvmTestContext {
 
         const legacyIx = toLegacyTransactionInstruction(instruction);
         const transaction = new web3.Transaction().add(legacyIx);
-        transaction.feePayer = keypairs[0].publicKey;
+        const feePayer = keypairs[0];
+        if (!feePayer) throw new Error('No signers');
+        transaction.feePayer = feePayer.publicKey;
         transaction.recentBlockhash = this.svm.latestBlockhash();
         transaction.sign(...keypairs);
 
@@ -182,7 +187,9 @@ export class SvmTestContext {
             transaction.add(legacyIx);
         }
 
-        transaction.feePayer = keypairs[0].publicKey;
+        const feePayer = keypairs[0];
+        if (!feePayer) throw new Error('No signers');
+        transaction.feePayer = feePayer.publicKey;
         transaction.recentBlockhash = this.svm.latestBlockhash();
         transaction.sign(...keypairs);
 

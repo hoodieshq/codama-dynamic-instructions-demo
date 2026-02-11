@@ -50,7 +50,7 @@ export async function derivePDA(
         }
 
         throw new AccountError(
-            `PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as unknown as any)?.kind}`
+            `PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as { kind?: string }).kind}`
         );
     });
 
@@ -67,9 +67,11 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
             throw new AccountError(`Linked PDA node not found: ${pdaDefaultValue.pda.name}`);
         }
         return linkedPda;
-    } else if (isNode(pdaDefaultValue.pda, 'pdaNode')) {
+    }
+    if (isNode(pdaDefaultValue.pda, 'pdaNode')) {
         return pdaDefaultValue.pda;
     }
+    throw new AccountError(`Unsupported PDA node kind: ${(pdaDefaultValue.pda as { kind: string }).kind}`);
 }
 
 function resolveVariablePdaSeed(
