@@ -4,15 +4,15 @@ A visitor-based library that builds Solana program instructions at runtime from 
 
 ## Prerequisites
 
-- **Node.js** ≥ 20.18 (project uses `pnpm@10.15.1`)
-- **pnpm** — install: `npm install -g pnpm` or use [corepack](https://nodejs.org/api/corepack.html): `corepack enable && corepack prepare pnpm@10.15.1 --activate`
+- **Node.js** — see [package.json](./package.json) `engines.node`
+- **pnpm** — see [package.json](./package.json) `packageManager`; install: `npm install -g pnpm` or use [corepack](https://nodejs.org/api/corepack.html): `corepack enable && corepack prepare pnpm@<version> --activate` (version in [package.json](./package.json))
 
 To run the full test suite (including Anchor E2E tests):
 
 - **Rust** (stable)
-- **Solana CLI** (e.g. 2.3.x; [install](https://docs.solana.com/cli/install-solana-cli-tools))
-- **Anchor CLI** 0.32.1 — e.g. via [AVM](https://www.anchor-lang.com/docs/installation):  
-  `cargo install --git https://github.com/coral-xyz/anchor avm --locked` then `avm install 0.32.1 && avm use 0.32.1`
+- **Solana CLI** — [install](https://docs.solana.com/cli/install-solana-cli-tools); use a version compatible with Anchor (see [Anchor installation](https://www.anchor-lang.com/docs/installation))
+- **Anchor CLI** — see [tests/anchor/programs/example/Cargo.toml](./packages/dynamic-instructions/tests/anchor/programs/example/Cargo.toml) `anchor-lang`; install via [AVM](https://www.anchor-lang.com/docs/installation):  
+  `cargo install --git https://github.com/coral-xyz/anchor avm --locked` then `avm install <version> && avm use <version>` (version in Cargo.toml)
 
 ## Getting started
 
@@ -97,8 +97,8 @@ cd packages/dynamic-instructions && pnpm test:types
 Generate strongly-typed clients from Codama IDLs:
 
 ```bash
-# Generate type-safe program client types
-pnpm generate-program-types
+# Generate type-safe program client types (from repo root)
+pnpm --filter @codama-monorepo-test/dynamic-instructions generate-program-types
 ```
 
 ```typescript
@@ -126,7 +126,7 @@ const ix = await client.methods
 - ✅ Generated from your IDL
 
 **Documentation:**
-- [tests/anchor/tests/strongly-typed-demo.ts](./packages/dynamic-instructions/tests/anchor/tests/strongly-typed-demo.ts) - Working examples
+- [tests/anchor/tests/idl.spec.ts](./packages/dynamic-instructions/tests/anchor/tests/idl.spec.ts) - Working examples
 
 ## Project structure
 
