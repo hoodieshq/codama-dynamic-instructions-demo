@@ -3,114 +3,121 @@ import type { Address } from '@solana/addresses';
 import { address, getAddressEncoder } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import { getBase16Codec, getBase58Codec, getBase64Codec, getBooleanCodec, getUtf8Codec } from '@solana/codecs';
-import type { Visitor } from 'codama';
 import type {
     AccountValueNode,
     ArgumentValueNode,
     BooleanValueNode,
     BytesValueNode,
-    IdentityValueNode,
-    InstructionNode,
     NumberValueNode,
-    PayerValueNode,
     PublicKeyValueNode,
-    RootNode,
     StringValueNode,
+    Visitor,
 } from 'codama';
-import type { BytesEncoding } from 'codama';
+import type { InstructionNode, RootNode } from 'codama';
 
+import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
+import { detectCircularDependency } from '../../shared/util';
 
 type PdaSeedValueVisitorContext = {
     accountsInput?: AccountsInput;
     argumentsInput?: ArgumentsInput;
-    ix: InstructionNode;
+    ixNode: InstructionNode;
     programId: Address;
+    resolutionPath?: ResolutionPath;
     root: RootNode;
 };
 
 /**
  * Visitor used to resolve PDA seed *values* to raw bytes.
- *
+ * Supports recursive resolution of dependent PDAs (accounts that are themselves auto-derived PDAs).
  * This is used for both:
  * - Variable seeds (e.g. seeds based on instruction accounts/arguments), and
  * - Constant seeds (e.g. bytes/string/programId/publicKey constants).
- *
- * The goal is to centralize seed encoding logic and avoid switch-cases.
+ * Doc: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/PdaSeedValueNode.md
+ * Visit AccountValueNode, ArgumentValueNode, ValueNode, ProgramIdValueNode
  */
-export function createPdaSeedValueVisitor(
-    ctx: PdaSeedValueVisitorContext
-): Visitor<
-    ReadonlyUint8Array,
-    'accountValueNode' | 'argumentValueNode' | 'booleanValueNode' | 'bytesValueNode' | 'identityValueNode' | 'numberValueNode' | 'payerValueNode' | 'programIdValueNode' | 'publicKeyValueNode' | 'stringValueNode'
+export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visitor<
+    Promise<ReadonlyUint8Array>,
+    | 'accountValueNode'
+    | 'argumentValueNode'
+    | 'booleanValueNode'
+    | 'bytesValueNode'
+    | 'numberValueNode'
+    | 'programIdValueNode'
+    | 'publicKeyValueNode'
+    | 'stringValueNode'
+    // TODO: consider supporting the rest of ValueNodes: [ArrayValueNode, ConstantValueNode, EnumValueNode, MapValueNode, NoneValueNode, SetValueNode, SomeValueNode, StructValueNode, TupleValueNode]
 > {
-    const { root, ix, programId } = ctx;
+    const { root, ixNode, programId } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
+    const resolutionPath = ctx.resolutionPath ?? [];
 
     return {
-        // Contextual seed values.
-        visitAccountValue: (node: AccountValueNode) => {
-            // FIXME: dependent account can be another auto-derived PDA account.
-            return getAccountAddressFromInput(node, accountsInput);
+        // Contextual seed values
+        visitAccountValue: async (node: AccountValueNode) => {
+            const providedAddress = accountsInput[node.name];
+            if (providedAddress !== undefined && providedAddress !== null) {
+                return getAddressEncoder().encode(toAddress(providedAddress));
+            }
+
+            detectCircularDependency(node.name, resolutionPath);
+
+            const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
+            if (!referencedIxAccountNode) {
+                throw new AccountError(`PDA seed references unknown account: ${node.name}`);
+            }
+
+            const resolvedAddress: Address | null = await resolveAccountAddress(
+                root,
+                ixNode,
+                referencedIxAccountNode,
+                argumentsInput,
+                accountsInput,
+                [...resolutionPath, node.name],
+            );
+
+            if (resolvedAddress === null) {
+                throw new AccountError(
+                    `Cannot resolve dependent account for PDA seed ${node.name} in ${ixNode.name} instruction`,
+                );
+            }
+
+            return getAddressEncoder().encode(resolvedAddress);
         },
         visitArgumentValue: (node: ArgumentValueNode) => {
-            const ixArgumentNode = ix.arguments.find(arg => arg.name === node.name);
+            const ixArgumentNode = ixNode.arguments.find(arg => arg.name === node.name);
             if (!ixArgumentNode) {
                 throw new AccountError(`Missing instruction argument node for PDA seed: ${node.name}`);
             }
-            const codec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
-            const argInput = argumentsInput[node.name];
-            return codec.encode(argInput);
+            const codec = getNodeCodec([root, root.program, ixNode, ixArgumentNode]);
+            const argInput = (argumentsInput as Record<string, unknown>)[node.name];
+            return Promise.resolve(codec.encode(argInput));
         },
 
-        visitBooleanValue: (node: BooleanValueNode) => getBooleanCodec().encode(node.boolean),
+        visitBooleanValue: (node: BooleanValueNode) => Promise.resolve(getBooleanCodec().encode(node.boolean)),
 
         visitBytesValue: (node: BytesValueNode) =>
-            getCodecFromBytesEncoding(node.encoding as BytesEncoding).encode(node.data),
+            Promise.resolve(getCodecFromBytesEncoding(node.encoding).encode(node.data)),
 
-        // Keep behavior compatible with existing implementation in `pda.ts`.
-        visitNumberValue: (node: NumberValueNode) => new Uint8Array([node.number]),
+        visitNumberValue: (node: NumberValueNode) => Promise.resolve(new Uint8Array([node.number])),
 
         // Constant / standalone value nodes.
-        visitProgramIdValue: () => getAddressEncoder().encode(programId),
+        visitProgramIdValue: () => Promise.resolve(getAddressEncoder().encode(programId)),
+
         visitPublicKeyValue: (node: PublicKeyValueNode) =>
-            getAddressEncoder().encode(address(node.publicKey)),
-        visitStringValue: (node: StringValueNode) => getUtf8Codec().encode(node.string),
+            Promise.resolve(getAddressEncoder().encode(address(node.publicKey))),
 
-        visitIdentityValue: (node: IdentityValueNode) => {
-            return getAccountAddressFromInput(node, accountsInput);
-        },
-        visitPayerValue: (node: PayerValueNode) => {
-            return getAccountAddressFromInput(node, accountsInput);
-        },
+        visitStringValue: (node: StringValueNode) => Promise.resolve(getUtf8Codec().encode(node.string)),
     };
-    
-}
-
-function getAccountAddressFromInput(
-    node: AccountValueNode | IdentityValueNode | PayerValueNode,
-    accountsInput: PdaSeedValueVisitorContext['accountsInput']
-) {
-    const nodeWithName = node as { name?: string };
-    const name = nodeWithName.name;
-    if (typeof name !== 'string') {
-        throw new AccountError(
-            'PDA seed identity/payer value node must have an account name in this context'
-        );
-    }
-    const input = accountsInput?.[name];
-    if (input === undefined || input === null || accountsInput === undefined) {
-        throw new AccountError(`Missing required account for PDA seed: ${name}`);
-    }
-    return getAddressEncoder().encode(toAddress(input));
 }
 
 // TODO: check if this can be replaced
 // https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L356
-function getCodecFromBytesEncoding(encoding: BytesEncoding) {
+function getCodecFromBytesEncoding(encoding: string) {
     switch (encoding) {
         case 'base16':
             return getBase16Codec();

@@ -5,7 +5,7 @@ import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
 import { toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
-import type { AccountsInput, ArgumentsInput } from '../../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../../shared/types';
 import { resolveAccountAddress } from './resolve-account-address';
 
 type ResolvedAccount = {
@@ -25,7 +25,7 @@ export async function resolveAccountMeta(
     root: RootNode,
     ixNode: InstructionNode,
     argumentsInput: ArgumentsInput = {},
-    accountsInput: AccountsInput = {}
+    accountsInput: AccountsInput = {},
 ): Promise<AccountMeta[]> {
     const resolvedAccounts = await Promise.all(
         ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
@@ -37,6 +37,7 @@ export async function resolveAccountMeta(
                 throw new AccountError(`Account not provided: ${ixAccountNode.name}`);
             }
 
+            const initialResolutionPath: ResolutionPath = [];
             let resolvedAccountAddress: Address | null = null;
             if (!isAccountProvided) {
                 resolvedAccountAddress = await resolveAccountAddress(
@@ -44,7 +45,8 @@ export async function resolveAccountMeta(
                     ixNode,
                     ixAccountNode,
                     argumentsInput,
-                    accountsInput
+                    accountsInput,
+                    initialResolutionPath,
                 );
             }
 
@@ -55,7 +57,7 @@ export async function resolveAccountMeta(
                 optional: Boolean(ixAccountNode.isOptional),
                 role: getAccountRole(ixAccountNode),
             };
-        })
+        }),
     );
 
     // FIXME: Handle remaining accounts:

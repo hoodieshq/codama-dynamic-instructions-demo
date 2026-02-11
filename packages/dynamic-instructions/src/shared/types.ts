@@ -6,6 +6,9 @@ import type { AddressInput } from './address';
 export type AccountsInput = Partial<Record<string, AddressInput | null>>;
 export type ArgumentsInput = Partial<Record<string, unknown>>;
 
+// Array of node names being resolved to detect circular dependencies
+export type ResolutionPath = readonly string[];
+
 type TBuildIxFn<TInstruction> = (
     argumentsInput?: ArgumentsInput,
     accountsInput?: AccountsInput

@@ -10,7 +10,7 @@ A visitor-based library that builds Solana program instructions at runtime from 
 To run the full test suite (including Anchor E2E tests):
 
 - **Rust** (stable)
-- **Solana CLI** — [install](https://docs.solana.com/cli/install-solana-cli-tools); use a version compatible with Anchor (see [Anchor installation](https://www.anchor-lang.com/docs/installation))
+- **Solana CLI** — [install](https://docs.solana.com/cli/install-solana-cli-tools); Recommended version `^3.1`
 - **Anchor CLI** — see [tests/anchor/programs/example/Cargo.toml](./packages/dynamic-instructions/tests/anchor/programs/example/Cargo.toml) `anchor-lang`; install via [AVM](https://www.anchor-lang.com/docs/installation):  
   `cargo install --git https://github.com/coral-xyz/anchor avm --locked` then `avm install <version> && avm use <version>` (version in Cargo.toml)
 
@@ -29,12 +29,12 @@ pnpm build
 
 ## Development
 
-| Command | Description |
-|--------|-------------|
-| `pnpm build` | Build all packages (Turbo). |
-| `pnpm test` | Run full test pipeline (Anchor build, IDL generation, typecheck, build, tree-shake check, unit tests). |
-| `pnpm lint` | Lint all packages. |
-| `pnpm lint:fix` | Fix lint and format with Prettier. |
+| Command         | Description                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------ |
+| `pnpm build`    | Build all packages (Turbo).                                                                            |
+| `pnpm test`     | Run full test pipeline (Anchor build, IDL generation, typecheck, build, tree-shake check, unit tests). |
+| `pnpm lint`     | Lint all packages.                                                                                     |
+| `pnpm lint:fix` | Fix lint and format with Prettier.                                                                     |
 
 ### Working on the library only
 
@@ -117,18 +117,20 @@ const client = createProgramClient<ExampleProgramClient>(idl);
 
 // Get full type safety!
 const ix = await client.methods
-  .yourInstruction({ arg1: 42 })      // ✓ Typed arguments
-  .accounts({ account1: address })    // ✓ Typed accounts
-  .instruction();
+    .yourInstruction({ arg1: 42 }) // ✓ Typed arguments
+    .accounts({ account1: address }) // ✓ Typed accounts
+    .instruction();
 ```
 
 **Benefits:**
+
 - ✅ Full type safety - catches errors at compile time
 - ✅ Works with runtime-loaded IDLs
 - ✅ Autocomplete for methods, arguments, and accounts
 - ✅ Generated from your IDL
 
 **Documentation:**
+
 - [tests/anchor/tests/idl.spec.ts](./packages/dynamic-instructions/tests/anchor/tests/idl.spec.ts) - Working examples
 
 ## Project structure
