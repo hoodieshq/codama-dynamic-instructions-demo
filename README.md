@@ -75,7 +75,8 @@ This will:
 
 1. Run `anchor build` in `packages/dynamic-instructions/tests/anchor/`
 2. Generate `tests/idls/example-idl.json` from the Anchor IDL
-3. Typecheck, build the library, run tree-shakability checks, then run unit and E2E tests (LiteSVM)
+3. Generate client type files in `tests/generated/*-types.ts` used by the tests
+4. Typecheck, build the library, run tree-shakability checks, then run unit and E2E tests (LiteSVM)
 
 ### Lint / typecheck without full test
 
