@@ -69,7 +69,7 @@ describe('anchor-example', () => {
             expect(decoded1.optionalInput).eq(optionalAddress);
 
             const ix2 = await programClient.methods
-                .updateOptionalInput({ input: 45, optionalInput: null })
+                .updateOptionalInput({ input: 45 })
                 .accounts({ signer })
                 .instruction();
 

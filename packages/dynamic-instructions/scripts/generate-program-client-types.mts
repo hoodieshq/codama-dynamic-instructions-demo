@@ -143,7 +143,10 @@ export type MethodBuilder<TAccounts> = {
             const argsInterfaceName = `${typeName}Args`;
             output += `export type ${argsInterfaceName} = {\n`;
             for (const arg of args) {
-                output += `    ${arg.name}: ${codamaTypeToTS(arg.type, definedTypes)};\n`;
+                const tsType = codamaTypeToTS(arg.type, definedTypes);
+                const isOptional = arg.type.kind === 'optionTypeNode';
+                const sep = isOptional ? '?:' : ':';
+                output += `    ${arg.name}${sep} ${tsType};\n`;
             }
             output += '};\n\n';
             argsRef = argsInterfaceName;
@@ -213,7 +216,7 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
         case 'booleanTypeNode':
             return 'boolean';
         case 'optionTypeNode':
-            return `${codamaTypeToTS(type.item, definedTypes)} | null | undefined`;
+            return `${codamaTypeToTS(type.item, definedTypes)} | null`;
         case 'remainderOptionTypeNode':
         case 'zeroableOptionTypeNode':
             return `${codamaTypeToTS(type.item, definedTypes)} | null`;
