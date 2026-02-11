@@ -21,6 +21,9 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -29,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
 
       - name: Compile JS and types
         run: pnpm run build
@@ -59,6 +65,9 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -67,6 +76,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
 
       - name: Build and run tests
         run: pnpm test

@@ -1,79 +1,79 @@
 {
-    "name": "@codama-monorepo-test/dynamic-instructions",
-    "version": "0.0.1",
-    "private": true,
-    "description": "Tool to dynamically build instructions based on Codama IDLs",
-    "exports": {
-        "types": "./dist/types/index.d.ts",
-        "react-native": "./dist/index.react-native.mjs",
-        "browser": {
-            "import": "./dist/index.browser.mjs",
-            "require": "./dist/index.browser.cjs"
-        },
-        "node": {
-            "import": "./dist/index.node.mjs",
-            "require": "./dist/index.node.cjs"
-        }
-    },
-    "browser": {
-        "./dist/index.node.cjs": "./dist/index.browser.cjs",
-        "./dist/index.node.mjs": "./dist/index.browser.mjs"
-    },
-    "main": "./dist/index.node.cjs",
-    "module": "./dist/index.node.mjs",
-    "react-native": "./dist/index.react-native.mjs",
+  "name": "@codama-monorepo-test/dynamic-instructions",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tool to dynamically build instructions based on Codama IDLs",
+  "exports": {
     "types": "./dist/types/index.d.ts",
-    "type": "commonjs",
-    "files": [
-        "./dist/types",
-        "./dist/index.*"
-    ],
-    "sideEffects": false,
-    "keywords": [
-        "solana",
-        "framework",
-        "standard",
-        "specifications",
-        "parsers"
-    ],
-    "scripts": {
-        "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
-        "dev": "vitest --project node",
-        "lint": "eslint . && prettier --check .",
-        "lint:fix": "eslint --fix . && prettier --write .",
-        "test": "pnpm test:setup && pnpm test:types && pnpm build && pnpm test:treeshakability && pnpm test:unit",
-        "test:setup": "pnpm test:anchor:build && pnpm generate-idl-from-anchor && pnpm generate-program-types",
-        "test:anchor:build": "cd tests/anchor && anchor build",
-        "test:treeshakability": "for file in dist/index.*.mjs; do test -f \"$file\" || (echo \"Missing build output: $file\" && exit 1); agadoo \"$file\"; done",
-        "test:types": "tsc --noEmit",
-        "test:unit": "vitest run --pool=threads",
-        "generate-idl-from-anchor": "node --experimental-transform-types ./scripts/generate-idl-from-anchor.mts",
-        "generate-program-types": "node --experimental-transform-types ./scripts/generate-program-client-types.mts"
+    "react-native": "./dist/index.react-native.mjs",
+    "browser": {
+      "import": "./dist/index.browser.mjs",
+      "require": "./dist/index.browser.cjs"
     },
-    "dependencies": {
-        "@codama/dynamic-codecs": "^1.1.23",
-        "@codama/dynamic-parsers": "^1.1.23",
-        "@codama/nodes": "^1.3.7",
-        "@codama/nodes-from-anchor": "^1.2.9",
-        "@codama/renderers-core": "^1.2.2",
-        "@codama/renderers-js": "^1.4.2",
-        "@codama/renderers-rust": "^1.2.7",
-        "@codama/visitors": "^1.3.7",
-        "@codama/visitors-core": "^1.3.7",
-        "@solana/addresses": "^5.1.0",
-        "@solana/codecs": "^5.1.0",
-        "@solana/instructions": "^5.1.0",
-        "@solana/kit": "^5.1.0",
-        "@solana/web3.js": "^1.98.4",
-        "codama": "^1.3.7",
-        "superstruct": "^2.0.2"
-    },
-    "devDependencies": {
-        "@types/bn.js": "^5.1.0",
-        "litesvm": "0.4.0"
-    },
-    "browserslist": [
-        "supports bigint and not dead",
-        "maintained node versions"
-    ]
+    "node": {
+      "import": "./dist/index.node.mjs",
+      "require": "./dist/index.node.cjs"
+    }
+  },
+  "browser": {
+    "./dist/index.node.cjs": "./dist/index.browser.cjs",
+    "./dist/index.node.mjs": "./dist/index.browser.mjs"
+  },
+  "main": "./dist/index.node.cjs",
+  "module": "./dist/index.node.mjs",
+  "react-native": "./dist/index.react-native.mjs",
+  "types": "./dist/types/index.d.ts",
+  "type": "commonjs",
+  "files": [
+    "./dist/types",
+    "./dist/index.*"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "solana",
+    "framework",
+    "standard",
+    "specifications",
+    "parsers"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
+    "dev": "vitest --project node",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint --fix . && prettier --write .",
+    "test": "pnpm test:setup && pnpm test:types && pnpm build && pnpm test:treeshakability && pnpm test:unit",
+    "test:setup": "pnpm test:anchor:build && pnpm generate-idl-from-anchor && pnpm generate-program-types",
+    "test:anchor:build": "cd tests/anchor && anchor build",
+    "test:treeshakability": "for file in dist/index.*.mjs; do test -f \"$file\" || (echo \"Missing build output: $file\" && exit 1); agadoo \"$file\"; done",
+    "test:types": "tsc --noEmit",
+    "test:unit": "vitest run --pool=threads",
+    "generate-idl-from-anchor": "node --experimental-transform-types ./scripts/generate-idl-from-anchor.mts",
+    "generate-program-types": "node --experimental-transform-types ./scripts/generate-program-client-types.mts"
+  },
+  "dependencies": {
+    "@codama/dynamic-codecs": "1.1.23",
+    "@codama/dynamic-parsers": "1.1.23",
+    "@codama/nodes": "1.3.7",
+    "@codama/nodes-from-anchor": "1.2.9",
+    "@codama/renderers-core": "1.2.2",
+    "@codama/renderers-js": "1.4.3",
+    "@codama/renderers-rust": "1.2.7",
+    "@codama/visitors": "1.3.7",
+    "@codama/visitors-core": "1.3.7",
+    "@solana/addresses": "5.1.0",
+    "@solana/codecs": "5.1.0",
+    "@solana/instructions": "5.1.0",
+    "@solana/kit": "5.1.0",
+    "@solana/web3.js": "1.98.4",
+    "codama": "1.3.7",
+    "superstruct": "2.0.2"
+  },
+  "devDependencies": {
+    "@types/bn.js": "5.2.0",
+    "litesvm": "0.4.0"
+  },
+  "browserslist": [
+    "supports bigint and not dead",
+    "maintained node versions"
+  ]
 }

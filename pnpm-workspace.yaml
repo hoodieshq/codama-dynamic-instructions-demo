@@ -1,2 +1,16 @@
 packages:
   - "packages/*"
+
+# Fix CVE-2025-5889 (ReDoS) in @isaacs/brace-expansion <= 5.0.0
+overrides:
+  "@isaacs/brace-expansion": "5.0.1"
+
+# Only allow packages released at least 5 days ago (mitigates supply chain attacks)
+minimumReleaseAge: 7200
+# TODO: Remove exclusions once these packages age past the minimumReleaseAge threshold.
+# These were excluded because the currently resolved versions were published recently
+# and would block installation.
+minimumReleaseAgeExclude:
+  - "@isaacs/brace-expansion"
+  - "@isaacs/balanced-match"
+  - espree
