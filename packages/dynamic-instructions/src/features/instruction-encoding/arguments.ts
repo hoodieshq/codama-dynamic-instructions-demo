@@ -99,5 +99,5 @@ function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: Argum
 }
 
 function isIxArgumentOmitted(node: InstructionArgumentNode) {
-    return node.defaultValueStrategy === 'omitted' && node.defaultValue;
+    return node.defaultValueStrategy === 'omitted';
 }
