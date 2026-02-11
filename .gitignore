@@ -12,3 +12,5 @@ clients
 
 # generated types
 **/generated/
+
+.pnpm-store
