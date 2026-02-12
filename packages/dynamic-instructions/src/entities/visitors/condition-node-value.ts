@@ -9,7 +9,7 @@ type ConditionNodeValueVisitorContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
-    resolutionPath: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
 
@@ -31,14 +31,15 @@ export function createConditionNodeValueVisitor(
                 );
             }
 
-            const conditionalAddress = await resolveAccountAddress(
-                root,
-                ixNode,
-                ixAccountNode,
-                argumentsInput,
+            const conditionalAddress = await resolveAccountAddress({
+                accountAddressInput: accountsInput?.[ixAccountNode.name],
                 accountsInput,
+                argumentsInput,
+                ixAccountNode,
+                ixNode,
                 resolutionPath,
-            );
+                root,
+            });
             return conditionalAddress;
         },
 

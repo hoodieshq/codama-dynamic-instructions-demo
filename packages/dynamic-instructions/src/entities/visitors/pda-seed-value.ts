@@ -26,7 +26,7 @@ type PdaSeedValueVisitorContext = {
     argumentsInput?: ArgumentsInput;
     ixNode: InstructionNode;
     programId: Address;
-    resolutionPath?: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
 
@@ -71,14 +71,15 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
                 throw new AccountError(`PDA seed references unknown account: ${node.name}`);
             }
 
-            const resolvedAddress: Address | null = await resolveAccountAddress(
-                root,
-                ixNode,
-                referencedIxAccountNode,
-                argumentsInput,
+            const resolvedAddress: Address | null = await resolveAccountAddress({
+                accountAddressInput: providedAddress,
                 accountsInput,
-                [...resolutionPath, node.name],
-            );
+                argumentsInput,
+                ixAccountNode: referencedIxAccountNode,
+                ixNode,
+                resolutionPath: [...resolutionPath, node.name],
+                root,
+            });
 
             if (resolvedAddress === null) {
                 throw new AccountError(

@@ -40,14 +40,15 @@ export async function resolveAccountMeta(
             const initialResolutionPath: ResolutionPath = [];
             let resolvedAccountAddress: Address | null = null;
             if (!isAccountProvided) {
-                resolvedAccountAddress = await resolveAccountAddress(
-                    root,
-                    ixNode,
-                    ixAccountNode,
-                    argumentsInput,
+                resolvedAccountAddress = await resolveAccountAddress({
+                    accountAddressInput,
                     accountsInput,
-                    initialResolutionPath,
-                );
+                    argumentsInput,
+                    ixAccountNode,
+                    ixNode,
+                    resolutionPath: initialResolutionPath,
+                    root,
+                });
             }
 
             return {

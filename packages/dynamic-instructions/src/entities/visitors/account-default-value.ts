@@ -203,7 +203,7 @@ type ConditionalValueNodeConditionContext = {
     conditionalValueNode: ConditionalValueNode;
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
-    resolutionPath: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
 /**
@@ -230,7 +230,7 @@ export async function resolveConditionalValueNodeCondition({
         accountsInput,
         argumentsInput,
         ixNode,
-        resolutionPath,
+        resolutionPath: resolutionPath ?? [],
         root,
     });
     const providedValue = await visitOrElse(condition, conditionVisitor, condNode => {

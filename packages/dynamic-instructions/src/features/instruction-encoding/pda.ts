@@ -23,7 +23,7 @@ type PdaDerivationContext = {
     argumentsInput: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
-    resolutionPath: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
 
@@ -33,7 +33,7 @@ export async function derivePDA({
     ixAccountNode,
     argumentsInput = {},
     accountsInput = {},
-    resolutionPath = [],
+    resolutionPath,
 }: PdaDerivationContext): Promise<ProgramDerivedAddress | null> {
     const pdaDefaultValue = ixAccountNode.defaultValue as PdaValueNode | undefined;
     if (!pdaDefaultValue || !isNode(pdaDefaultValue, 'pdaValueNode')) {
@@ -106,17 +106,17 @@ type ResolvePdaSeedContext = {
     argumentsInput?: ArgumentsInput;
     ixNode: InstructionNode;
     programId: Address;
-    resolutionPath: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
     seedNode: VariablePdaSeedNode;
     variableSeedValueNode: PdaSeedValueNode;
 };
-async function resolveVariablePdaSeed({
+function resolveVariablePdaSeed({
     accountsInput = {},
     argumentsInput = {},
     ixNode,
     programId,
-    resolutionPath = [],
+    resolutionPath,
     root,
     seedNode,
     variableSeedValueNode,
@@ -131,11 +131,11 @@ async function resolveVariablePdaSeed({
         argumentsInput,
         ixNode,
         programId,
-        resolutionPath,
+        resolutionPath: resolutionPath ?? [],
         root,
     });
 
-    return await visitOrElse(variableSeedValueNode.value, visitor, node => {
+    return visitOrElse(variableSeedValueNode.value, visitor, node => {
         throw new AccountError(`Unsupported variable PDA seed value node: ${node.kind}`);
     });
 }
@@ -143,14 +143,14 @@ async function resolveVariablePdaSeed({
 type ResolveConstantPdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
-    resolutionPath: ResolutionPath;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
     seedNode: RegisteredPdaSeedNode;
 };
-async function resolveConstantPdaSeed({
+function resolveConstantPdaSeed({
     ixNode,
     programId,
-    resolutionPath = [],
+    resolutionPath,
     root,
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
@@ -163,7 +163,7 @@ async function resolveConstantPdaSeed({
         resolutionPath,
         root,
     });
-    return await visitOrElse(seedNode.value, visitor, node => {
+    return visitOrElse(seedNode.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
     });
 }
