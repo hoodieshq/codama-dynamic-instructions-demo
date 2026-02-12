@@ -31,7 +31,7 @@ export function encodeInstructionArguments(
                     `Not supported encoding for ${ixArgumentNode.name} argument of "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
                 );
             });
-        } else if (ixArgumentNode.type.kind === 'optionTypeNode' && (input === null || input === undefined)) {
+        } else if (isOptionalArgument(ixArgumentNode, input)) {
             // optional null/undefined argument
             encodedValue = codec.encode(null);
         } else {
@@ -54,6 +54,13 @@ export function encodeInstructionArguments(
         offset += chunk.length;
     }
     return out;
+}
+
+function isOptionalArgument(ixArgumentNode: InstructionArgumentNode, input: unknown) {
+    return (
+        ['optionTypeNode', 'remainderOptionTypeNode'].includes(ixArgumentNode.type.kind) &&
+        (input === null || input === undefined)
+    );
 }
 
 export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {

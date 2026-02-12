@@ -30,6 +30,9 @@ export function createIxArgumentsValidator(
     definedTypes: DefinedTypeNode[],
 ): StructUnknown {
     const shape = ixArgumentNodes.reduce<Record<string, StructUnknown>>((acc, argumentNode, index) => {
+        if (!argumentNode.type) {
+            throw new Error(`Argument ${argumentNode.name} of instruction ${ixNodeName} does not have a type`);
+        }
         acc[argumentNode.name] = createValidatorForTypeNode(
             `${ixNodeName}_${argumentNode.name}_${index}`,
             argumentNode.type,
@@ -40,7 +43,60 @@ export function createIxArgumentsValidator(
     return object(shape) as StructUnknown;
 }
 
+/**
+ * Creates a permissive validator for remainderOptionTypeNode items.
+ * This is needed because remainder options have special encoding semantics:
+ * - None is encoded as absence of bytes (no data)
+ * - Some(value) is encoded as the value itself
+ * For types like fixedSizeTypeNode<stringTypeNode>, the codec handles padding
+ */
+function createValidatorForRemainderOptionTypeItem(
+    nodeName: string,
+    itemNode: TypeNode,
+    definedTypes: DefinedTypeNode[],
+): StructUnknown {
+    if (itemNode.kind === 'fixedSizeTypeNode' && itemNode.type.kind === 'stringTypeNode') {
+        // For fixed-size strings in remainder options, accept any string
+        // The codec will handle padding/truncation
+        return StringValidatorForFixedSize(itemNode.size);
+    }
+
+    // Check if this is a definedTypeLinkNode that resolves to fixedSizeTypeNode<stringTypeNode>
+    if (itemNode.kind === 'definedTypeLinkNode') {
+        const definedType = definedTypes.find(d => d.name === itemNode.name);
+        if (definedType?.type.kind === 'fixedSizeTypeNode' && definedType.type.type.kind === 'stringTypeNode') {
+            // Validate as permissive string for fixed-size string types
+            return StringValidatorForFixedSize(definedType.type.size);
+        }
+    }
+
+    // For other types, use normal validation
+    return createValidatorForTypeNode(nodeName, itemNode, definedTypes);
+}
+
+/**
+ * Validator for strings that will be encoded as fixed-size.
+ * More permissive than strict size checking because the codec handles padding.
+ */
+function StringValidatorForFixedSize(maxSize: number): StructUnknown {
+    return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
+        if (typeof value !== 'string') return false;
+        // Accept any string that can reasonably fit in the fixed size
+        // The codec will handle padding short strings with zeros
+        // We allow up to maxSize bytes (UTF-8 encoded)
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(value);
+        // Allow strings up to the maxSize (codec will pad if shorter)
+        return bytes.length <= maxSize;
+    }) as StructUnknown;
+}
+
 function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTypes: DefinedTypeNode[]): StructUnknown {
+    if (!node) {
+        throw new Error(
+            `Node ${nodeName} is not defined. ${definedTypes.length} defined types were provided: ${definedTypes.map(t => t.name).join(', ')}`,
+        );
+    }
     switch (node.kind) {
         case 'arrayTypeNode': {
             return arrayValidator(`${nodeName}_array`, node, definedTypes);
@@ -133,22 +189,27 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             const SomeValueValidator = createValidatorForTypeNode(`${nodeName}_option_item`, node.item, definedTypes);
             return OptionValueValidator(`${nodeName}_option`, SomeValueValidator);
         }
+        case 'remainderOptionTypeNode': {
+            // RemainderOptionTypeNode encodes None as absence of bytes (not as a prefix byte)
+            const innerValidator = createValidatorForRemainderOptionTypeItem(
+                `${nodeName}_remainder_option_item`,
+                node.item,
+                definedTypes,
+            );
+            return OptionValueValidator(`${nodeName}_remainder_option`, innerValidator);
+        }
         // TODO: check and handle later
         // DOCS: TypeNode https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/README.md
-        case 'amountTypeNode': // unit with decimals
-        case 'solAmountTypeNode': // equivalent to amountTypeNode with 9 decimals
         case 'hiddenPrefixTypeNode':
         case 'hiddenSuffixTypeNode':
-        case 'remainderOptionTypeNode':
         case 'sentinelTypeNode':
         case 'postOffsetTypeNode':
         case 'preOffsetTypeNode':
         case 'sizePrefixTypeNode': {
-            // Size-prefixed type (e.g. length-prefixed string); validate the inner type only
-            // Cast to access the type property which exists on sizePrefixTypeNode
-            const sizePrefixNode = node as TypeNode & { type: TypeNode };
-            return createValidatorForTypeNode(`${nodeName}_size_prefix`, sizePrefixNode.type, definedTypes);
+            return createValidatorForTypeNode(`${nodeName}_size_prefix`, node.type, definedTypes);
         }
+        case 'amountTypeNode': // unit with decimals
+        case 'solAmountTypeNode': // equivalent to amountTypeNode with 9 decimals
         case 'enumTypeNode':
             throw new Error(`Unsupported argument type: ${nodeName} of type ${node.kind}`);
     }
