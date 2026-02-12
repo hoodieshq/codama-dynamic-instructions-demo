@@ -94,7 +94,10 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
                 throw new AccountError(`Missing instruction argument node for PDA seed: ${node.name}`);
             }
             const codec = getNodeCodec([root, root.program, ixNode, ixArgumentNode]);
-            const argInput = (argumentsInput as Record<string, unknown>)[node.name];
+            const argInput = argumentsInput[node.name];
+            if (argInput === undefined || argInput === null) {
+                throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
+            }
             return Promise.resolve(codec.encode(argInput));
         },
 
