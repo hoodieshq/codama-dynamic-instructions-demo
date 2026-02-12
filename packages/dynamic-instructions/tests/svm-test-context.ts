@@ -46,6 +46,11 @@ export class SvmTestContext {
     private readonly accounts: Map<Address, web3.Keypair>;
     private currentSlot: bigint;
 
+    readonly TOKEN_PROGRAM_ADDRESS = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    readonly ASSOCIATED_TOKEN_PROGRAM_ADDRESS = address('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+    readonly SYSTEM_PROGRAM_ADDRESS = address(web3.SystemProgram.programId.toBase58());
+    readonly SYSVAR_RENT_ADDRESS = address(web3.SYSVAR_RENT_PUBKEY.toBase58());
+
     constructor(config: SvmTestContextConfig = {}) {
         let svm = new LiteSVM();
         if (config.defaultPrograms) {
@@ -163,6 +168,7 @@ export class SvmTestContext {
 
         const result = this.svm.sendTransaction(transaction);
         if (result instanceof FailedTransactionMetadata) {
+            console.error('Transaction failed, logs:\n', result.meta().prettyLogs());
             throw new Error(`Transaction failed: ${result.toString()}`);
         }
     }

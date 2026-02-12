@@ -1,20 +1,15 @@
 import type { Visitor } from 'codama';
-import type {
-    AccountValueNode,
-    ArgumentValueNode,
-    InstructionNode,
-    ResolverValueNode,
-    RootNode,
-} from 'codama';
+import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValueNode, RootNode } from 'codama';
 
 import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
 
 type ConditionNodeValueVisitorContext = {
-    accountsInput?: AccountsInput;
-    argumentsInput?: ArgumentsInput;
+    accountsInput: AccountsInput | undefined;
+    argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
+    resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
 
@@ -23,26 +18,28 @@ type ConditionNodeValueVisitorContext = {
  * Returns the runtime value of the condition (from accounts or arguments).
  */
 export function createConditionNodeValueVisitor(
-    ctx: ConditionNodeValueVisitorContext
+    ctx: ConditionNodeValueVisitorContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
-    const { root, ixNode, argumentsInput, accountsInput } = ctx;
+    const { root, ixNode, argumentsInput, accountsInput, resolutionPath } = ctx;
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
             const ixAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
             if (!ixAccountNode) {
                 throw new AccountError(
-                    `Missing instruction account node for conditionalValueNode condition: ${node.name}`
+                    `Missing instruction account node for conditionalValueNode condition: ${node.name}`,
                 );
             }
 
-            const conditionalAddress = await resolveAccountAddress(
-                root,
-                ixNode,
-                ixAccountNode,
+            const conditionalAddress = await resolveAccountAddress({
+                accountAddressInput: accountsInput?.[ixAccountNode.name],
+                accountsInput,
                 argumentsInput,
-                accountsInput
-            );
+                ixAccountNode,
+                ixNode,
+                resolutionPath,
+                root,
+            });
             return conditionalAddress;
         },
 

@@ -1,14 +1,14 @@
 import path from 'node:path';
 
 import { getNodeCodec } from '@codama/dynamic-codecs';
-import type { Address } from '@solana/addresses';
-import { unwrapOption, type Option } from '@solana/codecs';
+import { type Address } from '@solana/addresses';
+import { type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { createProgramClient } from '../../../src';
-import { loadIdl, SvmTestContext } from '../../test-utils';
 import type { ExampleProgramClient } from '../../generated/example-idl-types';
+import { loadIdl, SvmTestContext } from '../../test-utils';
 
 describe('anchor-example', () => {
     const idl = loadIdl('example-idl.json');
@@ -21,7 +21,7 @@ describe('anchor-example', () => {
     let payer: Address;
 
     beforeEach(() => {
-        ctx = new SvmTestContext();
+        ctx = new SvmTestContext({ defaultPrograms: true });
         ctx.loadProgram(programClient.programAddress, programSoPath);
         payer = ctx.createFundedAccount();
     });
@@ -119,6 +119,138 @@ describe('anchor-example', () => {
                 .instruction();
 
             ctx.sendInstruction(ix, [payer, account]);
+        });
+    });
+
+    test('ExternalProgramsWithPdaIx: should resolve dependent pda and external program addresses', async () => {
+        const mint = ctx.createAccount();
+        const expectedAta = ctx.findProgramAddress(
+            [
+                { type: 'address', value: payer },
+                { type: 'address', value: ctx.TOKEN_PROGRAM_ADDRESS },
+                { type: 'address', value: mint },
+            ],
+            ctx.ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+        );
+
+        const expectedDependentPda = ctx.findProgramAddress(
+            [
+                { type: 'string', value: 'signer_and_ata' },
+                { type: 'address', value: payer },
+                { type: 'address', value: expectedAta },
+            ],
+            programClient.programAddress,
+        );
+
+        const ix = await programClient.methods
+            .externalProgramsWithPda()
+            .accounts({
+                mint,
+                signer: payer,
+            })
+            .instruction();
+
+        expect(ix.accounts).toBeDefined();
+        if (!ix.accounts) throw new Error('Expected instruction accounts to be defined');
+
+        expect(ix.accounts.length).eq(8);
+
+        const expectedAccounts = [
+            [payer, "signer doesn't match"],
+            [mint, "mint doesn't match"],
+            [expectedAta, "token_account doesn't match"],
+            [expectedDependentPda, "dependent_account doesn't match"],
+            [ctx.SYSTEM_PROGRAM_ADDRESS, "system_program doesn't match"],
+            [ctx.TOKEN_PROGRAM_ADDRESS, "token_program doesn't match"],
+            [ctx.ASSOCIATED_TOKEN_PROGRAM_ADDRESS, "associated_token_program doesn't match"],
+            [ctx.SYSVAR_RENT_ADDRESS, "rent_sysvar doesn't match"],
+        ];
+
+        expectedAccounts.forEach((expected, i) => {
+            if (!ix?.accounts?.[i]) {
+                throw new Error(`Expected instruction accounts to be defined at index ${i}`);
+            }
+            expect(ix.accounts[i].address, expected[1]).eq(expected[0]);
+        });
+
+        // Send transaction to verify it executes on-chain
+        ctx.sendInstruction(ix, [payer, mint]);
+    });
+
+    test('FourLevelPdaIx: should resolve four-level dependent PDA', async () => {
+        const ix = await programClient.methods
+            .fourLevelPda()
+            .accounts({
+                signer: payer,
+            })
+            .instruction();
+
+        expect(ix.accounts).toBeDefined();
+        if (!ix.accounts) throw new Error('Expected instruction accounts to be defined');
+        expect(ix.accounts.length).eq(6);
+
+        const expectedLevel1 = ctx.findProgramAddress(
+            [
+                { type: 'string', value: 'level1' },
+                { type: 'address', value: payer },
+            ],
+            programClient.programAddress,
+        );
+
+        const expectedLevel2 = ctx.findProgramAddress(
+            [
+                { type: 'string', value: 'level2' },
+                { type: 'address', value: expectedLevel1 },
+            ],
+            programClient.programAddress,
+        );
+
+        const expectedLevel3 = ctx.findProgramAddress(
+            [
+                { type: 'string', value: 'level3' },
+                { type: 'address', value: expectedLevel2 },
+            ],
+            programClient.programAddress,
+        );
+
+        const expectedLevel4 = ctx.findProgramAddress(
+            [
+                { type: 'string', value: 'level4' },
+                { type: 'address', value: expectedLevel3 },
+            ],
+            programClient.programAddress,
+        );
+
+        const expectedAccounts = [
+            [payer, "signer doesn't match"],
+            [expectedLevel1, "level1 doesn't match"],
+            [expectedLevel2, "level2 doesn't match"],
+            [expectedLevel3, "level3 doesn't match"],
+            [expectedLevel4, "level4 doesn't match"],
+            [ctx.SYSTEM_PROGRAM_ADDRESS, "system_program doesn't match"],
+        ];
+
+        expectedAccounts.forEach((expected, i) => {
+            if (!ix?.accounts?.[i]) {
+                throw new Error(`Expected instruction accounts to be defined at index ${i}`);
+            }
+            expect(ix.accounts[i].address, expected[1]).eq(expected[0]);
+        });
+
+        ctx.sendInstruction(ix, [payer]);
+    });
+
+    describe('Circular Dependency Detection', () => {
+        test('SelfReferencePdaIx: should throw AccountError for A->A cycle', async () => {
+            await expect(
+                programClient.methods.selfReferencePda().accounts({ signer: payer }).instruction(),
+            ).rejects.toThrow(/Circular dependency detected: recursive -> recursive/);
+        });
+
+        test('TwoNodeCyclePdaIx: should throw AccountError for A->B->A pattern in two-node cycle', async () => {
+            await expect(
+                programClient.methods.twoNodeCyclePda().accounts({ signer: payer }).instruction(),
+            ).rejects.toThrow(/Circular dependency detected: pda[AB] -> pda[AB] -> pda[AB]/);
         });
     });
 });

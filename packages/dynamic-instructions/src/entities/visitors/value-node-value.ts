@@ -28,15 +28,15 @@ type ResolvedValue = {
 };
 
 type ValueNodeVisitorContext = {
-    accountsInput?: AccountsInput;
-    argumentsInput?: ArgumentsInput;
+    accountsInput: AccountsInput | undefined;
+    argumentsInput: ArgumentsInput | undefined;
 };
 
 /**
  * Visitor for resolving regular ValueNode types to their typed values.
  */
 export function createValueNodeVisitor(
-    ctx: ValueNodeVisitorContext = {}
+    ctx: ValueNodeVisitorContext,
 ): Visitor<
     ResolvedValue,
     | 'arrayValueNode'
@@ -114,7 +114,7 @@ export function createValueNodeVisitor(
                 throw new AccountError(`Cannot resolve someValueNode wrapping: ${innerNode.kind}`);
             });
         },
-        
+
         visitStringValue: (node: StringValueNode) => ({
             kind: node.kind,
             value: node.string,

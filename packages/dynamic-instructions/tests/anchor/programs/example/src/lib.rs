@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::{token::{Token, Mint, TokenAccount}, associated_token::AssociatedToken};
 
 declare_id!("5xjPsgMHuoj4MrAPJVBrTomk5UAZvCxVtAdcWwgheoZs");
 
@@ -26,12 +27,30 @@ pub mod example {
         msg!("Optional Input: {:?}", optional_input);
         Ok(())
     }
+
     pub fn update_optional_account(ctx: Context<UpdateOptionalAccount>, _id: u64) -> Result<()> {
         ctx.accounts.created_optional_acc.optional_acc =
             ctx.accounts.optional_acc_key.as_ref().map(|acc| acc.key());
         Ok(())
     }
+
     pub fn no_arguments(ctx: Context<NoArguments>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn external_programs_with_pda(ctx: Context<ExternalProgramsWithPdaIx>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn four_level_pda(ctx: Context<FourLevelPda>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn self_reference_pda(ctx: Context<SelfReferencePda>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn two_node_cycle_pda(ctx: Context<TwoNodeCyclePda>) -> Result<()> {
         Ok(())
     }
 }
@@ -52,6 +71,7 @@ pub struct PubkeySeedIx<'info> {
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct DataAccount1 {
     input: u64,
     optional_input: Option<Pubkey>,
@@ -78,7 +98,7 @@ pub struct UpdateOptionalAccount<'info> {
         init,
         seeds = [b"optional_acc".as_ref(), &id.to_le_bytes()], 
         payer = signer,
-        space = 8 + 1 + 32,
+        space = 8 + StoreOptionalAccount::INIT_SPACE,
         bump,
     )]
     pub created_optional_acc: Account<'info, StoreOptionalAccount>,
@@ -93,15 +113,141 @@ pub struct NoArguments<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + 1 + 32,
+        space = 8 + StoreOptionalAccount::INIT_SPACE,
     )]
     pub acc: Account<'info, StoreOptionalAccount>,
     pub system_program: Program<'info, System>,
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct StoreOptionalAccount {
     optional_acc: Option<Pubkey>,
+}
+
+#[derive(Accounts)]
+pub struct ExternalProgramsWithPdaIx<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    
+    // mint and token_account are to check auto-resolution with external program
+    #[account(
+        init,
+        payer = signer,
+        mint::decimals = 9,
+        mint::authority = signer,
+    )]
+    pub mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = signer,
+    )]
+    pub token_account: Account<'info, TokenAccount>,
+
+    // dependent_account to check that auto-resolution and seeds derivation from both:
+    // signer (accountInput) and token_account (another auto-derived account)
+    #[account(
+        init, 
+        payer = signer, 
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"signer_and_ata", signer.key().as_ref(), token_account.key().as_ref()], 
+        bump
+    )]
+    pub dependent_account: Account<'info, DataAccount1>,
+    
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct FourLevelPda<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"level1", signer.key().as_ref()],
+        bump
+    )]
+    pub level1: Account<'info, DataAccount1>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"level2", level1.key().as_ref()],
+        bump
+    )]
+    pub level2: Account<'info, DataAccount1>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"level3", level2.key().as_ref()],
+        bump
+    )]
+    pub level3: Account<'info, DataAccount1>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"level4", level3.key().as_ref()],
+        bump
+    )]
+    pub level4: Account<'info, DataAccount1>,
+    
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct SelfReferencePda<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"recursive", recursive.key().as_ref()],
+        bump
+    )]
+    pub recursive: Account<'info, DataAccount1>,
+    
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct TwoNodeCyclePda<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"pda_a", pda_b.key().as_ref()],
+        bump
+    )]
+    pub pda_a: Account<'info, DataAccount1>,
+    
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [b"pda_b", pda_a.key().as_ref()],
+        bump
+    )]
+    pub pda_b: Account<'info, DataAccount1>,
+    
+    pub system_program: Program<'info, System>,
 }
 
 // #[derive(Accounts)]
