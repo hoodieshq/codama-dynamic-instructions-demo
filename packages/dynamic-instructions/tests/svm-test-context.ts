@@ -50,6 +50,7 @@ export class SvmTestContext {
     readonly ASSOCIATED_TOKEN_PROGRAM_ADDRESS = address('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
     readonly SYSTEM_PROGRAM_ADDRESS = address(web3.SystemProgram.programId.toBase58());
     readonly SYSVAR_RENT_ADDRESS = address(web3.SYSVAR_RENT_PUBKEY.toBase58());
+    readonly BPF_LOADER_UPGRADEABLE = address('BPFLoaderUpgradeab1e11111111111111111111111');
 
     constructor(config: SvmTestContextConfig = {}) {
         let svm = new LiteSVM();
@@ -100,6 +101,34 @@ export class SvmTestContext {
             throw new Error(`Account ${account} not found in context`);
         }
         this.svm.airdrop(keypair.publicKey, lamports);
+    }
+
+    /** Airdrops lamports to any address on-chain (e.g. PDAs without stored keypairs). */
+    airdropToAddress(account: Address, lamports: bigint = BigInt(1e9)): void {
+        this.svm.airdrop(new web3.PublicKey(account), lamports);
+    }
+
+    /**
+     * Sets account data directly on any address.
+     * @param account - The account address to set
+     * @param accountData - The account data including lamports, data, owner, executable
+     */
+    setAccount(
+        account: Address,
+        accountData: {
+            readonly data: Uint8Array;
+            readonly executable?: boolean;
+            readonly lamports: bigint;
+            readonly owner: Address;
+        },
+    ): void {
+        const pubkey = new web3.PublicKey(account);
+        this.svm.setAccount(pubkey, {
+            data: Buffer.from(accountData.data),
+            executable: accountData.executable ?? false,
+            lamports: Number(accountData.lamports),
+            owner: new web3.PublicKey(accountData.owner),
+        });
     }
 
     /** Returns the account's lamport balance, or null if the account is unknown to the SVM. */
@@ -226,6 +255,11 @@ export class SvmTestContext {
 
     /** Calculates the minimum balance required to make an account with the given data length rent-exempt. */
     getMinimumBalanceForRentExemption(dataLen: bigint): bigint {
+        return this.svm.minimumBalanceForRentExemption(dataLen);
+    }
+
+    /** Calculates the minimum balance required to make an account with specified data length rent exempt. */
+    minimumBalanceForRentExemption(dataLen: bigint): bigint {
         return this.svm.minimumBalanceForRentExemption(dataLen);
     }
 
