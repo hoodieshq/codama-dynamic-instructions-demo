@@ -18,7 +18,7 @@ const pathToIdl = path.join(packageRoot, 'tests', 'idls', 'example-idl.json');
 console.log(`Writing Codama IDL to: ${pathToIdl}`);
 
 const codamaJson = JSON.parse(codama.getJson());
-const json = JSON.stringify(codamaJson, null, 2);
+const json = JSON.stringify(codamaJson, null, 4) + '\n';
 
 await Promise.resolve(writeFile(pathToIdl, json));
 console.log('Done');
