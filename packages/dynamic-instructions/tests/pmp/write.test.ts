@@ -123,7 +123,6 @@ describe('Program Metadata: write', () => {
             })
             .instruction();
 
-        // Write chunk 2: "World" at offset 5
         const chunk2 = new TextEncoder().encode('World');
         const chunk2Offset = chunk1.length;
         const writeIx2 = await programClient.methods

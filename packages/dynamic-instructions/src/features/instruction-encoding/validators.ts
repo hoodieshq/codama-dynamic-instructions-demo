@@ -48,7 +48,6 @@ export function createIxArgumentsValidator(
  * This is needed because remainder options have special encoding semantics:
  * - None is encoded as absence of bytes (no data)
  * - Some(value) is encoded as the value itself
- * For types like fixedSizeTypeNode<stringTypeNode>, the codec handles padding
  */
 function createValidatorForRemainderOptionTypeItem(
     nodeName: string,
@@ -57,20 +56,16 @@ function createValidatorForRemainderOptionTypeItem(
 ): StructUnknown {
     if (itemNode.kind === 'fixedSizeTypeNode' && itemNode.type.kind === 'stringTypeNode') {
         // For fixed-size strings in remainder options, accept any string
-        // The codec will handle padding/truncation
         return StringValidatorForFixedSize(itemNode.size);
     }
 
-    // Check if this is a definedTypeLinkNode that resolves to fixedSizeTypeNode<stringTypeNode>
     if (itemNode.kind === 'definedTypeLinkNode') {
         const definedType = definedTypes.find(d => d.name === itemNode.name);
         if (definedType?.type.kind === 'fixedSizeTypeNode' && definedType.type.type.kind === 'stringTypeNode') {
-            // Validate as permissive string for fixed-size string types
             return StringValidatorForFixedSize(definedType.type.size);
         }
     }
 
-    // For other types, use normal validation
     return createValidatorForTypeNode(nodeName, itemNode, definedTypes);
 }
 
@@ -81,9 +76,8 @@ function createValidatorForRemainderOptionTypeItem(
 function StringValidatorForFixedSize(maxSize: number): StructUnknown {
     return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
         if (typeof value !== 'string') return false;
-        // Accept any string that can reasonably fit in the fixed size
+        // Accept any string that can fit in the fixed size
         // The codec will handle padding short strings with zeros
-        // We allow up to maxSize bytes (UTF-8 encoded)
         const encoder = new TextEncoder();
         const bytes = encoder.encode(value);
         // Allow strings up to the maxSize (codec will pad if shorter)
@@ -190,7 +184,6 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return OptionValueValidator(`${nodeName}_option`, SomeValueValidator);
         }
         case 'remainderOptionTypeNode': {
-            // RemainderOptionTypeNode encodes None as absence of bytes (not as a prefix byte)
             const innerValidator = createValidatorForRemainderOptionTypeItem(
                 `${nodeName}_remainder_option_item`,
                 node.item,

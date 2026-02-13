@@ -42,7 +42,6 @@ export function createInputValueTransformer(
 ): (input: unknown) => unknown {
     const bytesEncoding = options?.bytesEncoding ?? 'base16';
 
-    // Simple recursive switch on type node kind
     switch (typeNode.kind) {
         case 'bytesTypeNode':
             return (input: unknown) => {

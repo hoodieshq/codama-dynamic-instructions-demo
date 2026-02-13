@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { type Address } from '@solana/addresses';
+import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import type { Some } from '@solana/codecs';
 import { AccountDiscriminator } from '@solana-program/program-metadata';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -48,7 +48,7 @@ describe('Program Metadata: allocate', () => {
         const testProgramAddress = ctx.createAccount();
         const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
 
-        const { programAddress, programDataAddress } = setUpgradeableProgramAccounts(
+        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
             ctx,
             exampleProgramPath,
             testProgramAddress,
@@ -58,13 +58,11 @@ describe('Program Metadata: allocate', () => {
         // Canonical seeds [program, seed] padded 16 bytes
         const seed = 'idl';
         const seed16Bytes = encodeSeedForPda(seed);
-        const bufferPda = ctx.findProgramAddress(
-            [
-                { type: 'address', value: programAddress },
-                { type: 'bytes', value: seed16Bytes },
-            ],
-            programClient.programAddress,
-        );
+        const addressEncoder = getAddressEncoder();
+        const [bufferPda] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
+        });
 
         ctx.airdropToAddress(bufferPda, BigInt(10_000_000_000));
         const ix = await programClient.methods
@@ -99,7 +97,7 @@ describe('Program Metadata: allocate', () => {
         const testProgramAddress = ctx.createAccount();
         const exampleProgramPath = path.join(__dirname, '../anchor/target/deploy/example.so'); // this can be any program
 
-        const { programAddress, programDataAddress } = setUpgradeableProgramAccounts(
+        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
             ctx,
             exampleProgramPath,
             testProgramAddress,
@@ -109,14 +107,11 @@ describe('Program Metadata: allocate', () => {
         // non-canonical seeds [program, authority, seed], padded to 16 bytes
         const seed = 'idl';
         const seed16Bytes = encodeSeedForPda(seed);
-        const bufferPda = ctx.findProgramAddress(
-            [
-                { type: 'address', value: programAddress },
-                { type: 'address', value: authority },
-                { type: 'bytes', value: seed16Bytes },
-            ],
-            programClient.programAddress,
-        );
+        const addressEncoder = getAddressEncoder();
+        const [bufferPda] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: [addressEncoder.encode(programAddress), addressEncoder.encode(authority), seed16Bytes],
+        });
 
         ctx.airdropToAddress(bufferPda, BigInt(10_000_000_000));
         const ix = await programClient.methods

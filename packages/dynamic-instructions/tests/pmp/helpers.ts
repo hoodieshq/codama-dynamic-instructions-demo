@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { type Address, address, getAddressEncoder } from '@solana/addresses';
+import { type Address, address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import { getOptionEncoder, getStructEncoder, getU32Encoder, getU64Encoder, none, some } from '@solana/codecs';
 import {
     type Buffer as PmpBuffer,
@@ -70,16 +70,17 @@ export function loadPmpProgram(ctx: SvmTestContext, programAddress: Address): vo
  * @param upgradeAuthority - Authority to set in ProgramData account
  * @returns { programAddress, programDataAddress }
  */
-export function setUpgradeableProgramAccounts(
+export async function setUpgradeableProgramAccounts(
     ctx: SvmTestContext,
     programBinaryPath: string,
     programAddress: Address,
     upgradeAuthority: Address,
-): { programAddress: Address; programDataAddress: Address } {
-    const programDataAddress = ctx.findProgramAddress(
-        [{ type: 'address', value: programAddress }],
-        ctx.BPF_LOADER_UPGRADEABLE,
-    );
+): Promise<{ programAddress: Address; programDataAddress: Address }> {
+    const addressEncoder = getAddressEncoder();
+    const [programDataAddress] = await getProgramDerivedAddress({
+        programAddress: ctx.BPF_LOADER_UPGRADEABLE,
+        seeds: [addressEncoder.encode(programAddress)],
+    });
 
     const programDataAccountBytes = encodeProgramDataAccount(upgradeAuthority);
     const programBytes = fs.readFileSync(programBinaryPath);
