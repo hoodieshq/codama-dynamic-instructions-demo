@@ -224,20 +224,9 @@ export class SvmTestContext {
         this.svm.addProgramFromFile(programId, programPath);
     }
 
-    /** Derives a Program Derived Address (PDA) from seeds and program ID. */
-    findProgramAddress(
-        seeds: Array<{ readonly type: 'string' | 'bytes' | 'address'; readonly value: string | Uint8Array | Address }>,
-        programId: Address,
-    ): Address {
-        const seedBuffers = seeds.map(seed => {
-            if (seed.type === 'string') return Buffer.from(seed.value as string, 'utf8');
-            if (seed.type === 'bytes') return Buffer.from(seed.value as Uint8Array);
-            return new web3.PublicKey(seed.value as Address).toBuffer();
-        });
-
-        const [pdaKey] = web3.PublicKey.findProgramAddressSync(seedBuffers, new web3.PublicKey(programId));
-
-        return address(pdaKey.toBase58());
+    /** Calculates the minimum balance required to make an account with the given data length rent-exempt. */
+    getMinimumBalanceForRentExemption(dataLen: bigint): bigint {
+        return this.svm.minimumBalanceForRentExemption(dataLen);
     }
 
     /** Returns the underlying LiteSVM instance for direct use when needed. Consider using the public methods instead. */

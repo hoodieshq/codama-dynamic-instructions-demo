@@ -1,8 +1,8 @@
 import path from 'node:path';
 
 import { getNodeCodec } from '@codama/dynamic-codecs';
-import { type Address } from '@solana/addresses';
-import { type Option, unwrapOption } from '@solana/codecs';
+import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import { unwrapOption, type Option } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -45,13 +45,10 @@ describe('anchor-example', () => {
 
             ctx.sendInstruction(ix0, [signer]);
 
-            const pda = ctx.findProgramAddress(
-                [
-                    { type: 'string', value: 'seed' },
-                    { type: 'address', value: signer },
-                ],
-                programClient.programAddress,
-            );
+            const [pda] = await getProgramDerivedAddress({
+                programAddress: programClient.programAddress,
+                seeds: ['seed', getAddressEncoder().encode(signer)],
+            });
 
             const optionalAddress = ctx.createAccount();
             const ix1 = await programClient.methods
@@ -124,23 +121,24 @@ describe('anchor-example', () => {
 
     test('ExternalProgramsWithPdaIx: should resolve dependent pda and external program addresses', async () => {
         const mint = ctx.createAccount();
-        const expectedAta = ctx.findProgramAddress(
-            [
-                { type: 'address', value: payer },
-                { type: 'address', value: ctx.TOKEN_PROGRAM_ADDRESS },
-                { type: 'address', value: mint },
+        const addressEncoder = getAddressEncoder();
+        const [expectedAta] = await getProgramDerivedAddress({
+            programAddress: ctx.ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+            seeds: [
+                addressEncoder.encode(payer),
+                addressEncoder.encode(ctx.TOKEN_PROGRAM_ADDRESS),
+                addressEncoder.encode(mint),
             ],
-            ctx.ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-        );
+        });
 
-        const expectedDependentPda = ctx.findProgramAddress(
-            [
-                { type: 'string', value: 'signer_and_ata' },
-                { type: 'address', value: payer },
-                { type: 'address', value: expectedAta },
+        const [expectedDependentPda] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: [
+                'signer_and_ata',
+                addressEncoder.encode(payer),
+                addressEncoder.encode(expectedAta),
             ],
-            programClient.programAddress,
-        );
+        });
 
         const ix = await programClient.methods
             .externalProgramsWithPda()
@@ -189,37 +187,27 @@ describe('anchor-example', () => {
         if (!ix.accounts) throw new Error('Expected instruction accounts to be defined');
         expect(ix.accounts.length).eq(6);
 
-        const expectedLevel1 = ctx.findProgramAddress(
-            [
-                { type: 'string', value: 'level1' },
-                { type: 'address', value: payer },
-            ],
-            programClient.programAddress,
-        );
+        const addressEncoder = getAddressEncoder();
 
-        const expectedLevel2 = ctx.findProgramAddress(
-            [
-                { type: 'string', value: 'level2' },
-                { type: 'address', value: expectedLevel1 },
-            ],
-            programClient.programAddress,
-        );
+        const [expectedLevel1] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: ['level1', addressEncoder.encode(payer)],
+        });
 
-        const expectedLevel3 = ctx.findProgramAddress(
-            [
-                { type: 'string', value: 'level3' },
-                { type: 'address', value: expectedLevel2 },
-            ],
-            programClient.programAddress,
-        );
+        const [expectedLevel2] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: ['level2', addressEncoder.encode(expectedLevel1)],
+        });
 
-        const expectedLevel4 = ctx.findProgramAddress(
-            [
-                { type: 'string', value: 'level4' },
-                { type: 'address', value: expectedLevel3 },
-            ],
-            programClient.programAddress,
-        );
+        const [expectedLevel3] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: ['level3', addressEncoder.encode(expectedLevel2)],
+        });
+
+        const [expectedLevel4] = await getProgramDerivedAddress({
+            programAddress: programClient.programAddress,
+            seeds: ['level4', addressEncoder.encode(expectedLevel3)],
+        });
 
         const expectedAccounts = [
             [payer, "signer doesn't match"],

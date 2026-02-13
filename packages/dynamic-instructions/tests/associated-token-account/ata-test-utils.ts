@@ -5,25 +5,21 @@ import type { SystemProgramClient } from '../generated/system-program-idl-types'
 import type { TokenProgramClient } from '../generated/token-idl-types';
 import { createTestProgramClient, SvmTestContext } from '../test-utils';
 
-export function createAtaTestContext() {
-    const ataClient = createTestProgramClient<SplAssociatedTokenAccountProgramClient>('associated-token-account-idl.json');
-    const tokenClient = createTestProgramClient<TokenProgramClient>('token-idl.json');
-    const systemClient = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
-    const ctx = new SvmTestContext({ defaultPrograms: true });
+export const ataClient = createTestProgramClient<SplAssociatedTokenAccountProgramClient>('associated-token-account-idl.json');
+export const tokenClient = createTestProgramClient<TokenProgramClient>('token-idl.json');
+export const systemClient = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
 
-    return { ataClient, tokenClient, systemClient, ctx };
-}
-
-export type AtaTestContext = ReturnType<typeof createAtaTestContext>;
+const SPL_TOKEN_MINT_SIZE = 82n;
 
 export async function createMint(
-    { ctx, systemClient, tokenClient }: Pick<AtaTestContext, 'ctx' | 'systemClient' | 'tokenClient'>,
+    ctx: SvmTestContext,
     payer: Address,
     mint: Address,
     mintAuthority: Address,
 ): Promise<void> {
+    const lamports = ctx.getMinimumBalanceForRentExemption(SPL_TOKEN_MINT_SIZE);
     const createMintAccountIx = await systemClient.methods
-        .createAccount({ lamports: 1_461_600n, space: 82, programAddress: tokenClient.programAddress })
+        .createAccount({ lamports, space: SPL_TOKEN_MINT_SIZE, programAddress: tokenClient.programAddress })
         .accounts({ payer, newAccount: mint })
         .instruction();
     ctx.sendInstruction(createMintAccountIx, [payer, mint]);
@@ -33,19 +29,4 @@ export async function createMint(
         .accounts({ mint })
         .instruction();
     ctx.sendInstruction(initializeMintIx, [payer]);
-}
-
-export function deriveAta(
-    { ctx, tokenClient, ataClient }: Pick<AtaTestContext, 'ctx' | 'tokenClient' | 'ataClient'>,
-    wallet: Address,
-    mint: Address,
-): Address {
-    return ctx.findProgramAddress(
-        [
-            { type: 'address', value: wallet },
-            { type: 'address', value: tokenClient.programAddress },
-            { type: 'address', value: mint },
-        ],
-        ataClient.programAddress,
-    );
 }

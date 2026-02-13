@@ -1,26 +1,27 @@
-import { getAddressDecoder } from '@solana/addresses';
+import { findAssociatedTokenPda, getTokenDecoder } from '@solana-program/token';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { type AtaTestContext, createAtaTestContext, createMint, deriveAta } from './ata-test-utils';
+import { SvmTestContext } from '../test-utils';
+import { ataClient, createMint, tokenClient } from './ata-test-utils';
 
 describe('Associated Token Account: createIdempotent', () => {
-    let t: AtaTestContext;
+    let ctx: SvmTestContext;
 
     beforeEach(() => {
-        t = createAtaTestContext();
+        ctx = new SvmTestContext({ defaultPrograms: true });
     });
 
     test('should create an associated token account idempotently', async () => {
-        const payer = t.ctx.createFundedAccount();
-        const mintAuthority = t.ctx.createFundedAccount();
-        const mint = t.ctx.createAccount();
-        const wallet = t.ctx.createFundedAccount();
+        const payer = ctx.createFundedAccount();
+        const mintAuthority = ctx.createFundedAccount();
+        const mint = ctx.createAccount();
+        const wallet = ctx.createFundedAccount();
 
-        await createMint(t, payer, mint, mintAuthority);
+        await createMint(ctx, payer, mint, mintAuthority);
 
-        const ataAddress = deriveAta(t, wallet, mint);
+        const [ataAddress] = await findAssociatedTokenPda({ owner: wallet, tokenProgram: tokenClient.programAddress, mint });
 
-        const ix = await t.ataClient.methods
+        const ix = await ataClient.methods
             .createIdempotent()
             .accounts({
                 fundingAddress: payer,
@@ -30,20 +31,22 @@ describe('Associated Token Account: createIdempotent', () => {
             })
             .instruction();
 
-        t.ctx.sendInstruction(ix, [payer]);
+        ctx.sendInstruction(ix, [payer]);
 
-        const ataAccount = t.ctx.requireEncodedAccount(ataAddress);
-        expect(ataAccount.owner).toBe(t.tokenClient.programAddress);
-        expect(getAddressDecoder().decode(ataAccount.data.slice(0, 32))).toBe(mint);
-        expect(getAddressDecoder().decode(ataAccount.data.slice(32, 64))).toBe(wallet);
+        const ataAccount = ctx.requireEncodedAccount(ataAddress);
+        const tokenData = getTokenDecoder().decode(ataAccount.data);
+        expect(ataAccount.owner).toBe(tokenClient.programAddress);
+        expect(tokenData.mint).toBe(mint);
+        expect(tokenData.owner).toBe(wallet);
 
         // Call again — should succeed without error
-        t.ctx.advanceSlots();
-        t.ctx.sendInstruction(ix, [payer]);
+        ctx.advanceSlots();
+        ctx.sendInstruction(ix, [payer]);
 
-        const ataAccountAfter = t.ctx.requireEncodedAccount(ataAddress);
-        expect(ataAccountAfter.owner).toBe(t.tokenClient.programAddress);
-        expect(getAddressDecoder().decode(ataAccountAfter.data.slice(0, 32))).toBe(mint);
-        expect(getAddressDecoder().decode(ataAccountAfter.data.slice(32, 64))).toBe(wallet);
+        const ataAccountAfter = ctx.requireEncodedAccount(ataAddress);
+        const tokenDataAfter = getTokenDecoder().decode(ataAccountAfter.data);
+        expect(ataAccountAfter.owner).toBe(tokenClient.programAddress);
+        expect(tokenDataAfter.mint).toBe(mint);
+        expect(tokenDataAfter.owner).toBe(wallet);
     });
 });
