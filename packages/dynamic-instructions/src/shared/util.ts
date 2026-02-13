@@ -11,6 +11,13 @@ export function detectCircularDependency(nodeName: string, resolutionPath: Resol
     }
 }
 
-export function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        !(value instanceof Date) &&
+        !(value instanceof Map) &&
+        !(value instanceof Set)
+    );
 }

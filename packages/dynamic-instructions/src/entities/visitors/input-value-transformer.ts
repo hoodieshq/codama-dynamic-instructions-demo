@@ -2,7 +2,7 @@ import type { BytesEncoding, RootNode, TypeNode, Visitor } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
-import { isObject } from '../../shared/util';
+import { isPlainObject } from '../../shared/util';
 
 /**
  * Type nodes that the input value transformer can process.
@@ -70,7 +70,12 @@ export function getInputValueTransformerVisitor(
                 throw new Error(`Unsupported type node in arrayTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
-                if (!Array.isArray(input)) return input;
+                if (!Array.isArray(input)) {
+                    throw new TypeError(
+                        `Expected an array for arrayTypeNode, but received: ${typeof input}. ` +
+                            `Received value: ${JSON.stringify(input)}`,
+                    );
+                }
                 return input.map(itemTransform);
             };
         },
@@ -108,17 +113,14 @@ export function getInputValueTransformerVisitor(
         },
 
         visitEnumType(node) {
-            // TODO: to be tested
             // Scalar enums pass through (just numbers/strings)
             // Data enums need variant transformation
             return (input: unknown) => {
-                // Scalar enum (number or string) - pass through
                 if (typeof input === 'number' || typeof input === 'string') {
                     return input;
                 }
 
-                // Data enum with __kind discriminator
-                if (typeof input !== 'object' || input === null || !('__kind' in input)) {
+                if (!isPlainObject(input)) {
                     return input;
                 }
 
@@ -136,7 +138,7 @@ export function getInputValueTransformerVisitor(
                         throw new Error(`Unsupported type node in enumStructVariantTypeNode: ${innerNode.kind}`);
                     });
                     const transformedFields = structTransform(rest);
-                    if (!isObject(transformedFields)) {
+                    if (!isPlainObject(transformedFields)) {
                         throw new Error(
                             `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${typeof transformedFields}`,
                         );
@@ -181,7 +183,12 @@ export function getInputValueTransformerVisitor(
                 throw new Error(`Unsupported type node in mapTypeNode value: ${innerNode.kind}`);
             });
             return (input: unknown) => {
-                if (!isObject(input)) return input;
+                if (!isPlainObject(input)) {
+                    throw new TypeError(
+                        `Expected a plain object for mapTypeNode, but received: ${typeof input}. ` +
+                            `Received value: ${JSON.stringify(input)}`,
+                    );
+                }
                 const result: Record<string, unknown> = {};
                 for (const [key, value] of Object.entries(input)) {
                     result[key] = valueTransform(value);
@@ -195,7 +202,6 @@ export function getInputValueTransformerVisitor(
             return (input: unknown) => input;
         },
 
-        // Option types
         visitOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
                 throw new Error(`Unsupported type node in optionTypeNode: ${innerNode.kind}`);
@@ -244,7 +250,12 @@ export function getInputValueTransformerVisitor(
                 throw new Error(`Unsupported type node in setTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
-                if (!Array.isArray(input)) return input;
+                if (!Array.isArray(input)) {
+                    throw new TypeError(
+                        `Expected an array for setTypeNode, but received: ${typeof input}. ` +
+                            `Received value: ${JSON.stringify(input)}`,
+                    );
+                }
                 return input.map(itemTransform);
             };
         },
@@ -279,7 +290,12 @@ export function getInputValueTransformerVisitor(
                 return { name: field.name, transform };
             });
             return (input: unknown) => {
-                if (typeof input !== 'object' || input === null) return input;
+                if (!isPlainObject(input)) {
+                    throw new TypeError(
+                        `Expected a plain object for structTypeNode, but received: ${typeof input}. ` +
+                            `Received value: ${JSON.stringify(input)}`,
+                    );
+                }
                 const result = { ...input } as Record<string, unknown>;
                 for (const { name, transform } of fieldTransformers) {
                     if (name in result) {
@@ -297,10 +313,18 @@ export function getInputValueTransformerVisitor(
                 }),
             );
             return (input: unknown) => {
-                if (!Array.isArray(input)) return input;
-                return input.map((value: unknown, index) =>
-                    itemTransforms[index] ? itemTransforms[index](value) : value,
-                );
+                if (!Array.isArray(input)) {
+                    throw new TypeError(
+                        `Expected an array for tupleTypeNode, but received: ${typeof input}. ` +
+                            `Received value: ${JSON.stringify(input)}`,
+                    );
+                }
+                if (input.length !== itemTransforms.length) {
+                    throw new TypeError(
+                        `Expected tuple of length ${itemTransforms.length} for tupleTypeNode, but received array of length ${input.length}.`,
+                    );
+                }
+                return input.map((value: unknown, index) => itemTransforms[index]!(value));
             };
         },
 
