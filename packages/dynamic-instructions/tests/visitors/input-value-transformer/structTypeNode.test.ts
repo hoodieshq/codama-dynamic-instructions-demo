@@ -128,7 +128,6 @@ describe('structTypeNode', () => {
         ]);
         const transformer = createInputValueTransformer(structNode, rootNodeMock, { bytesEncoding: 'base16' });
 
-        // Input missing the optional field
         const input = { required: 100 };
         expect(transformer(input)).toEqual({ required: 100 });
     });

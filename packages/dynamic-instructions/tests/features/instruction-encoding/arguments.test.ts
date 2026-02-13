@@ -1,0 +1,136 @@
+import { getU32Encoder, getU64Encoder } from '@solana/codecs';
+import { getInitializeInstructionDataDecoder } from '@solana-program/program-metadata';
+import type { InstructionNode, RootNode } from 'codama';
+import { createFromJson } from 'codama';
+import { describe, expect, test } from 'vitest';
+
+import {
+    encodeInstructionArguments,
+    validateArgumentsInput,
+} from '../../../src/features/instruction-encoding/arguments';
+import { concatBytes, getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
+import { ArgumentError, ValidationError } from '../../../src/shared/errors';
+import { loadIdl } from '../../test-utils';
+
+function loadRoot(idlFileName: string): RootNode {
+    const idl = loadIdl(idlFileName);
+    const json = JSON.stringify(idl);
+    return createFromJson(json).getRoot();
+}
+
+function getInstruction(root: RootNode, name: string): InstructionNode {
+    const ix = root.program.instructions.find(i => i.name === name);
+    if (!ix) throw new Error(`Instruction ${name} not found`);
+    return ix;
+}
+
+describe('Instruction encoding: encodeInstructionArguments', () => {
+    test('should encode omitted discriminator using default numberValueNode', () => {
+        // pmp-idl.json 'write' instruction has discriminator with defaultValue: numberValueNode(0)
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'write');
+
+        const encoded = encodeInstructionArguments(root, ix, {
+            data: null,
+            offset: 2,
+        });
+
+        // discriminator: u8 + offset: u32
+        expect(encoded).toEqual(new Uint8Array([0, 2, 0, 0, 0]));
+    });
+
+    test('should encode omitted discriminator using default bytesValueNode', () => {
+        const root = loadRoot('example-idl.json');
+        const ix = getInstruction(root, 'updateOptionalInput');
+
+        const encoded = encodeInstructionArguments(root, ix, {
+            input: 42n,
+            optionalInput: null,
+        });
+
+        // discriminator defaulValue from updateOptionalInput:
+        const expectedDiscriminator = getCodecFromBytesEncoding('base16').encode('1f094566b31b79c7');
+        const expectedInput = getU64Encoder().encode(42n);
+        const expectedOptionalInput = new Uint8Array([0]);
+        expect(encoded).toEqual(concatBytes([expectedDiscriminator, expectedInput, expectedOptionalInput]));
+    });
+
+    test('should transform Uint8Array in remainderOptionTypeNode argument', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'write');
+
+        const testData = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+        const encoded = encodeInstructionArguments(root, ix, {
+            data: testData,
+            offset: 10,
+        });
+
+        const expected = concatBytes([new Uint8Array([0]), getU32Encoder().encode(10), testData]);
+        expect(encoded).toEqual(expected);
+    });
+
+    test('should resolve definedTypeLinkNode to enumTypeNode', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'initialize');
+
+        // seed is a fixedSizeTypeNode(16, stringTypeNode) - needs 16-byte padded string
+        // Enums use lowercase variant names: none=0, utf8=1, gzip=1, json=1, direct=0, etc.
+        const encoded = encodeInstructionArguments(root, ix, {
+            compression: 'gzip', // gzip=1
+            data: null,
+            dataSource: 'url', // url=1
+            encoding: 'base64', // base64=3
+            format: 'json', // json=1
+            seed: 'test', // fixed 16-byte string, null-padded
+        });
+
+        const expected = getInitializeInstructionDataDecoder().decode(encoded);
+        expect(encoded.length).toBe(21);
+        expect(expected.discriminator).toBe(1);
+        expect(expected.seed).toBe('test');
+        expect(expected.encoding).toBe(3);
+        expect(expected.compression).toBe(1);
+        expect(expected.format).toBe(1);
+        expect(expected.dataSource).toBe(1);
+    });
+
+    test('should throw ArgumentError for missing required argument', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'write');
+
+        expect(() =>
+            encodeInstructionArguments(root, ix, {
+                data: null,
+            }),
+        ).toThrow(ArgumentError);
+
+        expect(() =>
+            encodeInstructionArguments(root, ix, {
+                data: null,
+            }),
+        ).toThrow('Missing required argument: offset');
+    });
+
+    test('should throw ValidationError when omitted argument is provided', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'write');
+
+        // discriminator should be omitted due to strategy
+        expect(() =>
+            validateArgumentsInput(root, ix, {
+                data: null,
+                discriminator: 99,
+                offset: 0,
+            }),
+        ).toThrow(ValidationError);
+    });
+
+    test('should encode instruction with only omitted discriminator (no user args)', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'close');
+
+        const encoded = encodeInstructionArguments(root, ix, {});
+        const discriminator = 6;
+        expect(encoded).toEqual(new Uint8Array([discriminator]));
+    });
+});

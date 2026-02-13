@@ -121,8 +121,19 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return string() as StructUnknown;
         }
         case 'fixedSizeTypeNode': {
-            const itemValidator = createValidatorForTypeNode(`${nodeName}_fixed_size`, node.type, definedTypes);
-            return size(array(itemValidator), node.size) as StructUnknown;
+            // fixedSizeTypeNode wraps an inner type and constrains its byte size
+            // It does NOT represent an array - it's a size constraint on serialization
+            if (node.type.kind === 'stringTypeNode') {
+                // For fixed-size strings, validate that UTF-8 bytes fit within the size
+                return StringValidatorForFixedSize(node.size);
+            }
+            if (node.type.kind === 'bytesTypeNode') {
+                // For fixed-size bytes, validate exact byte length
+                return BytesWithSizeValidator(node.size);
+            }
+            // For other types, delegate to the inner type validator
+            // The size constraint is handled during encoding
+            return createValidatorForTypeNode(`${nodeName}_fixed_size`, node.type, definedTypes);
         }
         case 'bytesTypeNode': {
             // Codama bytes can be provided as `Uint8Array` (recommended) or `number[]`.
@@ -235,6 +246,19 @@ const BytesLikeValidator: StructUnknown = /* @__PURE__ */ define('BytesLike', (v
     if (!Array.isArray(value)) return false;
     return value.every(n => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 255);
 });
+
+/**
+ * Validator for bytes that must be exactly a specific size.
+ * Used for fixedSizeTypeNode wrapping bytesTypeNode.
+ */
+function BytesWithSizeValidator(exactSize: number): StructUnknown {
+    return define(`BytesWithSize_${exactSize}`, (value: unknown) => {
+        if (value instanceof Uint8Array) return value.length === exactSize;
+        if (!Array.isArray(value)) return false;
+        if (value.length !== exactSize) return false;
+        return value.every(n => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 255);
+    }) as StructUnknown;
+}
 
 // Validates value only if it is not null or undefined (i.e. if it's provided)
 // SomeValueValidator validates the provided value (i.e. Some(value))
