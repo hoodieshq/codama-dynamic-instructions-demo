@@ -21,16 +21,16 @@ describe('System Program: transferSolWithSeed', () => {
         const fundingLamports = 10_000_000;
         const createIx = await programClient.methods
             .createAccountWithSeed({
-                base: baseAccount,
-                seed,
                 amount: fundingLamports,
-                space: 0,
+                base: baseAccount,
                 programAddress: programClient.programAddress,
+                seed,
+                space: 0,
             })
             .accounts({
-                payer: payerAccount,
-                newAccount: source,
                 baseAccount,
+                newAccount: source,
+                payer: payerAccount,
             })
             .instruction();
 
@@ -45,13 +45,13 @@ describe('System Program: transferSolWithSeed', () => {
         const transferIx = await programClient.methods
             .transferSolWithSeed({
                 amount: transferAmount,
-                fromSeed: seed,
                 fromOwner: programClient.programAddress,
+                fromSeed: seed,
             })
             .accounts({
-                source,
                 baseAccount,
                 destination,
+                source,
             })
             .instruction();
 

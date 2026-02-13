@@ -12,7 +12,7 @@ export class MethodsBuilder {
     constructor(
         private readonly root: RootNode,
         private readonly ixNode: InstructionNode,
-        private readonly args?: ArgumentsInput
+        private readonly args?: ArgumentsInput,
     ) {}
 
     accounts(accounts: AccountsInput) {

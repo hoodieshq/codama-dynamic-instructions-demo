@@ -44,7 +44,10 @@ export type ProgramMethodBuilder = {
  * const client = createProgramClient<MyProgramClient>(idl);
  * ```
  */
-export function createProgramClient<TClient = ProgramClient>(idl: IdlInput, options: CreateProgramClientOptions = {}): TClient {
+export function createProgramClient<TClient = ProgramClient>(
+    idl: IdlInput,
+    options: CreateProgramClientOptions = {},
+): TClient {
     const json = typeof idl === 'string' ? idl : JSON.stringify(idl);
     const root = createFromJson(json).getRoot();
 

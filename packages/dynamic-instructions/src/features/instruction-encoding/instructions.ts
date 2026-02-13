@@ -18,7 +18,7 @@ export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildI
             root,
             ixNode,
             argumentsInput,
-            accountsInput
+            accountsInput,
         );
 
         return {
@@ -33,7 +33,7 @@ export async function resolveInstructionData(
     root: RootNode,
     instructionNode: InstructionNode,
     argumentsInput?: ArgumentsInput,
-    accountsInput?: AccountsInput
+    accountsInput?: AccountsInput,
 ) {
     // Validate arguments according codama schema
     validateArgumentsInput(root, instructionNode, argumentsInput);

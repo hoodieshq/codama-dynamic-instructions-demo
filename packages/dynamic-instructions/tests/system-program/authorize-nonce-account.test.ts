@@ -23,12 +23,12 @@ describe('System Program: authorizeNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -47,9 +47,9 @@ describe('System Program: authorizeNonceAccount', () => {
 
         const initializedAccount = ctx.requireEncodedAccount(nonceAccount);
         expect(initializedAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
 
         const authorizeNonceInstruction = await programClient.methods
@@ -66,9 +66,9 @@ describe('System Program: authorizeNonceAccount', () => {
 
         const authorizedAccount = ctx.requireEncodedAccount(nonceAccount);
         expect(authorizedAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
         expect(authorizedAccount.data.length).toBe(nonceAccountSpace);
     });
@@ -86,12 +86,12 @@ describe('System Program: authorizeNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -134,9 +134,9 @@ describe('System Program: authorizeNonceAccount', () => {
 
         const finalAccount = ctx.requireEncodedAccount(nonceAccount);
         expect(finalAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
         expect(finalAccount.data.length).toBe(nonceAccountSpace);
     });
@@ -152,12 +152,12 @@ describe('System Program: authorizeNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -188,9 +188,9 @@ describe('System Program: authorizeNonceAccount', () => {
 
         const finalAccount = ctx.requireEncodedAccount(nonceAccount);
         expect(finalAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
     });
 });

@@ -5,7 +5,9 @@ import type { SystemProgramClient } from '../generated/system-program-idl-types'
 import type { TokenProgramClient } from '../generated/token-idl-types';
 import { createTestProgramClient, SvmTestContext } from '../test-utils';
 
-export const ataClient = createTestProgramClient<SplAssociatedTokenAccountProgramClient>('associated-token-account-idl.json');
+export const ataClient = createTestProgramClient<SplAssociatedTokenAccountProgramClient>(
+    'associated-token-account-idl.json',
+);
 export const tokenClient = createTestProgramClient<TokenProgramClient>('token-idl.json');
 export const systemClient = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
 
@@ -19,13 +21,13 @@ export async function createMint(
 ): Promise<void> {
     const lamports = ctx.getMinimumBalanceForRentExemption(SPL_TOKEN_MINT_SIZE);
     const createMintAccountIx = await systemClient.methods
-        .createAccount({ lamports, space: SPL_TOKEN_MINT_SIZE, programAddress: tokenClient.programAddress })
-        .accounts({ payer, newAccount: mint })
+        .createAccount({ lamports, programAddress: tokenClient.programAddress, space: SPL_TOKEN_MINT_SIZE })
+        .accounts({ newAccount: mint, payer })
         .instruction();
     ctx.sendInstruction(createMintAccountIx, [payer, mint]);
 
     const initializeMintIx = await tokenClient.methods
-        .initializeMint({ decimals: 9, mintAuthority, freezeAuthority: null })
+        .initializeMint({ decimals: 9, freezeAuthority: null, mintAuthority })
         .accounts({ mint })
         .instruction();
     ctx.sendInstruction(initializeMintIx, [payer]);

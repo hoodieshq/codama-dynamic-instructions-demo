@@ -1,4 +1,4 @@
-import { address, type Address } from '@solana/addresses';
+import { type Address, address } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
 import { FailedTransactionMetadata, LiteSVM } from 'litesvm';
@@ -9,10 +9,10 @@ import { toLegacyTransactionInstruction } from '../src';
  * Encoded account data returned from SVM.
  */
 export type EncodedAccount = {
-    readonly lamports: bigint;
-    readonly owner: Address;
     readonly data: Uint8Array;
     readonly executable: boolean;
+    readonly lamports: bigint;
+    readonly owner: Address;
     readonly rentEpoch?: bigint;
 };
 
@@ -127,10 +127,10 @@ export class SvmTestContext {
         }
 
         return {
-            lamports: BigInt(accountInfo.lamports),
-            owner: address(accountInfo.owner.toBase58()),
             data: accountInfo.data,
             executable: accountInfo.executable,
+            lamports: BigInt(accountInfo.lamports),
+            owner: address(accountInfo.owner.toBase58()),
             ...(accountInfo.rentEpoch !== undefined && { rentEpoch: BigInt(accountInfo.rentEpoch) }),
         };
     }

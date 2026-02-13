@@ -11,6 +11,6 @@ export type ResolutionPath = readonly string[];
 
 type TBuildIxFn<TInstruction> = (
     argumentsInput?: ArgumentsInput,
-    accountsInput?: AccountsInput
+    accountsInput?: AccountsInput,
 ) => Promise<TInstruction>;
 export type BuildIxFn = TBuildIxFn<Instruction>;

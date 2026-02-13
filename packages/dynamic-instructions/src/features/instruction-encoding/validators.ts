@@ -18,8 +18,7 @@ export function createIxAccountsValidator(ixAccountNodes: InstructionAccountNode
     const shape = ixAccountNodes.reduce<Record<string, StructUnknown>>((acc, node) => {
         // if node is optional, then validate only if it's provided
         // if node has default value, then consider it as optional and validate only if it's provided. Otherwise it will be resolved from default value
-        acc[node.name] =
-            node.isOptional || node.defaultValue ? OptionalSolanaAddressValidator : SolanaAddressValidator;
+        acc[node.name] = node.isOptional || node.defaultValue ? OptionalSolanaAddressValidator : SolanaAddressValidator;
         return acc;
     }, {});
     return object(shape) as StructUnknown;
@@ -61,7 +60,10 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         }
         case 'setTypeNode': {
             // array of unique items
-            return intersection([UniqueItemsValidator, arrayValidator(`${nodeName}_set`, node, definedTypes)]) as StructUnknown;
+            return intersection([
+                UniqueItemsValidator,
+                arrayValidator(`${nodeName}_set`, node, definedTypes),
+            ]) as StructUnknown;
         }
         case 'stringTypeNode': {
             // TODO: may be check encoding?
@@ -88,9 +90,13 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return createValidatorForTypeNode(`${nodeName}_defined_type`, definedType.type, definedTypes);
         }
         case 'mapTypeNode': {
-            const keyValidator = createValidatorForTypeNode(`${nodeName}_map_key_${node.key}`, node.key, definedTypes);
+            const keyValidator = createValidatorForTypeNode(
+                `${nodeName}_map_key_${node.key.kind}`,
+                node.key,
+                definedTypes,
+            );
             const valueValidator = createValidatorForTypeNode(
-                `${nodeName}_map_value_${node.key}`,
+                `${nodeName}_map_value_${node.key.kind}`,
                 node.value,
                 definedTypes,
             );
@@ -154,11 +160,14 @@ const SolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('SolanaAddr
     return false;
 });
 
-const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('OptionalSolanaAddress', (value: unknown) => {
-    if (value === undefined || value === null) return true;
-    const result = SolanaAddressValidator.validate(value);
-    return !result[0]; // [error|undefined, data|undefined]
-});
+const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define(
+    'OptionalSolanaAddress',
+    (value: unknown) => {
+        if (value === undefined || value === null) return true;
+        const result = SolanaAddressValidator.validate(value);
+        return !result[0]; // [error|undefined, data|undefined]
+    },
+);
 
 /** Accepts both number and bigint for u64/u128/i64/i128 instruction args. */
 const NumberOrBigintValidator: StructUnknown = /* @__PURE__ */ define('NumberOrBigint', (value: unknown) => {
@@ -238,7 +247,11 @@ function KeysLengthValidator(count: number): StructUnknown {
 }
 
 // Handles both fixed-size and variable-size arrays
-function arrayValidator(nodeName: string, node: ArrayTypeNode | SetTypeNode, definedTypes: DefinedTypeNode[]): StructUnknown {
+function arrayValidator(
+    nodeName: string,
+    node: ArrayTypeNode | SetTypeNode,
+    definedTypes: DefinedTypeNode[],
+): StructUnknown {
     // First define a validator for every array item
     const itemValidator = createValidatorForTypeNode(nodeName, node.item, definedTypes);
     // Then validate CountNode representing array size:

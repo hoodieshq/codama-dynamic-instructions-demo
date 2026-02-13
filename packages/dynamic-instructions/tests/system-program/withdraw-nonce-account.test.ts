@@ -24,12 +24,12 @@ describe('System Program: withdrawNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -55,8 +55,8 @@ describe('System Program: withdrawNonceAccount', () => {
             })
             .accounts({
                 nonceAccount,
-                recipientAccount: recipient,
                 nonceAuthority,
+                recipientAccount: recipient,
             })
             .instruction();
 

@@ -23,12 +23,12 @@ describe('System Program: advanceNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -100,9 +100,9 @@ describe('System Program: advanceNonceAccount', () => {
 
         const finalAccount = ctx.requireEncodedAccount(nonceAccount);
         expect(finalAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
         expect(finalAccount.data.length).toBe(nonceAccountSpace);
     });
