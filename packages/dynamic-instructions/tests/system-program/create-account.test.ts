@@ -21,12 +21,12 @@ describe('System Program: createAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: accountSpace,
                 programAddress: programClient.programAddress,
+                space: accountSpace,
             })
             .accounts({
-                payer: payerAccount,
                 newAccount: newAccountAddress,
+                payer: payerAccount,
             })
             .instruction();
 
@@ -35,10 +35,10 @@ describe('System Program: createAccount', () => {
         const createdAccount = ctx.requireEncodedAccount(newAccountAddress);
 
         expect(createdAccount).toMatchObject({
-            lamports: BigInt(fundingLamports),
             data: new Uint8Array(accountSpace),
-            owner: programClient.programAddress,
             executable: false,
+            lamports: BigInt(fundingLamports),
+            owner: programClient.programAddress,
         });
     });
 });

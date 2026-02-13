@@ -22,12 +22,12 @@ describe('System Program: initializeNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer,
                 newAccount: nonceAccount,
+                payer,
             })
             .instruction();
 
@@ -50,9 +50,9 @@ describe('System Program: initializeNonceAccount', () => {
         const initializedAccount = ctx.requireEncodedAccount(nonceAccount);
 
         expect(initializedAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
         expect(initializedAccount.data.length).toBe(nonceAccountSpace);
         expect(initializedAccount.data.some(byte => byte !== 0)).toBe(true);
@@ -68,12 +68,12 @@ describe('System Program: initializeNonceAccount', () => {
         const createAccountInstruction = await programClient.methods
             .createAccount({
                 lamports: fundingLamports,
-                space: nonceAccountSpace,
                 programAddress: programClient.programAddress,
+                space: nonceAccountSpace,
             })
             .accounts({
-                payer: payerAndAuthority,
                 newAccount: nonceAccount,
+                payer: payerAndAuthority,
             })
             .instruction();
 
@@ -93,9 +93,9 @@ describe('System Program: initializeNonceAccount', () => {
         const initializedAccount = ctx.requireEncodedAccount(nonceAccount);
 
         expect(initializedAccount).toMatchObject({
+            executable: false,
             lamports: BigInt(fundingLamports),
             owner: programClient.programAddress,
-            executable: false,
         });
         expect(initializedAccount.data.length).toBe(nonceAccountSpace);
     });

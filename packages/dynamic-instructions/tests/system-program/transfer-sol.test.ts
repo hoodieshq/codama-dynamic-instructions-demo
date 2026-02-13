@@ -24,7 +24,7 @@ describe('System Program: transferSol', () => {
 
         const instruction = await programClient.methods
             .transferSol({ amount: transferAmount })
-            .accounts({ source, destination })
+            .accounts({ destination, source })
             .instruction();
 
         ctx.sendInstruction(instruction, [source]);

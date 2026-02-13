@@ -21,16 +21,16 @@ describe('System Program: allocateWithSeed', () => {
         const fundingLamports = 5_000_000;
         const createIx = await programClient.methods
             .createAccountWithSeed({
-                base: baseAccount,
-                seed,
                 amount: fundingLamports,
-                space: 0,
+                base: baseAccount,
                 programAddress: programClient.programAddress,
+                seed,
+                space: 0,
             })
             .accounts({
-                payer: payerAccount,
-                newAccount,
                 baseAccount,
+                newAccount,
+                payer: payerAccount,
             })
             .instruction();
 
@@ -40,13 +40,13 @@ describe('System Program: allocateWithSeed', () => {
         const allocateIx = await programClient.methods
             .allocateWithSeed({
                 base: baseAccount,
+                programAddress: programClient.programAddress,
                 seed,
                 space,
-                programAddress: programClient.programAddress,
             })
             .accounts({
-                newAccount,
                 baseAccount,
+                newAccount,
             })
             .instruction();
 
@@ -55,8 +55,8 @@ describe('System Program: allocateWithSeed', () => {
         const accountAfter = ctx.requireEncodedAccount(newAccount);
 
         expect(accountAfter).toMatchObject({
-            owner: programClient.programAddress,
             data: new Uint8Array(space),
+            owner: programClient.programAddress,
         });
     });
 });

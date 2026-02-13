@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
-import { unwrapOption, type Option } from '@solana/codecs';
+import { type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -133,11 +133,7 @@ describe('anchor-example', () => {
 
         const [expectedDependentPda] = await getProgramDerivedAddress({
             programAddress: programClient.programAddress,
-            seeds: [
-                'signer_and_ata',
-                addressEncoder.encode(payer),
-                addressEncoder.encode(expectedAta),
-            ],
+            seeds: ['signer_and_ata', addressEncoder.encode(payer), addressEncoder.encode(expectedAta)],
         });
 
         const ix = await programClient.methods

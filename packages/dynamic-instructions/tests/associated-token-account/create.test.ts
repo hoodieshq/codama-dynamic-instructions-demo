@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, test } from 'vitest';
-
 import { findAssociatedTokenPda, getTokenDecoder } from '@solana-program/token';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
 import { ataClient, createMint, tokenClient } from './ata-test-utils';
@@ -20,15 +19,19 @@ describe('Associated Token Account: create', () => {
 
         await createMint(ctx, payer, mint, mintAuthority);
 
-        const [ataAddress] = await findAssociatedTokenPda({ owner: wallet, tokenProgram: tokenClient.programAddress, mint });
+        const [ataAddress] = await findAssociatedTokenPda({
+            mint,
+            owner: wallet,
+            tokenProgram: tokenClient.programAddress,
+        });
 
         const ix = await ataClient.methods
             .create()
             .accounts({
-                fundingAddress: payer,
                 associatedAccountAddress: ataAddress,
-                walletAddress: wallet,
+                fundingAddress: payer,
                 tokenMintAddress: mint,
+                walletAddress: wallet,
             })
             .instruction();
 

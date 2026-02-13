@@ -13,7 +13,7 @@ import { createIxArgumentsValidator } from './validators';
 export function encodeInstructionArguments(
     root: RootNode,
     ix: InstructionNode,
-    argumentsInput: ArgumentsInput = {}
+    argumentsInput: ArgumentsInput = {},
 ): ReadonlyUint8Array {
     const chunks = ix.arguments.reduce<ReadonlyUint8Array[]>((chunks, ixArgumentNode) => {
         const codec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
@@ -23,14 +23,12 @@ export function encodeInstructionArguments(
             // Omitted argument means it must always use the default value (e.g discriminator)
             const defaultValue = ixArgumentNode.defaultValue;
             if (defaultValue === undefined) {
-                throw new ArgumentError(
-                    `Omitted argument ${ixArgumentNode.name} has no default value`
-                );
+                throw new ArgumentError(`Omitted argument ${ixArgumentNode.name} has no default value`);
             }
             const visitor = createDefaultValueEncoderVisitor(codec);
             encodedValue = visitOrElse(defaultValue, visitor, node => {
                 throw new ArgumentError(
-                    `Not supported encoding for ${ixArgumentNode.name} argument of "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`
+                    `Not supported encoding for ${ixArgumentNode.name} argument of "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
                 );
             });
         } else if (ixArgumentNode.type.kind === 'optionTypeNode' && (input === null || input === undefined)) {
@@ -69,7 +67,7 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     const ArgumentsInputValidator = createIxArgumentsValidator(
         ixNode.name,
         requiredArguments,
-        root.program.definedTypes
+        root.program.definedTypes,
     );
 
     try {
@@ -92,7 +90,7 @@ function getRequiredIxArguments(ixNode: InstructionNode) {
 // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionArgumentNode.md#data
 function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     ixNode.arguments.filter(isIxArgumentOmitted).forEach(ixNode => {
-        if (argumentsInput.hasOwnProperty(ixNode.name)) {
+        if (Object.hasOwn(argumentsInput, ixNode.name)) {
             throw new ValidationError(`Argument ${ixNode.name} cannot be provided`);
         }
     });

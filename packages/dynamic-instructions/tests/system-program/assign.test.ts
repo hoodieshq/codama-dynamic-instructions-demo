@@ -20,8 +20,8 @@ describe('System Program: assign', () => {
         const transferInstruction = await programClient.methods
             .transferSol({ amount })
             .accounts({
-                source: payer,
                 destination: accountToAssign,
+                source: payer,
             })
             .instruction();
 

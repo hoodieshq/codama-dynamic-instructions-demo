@@ -20,16 +20,16 @@ describe('System Program: assignWithSeed', () => {
 
         const createIx = await programClient.methods
             .createAccountWithSeed({
-                base: baseAccount,
-                seed,
                 amount: 5_000_000,
-                space: 32,
+                base: baseAccount,
                 programAddress: programClient.programAddress,
+                seed,
+                space: 32,
             })
             .accounts({
-                payer: payerAccount,
-                newAccount: account,
                 baseAccount,
+                newAccount: account,
+                payer: payerAccount,
             })
             .instruction();
 
@@ -38,8 +38,8 @@ describe('System Program: assignWithSeed', () => {
         const assignIx = await programClient.methods
             .assignWithSeed({
                 base: baseAccount,
-                seed,
                 programAddress: programClient.programAddress,
+                seed,
             })
             .accounts({
                 account,

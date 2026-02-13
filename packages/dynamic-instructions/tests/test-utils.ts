@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { createProgramClient } from '../src';
 import type { IdlInput, ProgramClient } from '../src';
+import { createProgramClient } from '../src';
 
 export function loadIdl(idlFileName: string, baseDir?: string): IdlInput {
     const basePath = baseDir ?? path.resolve(__dirname, 'idls');

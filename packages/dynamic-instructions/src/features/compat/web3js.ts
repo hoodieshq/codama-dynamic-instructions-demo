@@ -36,7 +36,7 @@ export type ToVersionedTransactionOptions = {
  */
 export function toVersionedTransaction(
     instructions: Instruction | readonly Instruction[],
-    options: ToVersionedTransactionOptions
+    options: ToVersionedTransactionOptions,
 ): web3.VersionedTransaction {
     const ixs = Array.isArray(instructions) ? instructions : [instructions];
     const legacyIxs = ixs.map(toLegacyTransactionInstruction);

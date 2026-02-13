@@ -19,15 +19,19 @@ describe('Associated Token Account: createIdempotent', () => {
 
         await createMint(ctx, payer, mint, mintAuthority);
 
-        const [ataAddress] = await findAssociatedTokenPda({ owner: wallet, tokenProgram: tokenClient.programAddress, mint });
+        const [ataAddress] = await findAssociatedTokenPda({
+            mint,
+            owner: wallet,
+            tokenProgram: tokenClient.programAddress,
+        });
 
         const ix = await ataClient.methods
             .createIdempotent()
             .accounts({
-                fundingAddress: payer,
                 associatedAccountAddress: ataAddress,
-                walletAddress: wallet,
+                fundingAddress: payer,
                 tokenMintAddress: mint,
+                walletAddress: wallet,
             })
             .instruction();
 

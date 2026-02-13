@@ -23,16 +23,16 @@ describe('System Program: createAccountWithSeed', () => {
 
         const createAccountWithSeedInstruction = await programClient.methods
             .createAccountWithSeed({
-                base: baseAccount,
-                seed,
                 amount: fundingLamports,
-                space: accountSpace,
+                base: baseAccount,
                 programAddress: programClient.programAddress,
+                seed,
+                space: accountSpace,
             })
             .accounts({
-                payer: payerAccount,
-                newAccount,
                 baseAccount,
+                newAccount,
+                payer: payerAccount,
             })
             .instruction();
 
@@ -41,10 +41,10 @@ describe('System Program: createAccountWithSeed', () => {
         const createdAccount = ctx.requireEncodedAccount(newAccount);
 
         expect(createdAccount).toMatchObject({
-            lamports: BigInt(fundingLamports),
             data: new Uint8Array(accountSpace),
-            owner: programClient.programAddress,
             executable: false,
+            lamports: BigInt(fundingLamports),
+            owner: programClient.programAddress,
         });
     });
 });
