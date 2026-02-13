@@ -5,9 +5,8 @@
   "program": {
     "kind": "programNode",
     "name": "splAssociatedTokenAccount",
-    "publicKey": "",
+    "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
     "version": "1.1.1",
-    "origin": "anchor",
     "docs": [],
     "accounts": [],
     "instructions": [
@@ -80,20 +79,17 @@
           {
             "kind": "instructionArgumentNode",
             "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
             "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
             },
+            "docs": [],
             "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "181ec828051c0777",
-              "encoding": "base16"
-            }
+              "kind": "numberValueNode",
+              "number": 0
+            },
+            "defaultValueStrategy": "omitted"
           }
         ],
         "discriminators": [
@@ -173,20 +169,17 @@
           {
             "kind": "instructionArgumentNode",
             "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
             "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
             },
+            "docs": [],
             "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "8f58225b7014f53b",
-              "encoding": "base16"
-            }
+              "kind": "numberValueNode",
+              "number": 1
+            },
+            "defaultValueStrategy": "omitted"
           }
         ],
         "discriminators": [
@@ -269,20 +262,17 @@
           {
             "kind": "instructionArgumentNode",
             "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
             "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
             },
+            "docs": [],
             "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "08bec93ac879d28f",
-              "encoding": "base16"
-            }
+              "kind": "numberValueNode",
+              "number": 2
+            },
+            "defaultValueStrategy": "omitted"
           }
         ],
         "discriminators": [
