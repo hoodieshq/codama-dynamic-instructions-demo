@@ -23,12 +23,39 @@ type ResolveAccountAddressContext = {
  * Resolves the address of an instruction account node by evaluating its default value
  * using the AccountDefaultValueVisitor.
  */
-export async function resolveAccountAddress(ctx: ResolveAccountAddressContext): Promise<Address | null> {
-    const { root, ixNode, ixAccountNode, argumentsInput, accountsInput, resolutionPath, accountAddressInput } = ctx;
-    // Undefined optional accounts are handled according on optionalAccountStrategy
-    // With "programId" optionalStrategy, optional accounts are resolved to programId
-    // With "omitted" optionalStrategy, optional accounts must be excluded from accounts list
-    // By default, optional accounts are resolved to programId
+export async function resolveAccountAddress({
+    root,
+    ixNode,
+    ixAccountNode,
+    argumentsInput,
+    accountsInput,
+    resolutionPath,
+    accountAddressInput,
+}: ResolveAccountAddressContext): Promise<Address | null> {
+    // Ensures accounts with explicit defaults (like System Program) are resolved correctly
+    if (ixAccountNode.defaultValue) {
+        const visitor = createAccountDefaultValueVisitor({
+            accountAddressInput,
+            accountsInput,
+            argumentsInput,
+            ixAccountNode,
+            ixNode,
+            resolutionPath,
+            root,
+        });
+
+        const addressValue = await visitOrElse(ixAccountNode.defaultValue, visitor, node => {
+            throw new AccountError(
+                `Cannot resolve account ${ixAccountNode.name}:${node.kind} of ${ixNode.name} instruction`,
+            );
+        });
+
+        return addressValue;
+    }
+
+    // Handle optional accounts without defaultValue based on optionalAccountStrategy
+    // With "programId" strategy, optional accounts are resolved to programId
+    // With "omitted" strategy, optional accounts must be excluded from accounts list
     if (!accountAddressInput && ixAccountNode.isOptional) {
         switch (ixNode.optionalAccountStrategy) {
             case 'omitted':
@@ -42,27 +69,7 @@ export async function resolveAccountAddress(ctx: ResolveAccountAddressContext): 
         }
     }
 
-    if (!ixAccountNode.defaultValue) {
-        throw new AccountError(
-            `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value`,
-        );
-    }
-
-    const visitor = createAccountDefaultValueVisitor({
-        accountAddressInput,
-        accountsInput,
-        argumentsInput,
-        ixAccountNode,
-        ixNode,
-        resolutionPath,
-        root,
-    });
-
-    const addressValue = await visitOrElse(ixAccountNode.defaultValue, visitor, node => {
-        throw new AccountError(
-            `Cannot resolve account ${ixAccountNode.name}:${node.kind} of ${ixNode.name} instruction`,
-        );
-    });
-
-    return addressValue;
+    throw new AccountError(
+        `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value and was not provided`,
+    );
 }

@@ -6,6 +6,8 @@ import type { StructError } from 'superstruct';
 import { assert } from 'superstruct';
 
 import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
+import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
+import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
 import type { ArgumentsInput } from '../../shared/types';
 import { createIxArgumentsValidator } from './validators';
@@ -16,7 +18,7 @@ export function encodeInstructionArguments(
     argumentsInput: ArgumentsInput = {},
 ): ReadonlyUint8Array {
     const chunks = ix.arguments.reduce<ReadonlyUint8Array[]>((chunks, ixArgumentNode) => {
-        const codec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
+        const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
         const input = argumentsInput?.[ixArgumentNode.name];
         let encodedValue: ReadonlyUint8Array;
         if (isIxArgumentOmitted(ixArgumentNode)) {
@@ -25,35 +27,38 @@ export function encodeInstructionArguments(
             if (defaultValue === undefined) {
                 throw new ArgumentError(`Omitted argument ${ixArgumentNode.name} has no default value`);
             }
-            const visitor = createDefaultValueEncoderVisitor(codec);
+            const visitor = createDefaultValueEncoderVisitor(nodeCodec);
             encodedValue = visitOrElse(defaultValue, visitor, node => {
                 throw new ArgumentError(
                     `Not supported encoding for ${ixArgumentNode.name} argument of "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
                 );
             });
-        } else if (ixArgumentNode.type.kind === 'optionTypeNode' && (input === null || input === undefined)) {
+        } else if (isOptionalArgument(ixArgumentNode, input)) {
             // optional null/undefined argument
-            encodedValue = codec.encode(null);
+            encodedValue = nodeCodec.encode(null);
         } else {
             if (input === undefined) {
                 throw new ArgumentError(`Missing required argument: ${ixArgumentNode.name}`);
             }
-            encodedValue = codec.encode(input);
+            // Transform user input to codamaCodec-compatible format
+            const transformer = createInputValueTransformer(ixArgumentNode.type, root, {
+                bytesEncoding: 'base16',
+            });
+            const transformedInput = transformer(input);
+            encodedValue = nodeCodec.encode(transformedInput);
         }
         chunks.push(encodedValue);
         return chunks;
     }, []);
 
-    // Avoid `[...bytes]` spreading/flattening; that creates lots of intermediate arrays.
-    let totalLength = 0;
-    for (const chunk of chunks) totalLength += chunk.length;
-    const out = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const chunk of chunks) {
-        out.set(chunk as Uint8Array, offset);
-        offset += chunk.length;
-    }
-    return out;
+    return concatBytes(chunks);
+}
+
+function isOptionalArgument(ixArgumentNode: InstructionArgumentNode, input: unknown) {
+    return (
+        ['optionTypeNode', 'remainderOptionTypeNode'].includes(ixArgumentNode.type.kind) &&
+        (input === null || input === undefined)
+    );
 }
 
 export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {

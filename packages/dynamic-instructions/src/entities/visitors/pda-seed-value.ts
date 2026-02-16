@@ -2,7 +2,7 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address } from '@solana/addresses';
 import { address, getAddressEncoder } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import { getBase16Codec, getBase58Codec, getBase64Codec, getBooleanCodec, getUtf8Codec } from '@solana/codecs';
+import { getBooleanCodec, getUtf8Codec } from '@solana/codecs';
 import type {
     AccountValueNode,
     ArgumentValueNode,
@@ -17,9 +17,11 @@ import type { InstructionNode, RootNode } from 'codama';
 
 import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
+import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
+import { createInputValueTransformer } from './input-value-transformer';
 
 type PdaSeedValueVisitorContext = {
     accountsInput?: AccountsInput;
@@ -99,13 +101,19 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
             if (argInput === undefined || argInput === null) {
                 throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
             }
-            return Promise.resolve(codec.encode(argInput));
+            const transformer = createInputValueTransformer(ixArgumentNode.type, root, {
+                bytesEncoding: 'base16',
+            });
+            const transformedInput = transformer(argInput);
+            return Promise.resolve(codec.encode(transformedInput));
         },
 
         visitBooleanValue: (node: BooleanValueNode) => Promise.resolve(getBooleanCodec().encode(node.boolean)),
 
-        visitBytesValue: (node: BytesValueNode) =>
-            Promise.resolve(getCodecFromBytesEncoding(node.encoding).encode(node.data)),
+        visitBytesValue: (node: BytesValueNode) => {
+            const encodedValue = getCodecFromBytesEncoding(node.encoding).encode(node.data);
+            return Promise.resolve(encodedValue);
+        },
 
         visitNumberValue: (node: NumberValueNode) => Promise.resolve(new Uint8Array([node.number])),
 
@@ -117,21 +125,4 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
 
         visitStringValue: (node: StringValueNode) => Promise.resolve(getUtf8Codec().encode(node.string)),
     };
-}
-
-// TODO: check if this can be replaced
-// https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L356
-function getCodecFromBytesEncoding(encoding: string) {
-    switch (encoding) {
-        case 'base16':
-            return getBase16Codec();
-        case 'base58':
-            return getBase58Codec();
-        case 'base64':
-            return getBase64Codec();
-        case 'utf8':
-            return getUtf8Codec();
-        default:
-            throw new AccountError(`Unsupported bytes encoding: ${encoding}`);
-    }
 }
