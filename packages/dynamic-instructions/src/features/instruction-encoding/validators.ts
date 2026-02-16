@@ -224,6 +224,8 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
 
 function EnumVariantValidator(nodeName: string, variantNames: string[]): StructUnknown {
     return define(`${nodeName}_EnumVariant`, (value: unknown) => {
+        // TODO: check nested enums
+        // Variant.name is CamelCaseString
         if (typeof value !== 'string') return false;
         return variantNames.includes(value);
     }) as StructUnknown;
