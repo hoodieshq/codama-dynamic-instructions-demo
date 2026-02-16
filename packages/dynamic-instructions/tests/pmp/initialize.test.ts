@@ -302,4 +302,73 @@ describe('Program Metadata: initialize', () => {
         const writtenData = metadata.data.slice(0, testData.length);
         expect(writtenData).toEqual(testData);
     });
+
+    test('should throw AccountError when authority is missing for non-canonical metadata', async () => {
+        const testProgramAddress = ctx.createAccount();
+        await expect(
+            programClient.methods
+                .initialize({
+                    compression: 'none',
+                    data: null,
+                    dataSource: 'direct',
+                    encoding: 'utf8',
+                    format: 'json',
+                    seed: 'idl',
+                })
+                .accounts({
+                    // Simulate invalid required authority account
+                    authority: undefined as unknown as Address,
+                    program: testProgramAddress,
+                    programData: null,
+                })
+                .instruction(),
+        ).rejects.toThrow(/Missing required account: authority/);
+    });
+
+    test('should throw AccountError when required program account is missing', async () => {
+        const authority = ctx.createFundedAccount();
+
+        await expect(
+            programClient.methods
+                .initialize({
+                    compression: 'none',
+                    data: null,
+                    dataSource: 'direct',
+                    encoding: 'utf8',
+                    format: 'json',
+                    seed: 'idl',
+                })
+                .accounts({
+                    authority,
+                    // Simulate invalid required program account
+                    program: undefined as unknown as Address,
+                    programData: null,
+                })
+                .instruction(),
+        ).rejects.toThrow(/Missing required account: program/);
+    });
+
+    test('should throw ArgumentError when missing required seed argument', async () => {
+        const authority = ctx.createFundedAccount();
+        const testProgramAddress = ctx.createAccount();
+
+        await expect(
+            programClient.methods
+                .initialize({
+                    compression: 'none',
+                    data: null,
+                    dataSource: 'direct',
+                    encoding: 'utf8',
+                    format: 'json',
+                    // Simulate invalid seed
+                    seed: undefined as unknown as string,
+                })
+                .accounts({
+                    authority,
+                    program: testProgramAddress,
+                    programData: null,
+                })
+                .instruction(),
+        ).rejects.toThrow(/Invalid argument "seed", "value": undefined/);
+    });
 });
