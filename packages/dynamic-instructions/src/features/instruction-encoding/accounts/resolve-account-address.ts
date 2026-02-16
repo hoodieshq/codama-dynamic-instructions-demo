@@ -1,10 +1,9 @@
 import type { Address } from '@solana/addresses';
-import { address } from '@solana/addresses';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
 import { createAccountDefaultValueVisitor } from '../../../entities/visitors/account-default-value';
-import type { AddressInput } from '../../../shared/address';
+import { type AddressInput, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type { ResolutionPath } from '../../../shared/types';
 import type { AccountsInput, ArgumentsInput } from '../../../shared/types';
@@ -61,7 +60,7 @@ export async function resolveAccountAddress({
             case 'omitted':
                 return null;
             case 'programId':
-                return address(root.program.publicKey);
+                return toAddress(root.program.publicKey);
             default:
                 throw new AccountError(
                     `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
@@ -70,6 +69,6 @@ export async function resolveAccountAddress({
     }
 
     throw new AccountError(
-        `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value and was not provided`,
+        `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value or was not provided`,
     );
 }

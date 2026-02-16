@@ -23,6 +23,7 @@ type PdaDerivationContext = {
     argumentsInput: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
+    pdaValueNode: PdaValueNode;
     resolutionPath: ResolutionPath | undefined;
     root: RootNode;
 };
@@ -33,14 +34,14 @@ export async function derivePDA({
     ixAccountNode,
     argumentsInput = {},
     accountsInput = {},
+    pdaValueNode,
     resolutionPath,
 }: PdaDerivationContext): Promise<ProgramDerivedAddress | null> {
-    const pdaDefaultValue = ixAccountNode.defaultValue as PdaValueNode | undefined;
-    if (!pdaDefaultValue || !isNode(pdaDefaultValue, 'pdaValueNode')) {
+    if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
     }
 
-    const pdaNode = resolvePdaNode(pdaDefaultValue, root.program.pdas);
+    const pdaNode = resolvePdaNode(pdaValueNode, root.program.pdas);
     const programId = address(pdaNode.programId || root.program.publicKey);
 
     const seedValues = await Promise.all(
@@ -55,7 +56,7 @@ export async function derivePDA({
                 });
             } else if (seedNode.kind === 'variablePdaSeedNode') {
                 // Variable seeds depend on instruction arguments or accounts
-                const variableSeedValueNodes = pdaDefaultValue.seeds;
+                const variableSeedValueNodes = pdaValueNode.seeds;
                 const seedName = seedNode.name;
                 const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);
                 if (!variableSeedValueNode) {
