@@ -5,24 +5,27 @@ import { createInputValueTransformer } from '../../../src/entities/visitors/inpu
 import { rootNodeMock } from './test-helpers';
 
 describe('bytesTypeNode', () => {
-    test('should transform Uint8Array to tuple for bytesTypeNode', () => {
+    test('should transform Uint8Array or number[] to tuple for bytesTypeNode', () => {
         const transformer = createInputValueTransformer(bytesTypeNode(), rootNodeMock, { bytesEncoding: 'base16' });
 
         // 'Hello' as bytes: [72, 101, 108, 108, 111] -> base16: '48656c6c6f'
-        const input = new Uint8Array([72, 101, 108, 108, 111]);
-        const result = transformer(input);
+        const inputNumbers = [72, 101, 108, 108, 111];
+        const inputUint8 = new Uint8Array(inputNumbers);
+        const resultWithUint8 = transformer(inputUint8);
+        const resultWithNumbers = transformer(inputNumbers);
+        const expectedResult = ['base16', '48656c6c6f'];
 
-        expect(result).toEqual(['base16', '48656c6c6f']);
+        expect(resultWithUint8).toEqual(expectedResult);
+        expect(resultWithNumbers).toEqual(expectedResult);
     });
 
     test('should throw error for non-Uint8Array input', () => {
         const transformer = createInputValueTransformer(bytesTypeNode(), rootNodeMock, { bytesEncoding: 'base16' });
-
-        expect(() => transformer(null)).toThrow('Expected Uint8Array for bytesTypeNode');
-        expect(() => transformer(undefined)).toThrow('Expected Uint8Array for bytesTypeNode');
-        expect(() => transformer('not a Uint8Array')).toThrow('Expected Uint8Array for bytesTypeNode');
-        expect(() => transformer(123)).toThrow('Expected Uint8Array for bytesTypeNode');
-        expect(() => transformer({ data: [1, 2, 3] })).toThrow('Expected Uint8Array for bytesTypeNode');
-        expect(() => transformer([1, 2, 3])).toThrow('Expected Uint8Array for bytesTypeNode');
+        const expectedMessage = 'Expected bytes input (Uint8Array or number[]) for bytesTypeNode';
+        expect(() => transformer(null)).toThrow(expectedMessage);
+        expect(() => transformer(undefined)).toThrow(expectedMessage);
+        expect(() => transformer('not a Uint8Array')).toThrow(expectedMessage);
+        expect(() => transformer(123)).toThrow(expectedMessage);
+        expect(() => transformer({ data: [1, 2, 3] })).toThrow(expectedMessage);
     });
 });

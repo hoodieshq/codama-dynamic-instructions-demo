@@ -258,11 +258,6 @@ export class SvmTestContext {
         return this.svm.minimumBalanceForRentExemption(dataLen);
     }
 
-    /** Calculates the minimum balance required to make an account with specified data length rent exempt. */
-    minimumBalanceForRentExemption(dataLen: bigint): bigint {
-        return this.svm.minimumBalanceForRentExemption(dataLen);
-    }
-
     /** Returns the underlying LiteSVM instance for direct use when needed. Consider using the public methods instead. */
     getSvm(): LiteSVM {
         return this.svm;

@@ -2,7 +2,8 @@ import type { BytesEncoding, RootNode, TypeNode, Visitor } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
-import { isPlainObject } from '../../shared/util';
+import { ArgumentError } from '../../shared/errors';
+import { isObjectRecord } from '../../shared/util';
 
 /**
  * Type nodes that the input value transformer can process.
@@ -61,17 +62,17 @@ export function getInputValueTransformerVisitor(
     const visitor: Visitor<InputTransformer, TransformableTypeNodeKind> = {
         visitAmountType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new Error(`Unsupported type node in amountTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in amountTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitArrayType(node) {
             const itemTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new Error(`Unsupported type node in arrayTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in arrayTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new TypeError(
+                    throw new ArgumentError(
                         `Expected an array for arrayTypeNode, but received: ${typeof input}. ` +
                             `Received value: ${JSON.stringify(input)}`,
                     );
@@ -86,29 +87,33 @@ export function getInputValueTransformerVisitor(
 
         visitBytesType() {
             return (input: unknown) => {
-                if (!isUint8Array(input)) {
-                    throw new Error(
-                        `Expected Uint8Array for bytesTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
-                    );
+                if (isUint8Array(input)) {
+                    return [bytesEncoding, uint8ArrayToEncodedString(input, bytesEncoding)];
                 }
-                return [bytesEncoding, uint8ArrayToEncodedString(input, bytesEncoding)];
+                // Accept number[] by coercing to Uint8Array
+                if (Array.isArray(input) && input.every(item => typeof item === 'number')) {
+                    return [bytesEncoding, uint8ArrayToEncodedString(new Uint8Array(input), bytesEncoding)];
+                }
+                throw new ArgumentError(
+                    `Expected bytes input (Uint8Array or number[]) for bytesTypeNode, but received: ${typeof input}. ` +
+                        `Received value: ${JSON.stringify(input)}`,
+                );
             };
         },
 
         visitDateTimeType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new Error(`Unsupported type node in dateTimeTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in dateTimeTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitDefinedTypeLink(node) {
             const definedType = root.program.definedTypes.find(dt => dt.name === node.name);
             if (!definedType) {
-                throw new Error(`Cannot resolve defined type link: ${node.name}`);
+                throw new ArgumentError(`Cannot resolve defined type link: ${node.name}`);
             }
             return visitOrElse(definedType.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in definedTypeLink: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in definedTypeLink: ${innerNode.kind}`);
             });
         },
 
@@ -120,7 +125,7 @@ export function getInputValueTransformerVisitor(
                     return input;
                 }
 
-                if (!isPlainObject(input)) {
+                if (!isObjectRecord(input)) {
                     return input;
                 }
 
@@ -135,11 +140,13 @@ export function getInputValueTransformerVisitor(
 
                 if (isNode(variantNode, 'enumStructVariantTypeNode')) {
                     const structTransform = visitOrElse(variantNode.struct, visitor, innerNode => {
-                        throw new Error(`Unsupported type node in enumStructVariantTypeNode: ${innerNode.kind}`);
+                        throw new ArgumentError(
+                            `Unsupported type node in enumStructVariantTypeNode: ${innerNode.kind}`,
+                        );
                     });
                     const transformedFields = structTransform(rest);
-                    if (!isPlainObject(transformedFields)) {
-                        throw new Error(
+                    if (!isObjectRecord(transformedFields)) {
+                        throw new ArgumentError(
                             `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${typeof transformedFields}`,
                         );
                     }
@@ -148,7 +155,7 @@ export function getInputValueTransformerVisitor(
 
                 if (isNode(variantNode, 'enumTupleVariantTypeNode')) {
                     const tupleTransform = visitOrElse(variantNode.tuple, visitor, innerNode => {
-                        throw new Error(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
+                        throw new ArgumentError(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
                     });
                     if ('fields' in rest && Array.isArray(rest.fields)) {
                         return { __kind, fields: tupleTransform(rest.fields) };
@@ -161,30 +168,30 @@ export function getInputValueTransformerVisitor(
 
         visitFixedSizeType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in fixedSizeTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in fixedSizeTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitHiddenPrefixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in hiddenPrefixTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in hiddenPrefixTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitHiddenSuffixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in hiddenSuffixTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in hiddenSuffixTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitMapType(node) {
             // Maps are represented as objects in dynamic-codecs
             const valueTransform = visitOrElse(node.value, visitor, innerNode => {
-                throw new Error(`Unsupported type node in mapTypeNode value: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in mapTypeNode value: ${innerNode.kind}`);
             });
             return (input: unknown) => {
-                if (!isPlainObject(input)) {
-                    throw new TypeError(
+                if (!isObjectRecord(input)) {
+                    throw new ArgumentError(
                         `Expected a plain object for mapTypeNode, but received: ${typeof input}. ` +
                             `Received value: ${JSON.stringify(input)}`,
                     );
@@ -204,7 +211,7 @@ export function getInputValueTransformerVisitor(
 
         visitOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new Error(`Unsupported type node in optionTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in optionTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -214,13 +221,13 @@ export function getInputValueTransformerVisitor(
 
         visitPostOffsetType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in postOffsetTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in postOffsetTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitPreOffsetType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in preOffsetTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in preOffsetTypeNode: ${innerNode.kind}`);
             });
         },
 
@@ -230,7 +237,7 @@ export function getInputValueTransformerVisitor(
 
         visitRemainderOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new Error(`Unsupported type node in remainderOptionTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in remainderOptionTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -240,18 +247,18 @@ export function getInputValueTransformerVisitor(
 
         visitSentinelType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in sentinelTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in sentinelTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitSetType(node) {
             // Sets are represented as arrays in dynamic-codecs
             const itemTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new Error(`Unsupported type node in setTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in setTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new TypeError(
+                    throw new ArgumentError(
                         `Expected an array for setTypeNode, but received: ${typeof input}. ` +
                             `Received value: ${JSON.stringify(input)}`,
                     );
@@ -262,13 +269,13 @@ export function getInputValueTransformerVisitor(
 
         visitSizePrefixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in sizePrefixTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in sizePrefixTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitSolAmountType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new Error(`Unsupported type node in solAmountTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in solAmountTypeNode: ${innerNode.kind}`);
             });
         },
 
@@ -278,20 +285,20 @@ export function getInputValueTransformerVisitor(
 
         visitStructFieldType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new Error(`Unsupported type node in structFieldTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in structFieldTypeNode: ${innerNode.kind}`);
             });
         },
 
         visitStructType(node) {
             const fieldTransformers = node.fields.map(field => {
                 const transform = visitOrElse(field, visitor, innerNode => {
-                    throw new Error(`Unsupported type node in structTypeNode field: ${innerNode.kind}`);
+                    throw new ArgumentError(`Unsupported type node in structTypeNode field: ${innerNode.kind}`);
                 });
                 return { name: field.name, transform };
             });
             return (input: unknown) => {
-                if (!isPlainObject(input)) {
-                    throw new TypeError(
+                if (!isObjectRecord(input)) {
+                    throw new ArgumentError(
                         `Expected a plain object for structTypeNode, but received: ${typeof input}. ` +
                             `Received value: ${JSON.stringify(input)}`,
                     );
@@ -309,18 +316,18 @@ export function getInputValueTransformerVisitor(
         visitTupleType(node) {
             const itemTransforms = node.items.map(item =>
                 visitOrElse(item, visitor, innerNode => {
-                    throw new Error(`Unsupported type node in tupleTypeNode: ${innerNode.kind}`);
+                    throw new ArgumentError(`Unsupported type node in tupleTypeNode: ${innerNode.kind}`);
                 }),
             );
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new TypeError(
+                    throw new ArgumentError(
                         `Expected an array for tupleTypeNode, but received: ${typeof input}. ` +
                             `Received value: ${JSON.stringify(input)}`,
                     );
                 }
                 if (input.length !== itemTransforms.length) {
-                    throw new TypeError(
+                    throw new ArgumentError(
                         `Expected tuple of length ${itemTransforms.length} for tupleTypeNode, but received array of length ${input.length}.`,
                     );
                 }
@@ -330,7 +337,7 @@ export function getInputValueTransformerVisitor(
 
         visitZeroableOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new Error(`Unsupported type node in zeroableOptionTypeNode: ${innerNode.kind}`);
+                throw new ArgumentError(`Unsupported type node in zeroableOptionTypeNode: ${innerNode.kind}`);
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -369,6 +376,6 @@ export function createInputValueTransformer(
 ): InputTransformer {
     const visitor = getInputValueTransformerVisitor(root, options);
     return visitOrElse(typeNode, visitor, node => {
-        throw new Error(`Unsupported type node for input transformation: ${node.kind}`);
+        throw new ArgumentError(`Unsupported type node for input transformation: ${node.kind}`);
     });
 }

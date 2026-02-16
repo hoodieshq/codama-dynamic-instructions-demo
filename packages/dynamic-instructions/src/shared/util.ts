@@ -10,14 +10,9 @@ export function detectCircularDependency(nodeName: string, resolutionPath: Resol
         throw new AccountError(`Circular dependency detected: ${[...resolutionPath, nodeName].join(' -> ')}`);
     }
 }
-
-export function isPlainObject(value: unknown): value is Record<string, unknown> {
-    return (
-        typeof value === 'object' &&
-        value !== null &&
-        !Array.isArray(value) &&
-        !(value instanceof Date) &&
-        !(value instanceof Map) &&
-        !(value instanceof Set)
-    );
+/**
+ * Checks if a value is a plain object record (struct-like).
+ */
+export function isObjectRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 }

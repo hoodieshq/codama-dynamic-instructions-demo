@@ -42,7 +42,7 @@ export function decodeMetadataAccount(data: Uint8Array): PmpMetadata {
 }
 
 /**
- * Loads compiled PMP program PMP binary located at '../dumps/pmp.so' into the test context at the specified program address.
+ * Loads compiled PMP program binary located at '../dumps/pmp.so' into the test context at the specified program address.
  */
 export function loadPmpProgram(ctx: SvmTestContext, programAddress: Address): void {
     const programPath = path.resolve(__dirname, '..', 'dumps', 'pmp.so');
@@ -66,7 +66,7 @@ export function loadPmpProgram(ctx: SvmTestContext, programAddress: Address): vo
  *
  * @param ctx - Test context
  * @param programBinaryPath - Path to program .so file
- * @param programAddress - Address of the program program
+ * @param programAddress - Address of the program
  * @param upgradeAuthority - Authority to set in ProgramData account
  * @returns { programAddress, programDataAddress }
  */
@@ -86,7 +86,7 @@ export async function setUpgradeableProgramAccounts(
     const programBytes = fs.readFileSync(programBinaryPath);
     const programDataAccountData = new Uint8Array([...programDataAccountBytes, ...programBytes]);
 
-    const rentExemptBalance = ctx.minimumBalanceForRentExemption(BigInt(programDataAccountData.length));
+    const rentExemptBalance = ctx.getMinimumBalanceForRentExemption(BigInt(programDataAccountData.length));
     ctx.setAccount(programDataAddress, {
         data: programDataAccountData,
         executable: false,
