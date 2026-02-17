@@ -1,7 +1,7 @@
 import { type Address, address } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
-import { FailedTransactionMetadata, LiteSVM } from 'litesvm';
+import { FailedTransactionMetadata, LiteSVM, type TransactionMetadata } from 'litesvm';
 
 import { toLegacyTransactionInstruction } from '../src';
 
@@ -174,64 +174,13 @@ export class SvmTestContext {
     }
 
     /** Builds, signs, and sends a transaction with a single instruction. Signers must be context-owned. */
-    sendInstruction(instruction: Instruction, signers: Address[]): void {
-        if (signers.length === 0) {
-            throw new Error('At least one signer is required');
-        }
-
-        const keypairs = signers.map(addr => {
-            const keypair = this.accounts.get(addr);
-            if (!keypair) {
-                throw new Error(`Signer ${addr} not found in context`);
-            }
-            return keypair;
-        });
-
-        const legacyIx = toLegacyTransactionInstruction(instruction);
-        const transaction = new web3.Transaction().add(legacyIx);
-        const feePayer = keypairs[0];
-        if (!feePayer) throw new Error('No signers');
-        transaction.feePayer = feePayer.publicKey;
-        transaction.recentBlockhash = this.svm.latestBlockhash();
-        transaction.sign(...keypairs);
-
-        const result = this.svm.sendTransaction(transaction);
-        if (result instanceof FailedTransactionMetadata) {
-            console.error('Transaction failed, logs:\n', result.meta().prettyLogs());
-            throw new Error(`Transaction failed: ${result.toString()}`);
-        }
+    sendInstruction(instruction: Instruction, signers: Address[]): TransactionMetadata {
+        return this.buildAndSend([instruction], signers);
     }
 
     /** Builds, signs, and sends a transaction with multiple instructions. Signers must be context-owned. */
-    sendInstructions(instructions: Instruction[], signers: Address[]): void {
-        if (signers.length === 0) {
-            throw new Error('At least one signer is required');
-        }
-
-        const keypairs = signers.map(addr => {
-            const keypair = this.accounts.get(addr);
-            if (!keypair) {
-                throw new Error(`Signer ${addr} not found in context`);
-            }
-            return keypair;
-        });
-
-        const transaction = new web3.Transaction();
-        for (const instruction of instructions) {
-            const legacyIx = toLegacyTransactionInstruction(instruction);
-            transaction.add(legacyIx);
-        }
-
-        const feePayer = keypairs[0];
-        if (!feePayer) throw new Error('No signers');
-        transaction.feePayer = feePayer.publicKey;
-        transaction.recentBlockhash = this.svm.latestBlockhash();
-        transaction.sign(...keypairs);
-
-        const result = this.svm.sendTransaction(transaction);
-        if (result instanceof FailedTransactionMetadata) {
-            throw new Error(`Transaction failed: ${result.toString()}`);
-        }
+    sendInstructions(instructions: Instruction[], signers: Address[]): TransactionMetadata {
+        return this.buildAndSend(instructions, signers);
     }
 
     /** Warps the SVM to the specified slot. */
@@ -261,5 +210,37 @@ export class SvmTestContext {
     /** Returns the underlying LiteSVM instance for direct use when needed. Consider using the public methods instead. */
     getSvm(): LiteSVM {
         return this.svm;
+    }
+
+    private buildAndSend(instructions: Instruction[], signers: Address[]): TransactionMetadata {
+        if (signers.length === 0) {
+            throw new Error('At least one signer is required');
+        }
+
+        const keypairs = signers.map(addr => {
+            const keypair = this.accounts.get(addr);
+            if (!keypair) {
+                throw new Error(`Signer ${addr} not found in context`);
+            }
+            return keypair;
+        });
+
+        const transaction = new web3.Transaction();
+        for (const instruction of instructions) {
+            transaction.add(toLegacyTransactionInstruction(instruction));
+        }
+
+        const feePayer = keypairs[0];
+        if (!feePayer) throw new Error('No signers');
+        transaction.feePayer = feePayer.publicKey;
+        transaction.recentBlockhash = this.svm.latestBlockhash();
+        transaction.sign(...keypairs);
+
+        const result = this.svm.sendTransaction(transaction);
+        if (result instanceof FailedTransactionMetadata) {
+            console.error('Transaction failed, logs:\n', result.meta().prettyLogs());
+            throw new Error(`Transaction failed: ${result.toString()}`);
+        }
+        return result;
     }
 }
