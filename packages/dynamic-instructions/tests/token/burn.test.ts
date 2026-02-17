@@ -1,7 +1,7 @@
 import { getMintDecoder, getTokenDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
-import { SvmTestContext } from '../svm-test-context';
+import { SvmTestContext } from '../test-utils';
 import { createMint, createTokenAccount, tokenClient } from './token-test-utils';
 
 describe('Token Program: burn', () => {

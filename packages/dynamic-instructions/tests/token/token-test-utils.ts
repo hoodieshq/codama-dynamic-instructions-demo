@@ -9,6 +9,7 @@ export const systemClient = createTestProgramClient<SystemProgramClient>('system
 
 export const SPL_TOKEN_MINT_SIZE = 82;
 export const SPL_TOKEN_ACCOUNT_SIZE = 165;
+export const SPL_TOKEN_MULTISIG_SIZE = 355;
 
 export async function createMint(
     ctx: SvmTestContext,

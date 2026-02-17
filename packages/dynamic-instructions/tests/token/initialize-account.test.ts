@@ -1,8 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
-import { createMint, createTokenAccount, tokenClient } from './token-test-utils';
-import { SPL_TOKEN_ACCOUNT_SIZE } from './token-test-utils';
+import { createMint, createTokenAccount, SPL_TOKEN_ACCOUNT_SIZE, tokenClient } from './token-test-utils';
 
 describe('Token Program: initializeAccount', () => {
     test('should initialize a token account', async () => {

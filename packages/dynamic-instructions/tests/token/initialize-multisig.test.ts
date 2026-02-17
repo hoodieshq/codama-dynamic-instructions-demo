@@ -2,9 +2,7 @@ import { getMultisigDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
-import { systemClient, tokenClient } from './token-test-utils';
-
-const SPL_TOKEN_MULTISIG_SIZE = 355;
+import { SPL_TOKEN_MULTISIG_SIZE, systemClient, tokenClient } from './token-test-utils';
 
 describe('Token Program: initializeMultisig', () => {
     test('should initialize a multisig account with 2-of-3 signers', async () => {

@@ -74,10 +74,15 @@ export async function resolveAccountMeta(
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
         if (remainingNode.value.kind !== 'argumentValueNode') continue;
-        const addresses = argumentsInput[remainingNode.value.name] as AddressInput[] | undefined;
+        const addresses = argumentsInput[remainingNode.value.name];
         if (addresses === undefined) continue;
+        if (!Array.isArray(addresses)) {
+            throw new AccountError(
+                `Remaining account argument "${remainingNode.value.name}" must be an array of addresses`,
+            );
+        }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
-        for (const addr of addresses) {
+        for (const addr of addresses as AddressInput[]) {
             accountMetas.push({ address: toAddress(addr), role });
         }
     }
