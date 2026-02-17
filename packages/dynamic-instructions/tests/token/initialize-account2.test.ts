@@ -1,5 +1,4 @@
-import { getTokenDecoder } from '@solana-program/token';
-import { AccountState } from '@solana-program/token';
+import { AccountState, getTokenDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';

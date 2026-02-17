@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
-import { systemClient, tokenClient } from './token-test-utils';
+import { SPL_TOKEN_MINT_SIZE, systemClient, tokenClient } from './token-test-utils';
 
 describe('Token Program: initializeMint2', () => {
     test('should initialize a mint without requiring the Rent sysvar', async () => {
@@ -9,14 +9,13 @@ describe('Token Program: initializeMint2', () => {
         const payer = ctx.createFundedAccount();
         const mintAccount = ctx.createAccount();
 
-        const mintSpace = 82;
-        const mintRent = ctx.getMinimumBalanceForRentExemption(BigInt(mintSpace));
+        const mintRent = ctx.getMinimumBalanceForRentExemption(BigInt(SPL_TOKEN_MINT_SIZE));
 
         const createAccountIx = await systemClient.methods
             .createAccount({
                 lamports: mintRent,
                 programAddress: tokenClient.programAddress,
-                space: mintSpace,
+                space: SPL_TOKEN_MINT_SIZE,
             })
             .accounts({
                 newAccount: mintAccount,
@@ -33,6 +32,6 @@ describe('Token Program: initializeMint2', () => {
 
         const encodedAccount = ctx.requireEncodedAccount(mintAccount);
         expect(encodedAccount.owner).toBe(tokenClient.programAddress);
-        expect(encodedAccount.data.length).toBe(mintSpace);
+        expect(encodedAccount.data.length).toBe(SPL_TOKEN_MINT_SIZE);
     });
 });

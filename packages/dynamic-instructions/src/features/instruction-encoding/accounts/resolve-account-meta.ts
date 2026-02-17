@@ -96,6 +96,8 @@ function isIxAccountRequired(ixAccountNode: InstructionAccountNode) {
     return !ixAccountNode.isOptional && !ixAccountNode.defaultValue;
 }
 
+// TODO: 'either' is treated as signer — this works for Token Program multisig signers,
+// but may need refinement for programs where 'either' accounts are sometimes non-signers.
 function getRemainingAccountRole(isSigner?: boolean | 'either', isWritable?: boolean): AccountRole {
     const signer = isSigner === true || isSigner === 'either';
     const writable = isWritable === true;
