@@ -24,6 +24,8 @@ export type SvmTestContextConfig = {
     readonly defaultPrograms?: boolean;
     /** Include standard precompiles (ed25519, secp256k1). Default: false. */
     readonly precompiles?: boolean;
+    /** Include standard sysvars (clock, rent, etc.). Default: false. */
+    readonly sysvars?: boolean;
 };
 
 /**
@@ -59,6 +61,9 @@ export class SvmTestContext {
         }
         if (config.precompiles) {
             svm = svm.withPrecompiles();
+        }
+        if (config.sysvars) {
+            svm = svm.withSysvars();
         }
         this.svm = svm;
         this.accounts = new Map();
