@@ -116,4 +116,13 @@ describe('resolveAccountMeta: remaining accounts', () => {
             resolveAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
         ).rejects.toThrow('Remaining account argument "signers" must be an array of addresses');
     });
+
+    test('should throw when remaining account array contains invalid element types', async () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        await expect(
+            resolveAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
+        ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
+    });
 });

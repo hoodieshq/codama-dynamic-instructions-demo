@@ -3,8 +3,7 @@ import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
-import type { AddressInput } from '../../../shared/address';
-import { toAddress } from '../../../shared/address';
+import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../../shared/types';
 import { resolveAccountAddress } from './resolve-account-address';
@@ -82,7 +81,13 @@ export async function resolveAccountMeta(
             );
         }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
-        for (const addr of addresses as AddressInput[]) {
+        for (let i = 0; i < addresses.length; i++) {
+            const addr: unknown = addresses[i];
+            if (typeof addr !== 'string' && !isPublicKeyLike(addr)) {
+                throw new AccountError(
+                    `Remaining account argument "${remainingNode.value.name}[${i}]" must be an address string or PublicKey, got ${typeof addr}`,
+                );
+            }
             accountMetas.push({ address: toAddress(addr), role });
         }
     }
