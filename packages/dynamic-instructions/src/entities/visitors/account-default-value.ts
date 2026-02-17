@@ -16,7 +16,7 @@ import type {
     ResolverValueNode,
     RootNode,
 } from 'codama';
-import { visitOrElse } from 'codama';
+import { isNode, visitOrElse } from 'codama';
 
 import { derivePDA } from '../../features/instruction-encoding/pda';
 import type { AddressInput } from '../../shared/address';
@@ -165,12 +165,13 @@ export function createAccountDefaultValueVisitor(
             return await Promise.resolve(toAddress(accountAddressInput));
         },
 
-        visitPdaValue: async (_node: PdaValueNode) => {
+        visitPdaValue: async (node: PdaValueNode) => {
             const pda = await derivePDA({
                 accountsInput,
                 argumentsInput,
                 ixAccountNode,
                 ixNode,
+                pdaValueNode: node,
                 resolutionPath,
                 root,
             });
@@ -219,6 +220,9 @@ export async function resolveConditionalValueNodeCondition({
     accountsInput,
     resolutionPath,
 }: ConditionalValueNodeConditionContext) {
+    if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
+        throw new AccountError(`Expected conditionalValueNode in account ${ixAccountNode.name}`);
+    }
     const { condition, value: requiredValueNode, ifTrue, ifFalse } = conditionalValueNode;
 
     if (!requiredValueNode && !ifTrue && !ifFalse) {

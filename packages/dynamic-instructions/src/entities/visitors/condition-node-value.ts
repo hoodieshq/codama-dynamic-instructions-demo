@@ -2,6 +2,7 @@ import type { Visitor } from 'codama';
 import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValueNode, RootNode } from 'codama';
 
 import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
+import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
 
@@ -31,8 +32,18 @@ export function createConditionNodeValueVisitor(
                 );
             }
 
+            // if user explicitly provides null for conditional account, we should return it for conditionalValueNode ifFalse branch
+            const accountAddressInput = accountsInput?.[ixAccountNode.name];
+            if (accountAddressInput === null) {
+                return null;
+            }
+            if (accountAddressInput !== undefined) {
+                return toAddress(accountAddressInput);
+            }
+
+            // Fallback to resolving from default value
             const conditionalAddress = await resolveAccountAddress({
-                accountAddressInput: accountsInput?.[ixAccountNode.name],
+                accountAddressInput,
                 accountsInput,
                 argumentsInput,
                 ixAccountNode,

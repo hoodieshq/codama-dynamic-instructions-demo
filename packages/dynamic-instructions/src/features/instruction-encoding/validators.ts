@@ -212,11 +212,23 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         case 'sizePrefixTypeNode': {
             return createValidatorForTypeNode(`${nodeName}_size_prefix`, node.type, definedTypes);
         }
+        case 'enumTypeNode': {
+            const variantNames = node.variants.map(v => v.name);
+            return EnumVariantValidator(nodeName, variantNames);
+        }
         case 'amountTypeNode': // unit with decimals
         case 'solAmountTypeNode': // equivalent to amountTypeNode with 9 decimals
-        case 'enumTypeNode':
             throw new Error(`Unsupported argument type: ${nodeName} of type ${node.kind}`);
     }
+}
+
+function EnumVariantValidator(nodeName: string, variantNames: string[]): StructUnknown {
+    return define(`${nodeName}_EnumVariant`, (value: unknown) => {
+        // TODO: check nested enums
+        // Variant.name is CamelCaseString
+        if (typeof value !== 'string') return false;
+        return variantNames.includes(value);
+    }) as StructUnknown;
 }
 
 const SolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('SolanaAddress', (value: unknown) => {
