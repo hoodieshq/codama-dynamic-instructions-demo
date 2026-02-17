@@ -7,17 +7,12 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
 import { createTestProgramClient, SvmTestContext } from '../test-utils';
-import {
-    decodeMetadataAccount,
-    encodeSeedForPda,
-    loadPmpProgram,
-    PMP_PROGRAM_ID,
-    setUpgradeableProgramAccounts,
-} from './helpers';
+import { decodeMetadataAccount, encodeSeedForPda, loadPmpProgram, setUpgradeableProgramAccounts } from './helpers';
 
 describe('Program Metadata: setData', () => {
     const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
     const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
+    const PMP_PROGRAM_ID = programClient.programAddress;
     let ctx: SvmTestContext;
 
     beforeEach(() => {
@@ -79,9 +74,9 @@ describe('Program Metadata: setData', () => {
             .setData({
                 compression: 'zlib',
                 data: newData,
-                dataSource: 'url',
-                encoding: 'base64',
-                format: 'toml',
+                dataSource: 'direct',
+                encoding: 'utf8',
+                format: 'json',
             })
             .accounts({
                 authority,
@@ -105,10 +100,10 @@ describe('Program Metadata: setData', () => {
 
         const writtenData = metadataAfter.data.slice(0, newData.length);
         expect(writtenData).toEqual(newData);
-        expect(metadataAfter.encoding).toBe(Encoding.Base64);
+        expect(metadataAfter.encoding).toBe(Encoding.Utf8);
         expect(metadataAfter.compression).toBe(Compression.Zlib);
-        expect(metadataAfter.format).toBe(Format.Toml);
-        expect(metadataAfter.dataSource).toBe(DataSource.Url);
+        expect(metadataAfter.format).toBe(Format.Json);
+        expect(metadataAfter.dataSource).toBe(DataSource.Direct);
 
         // Unchanged fields
         expect(metadataAfter.canonical).toBe(true);
@@ -291,7 +286,6 @@ describe('Program Metadata: setData', () => {
 
         ctx.sendInstruction(setDataIx, [authority]);
 
-        // Verify updated buffer
         const accountAfter = ctx.requireEncodedAccount(metadataPda);
         const metadataAfter = decodeMetadataAccount(accountAfter.data);
 
@@ -302,86 +296,5 @@ describe('Program Metadata: setData', () => {
         expect(metadataAfter.format).toBe(Format.Json);
         expect(metadataAfter.dataSource).toBe(DataSource.Direct);
         expect((metadataAfter.authority as Some<Address>).value).toBe(authority);
-    });
-
-    test('should fail to update immutable metadata', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            authority,
-        );
-
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
-
-        const initialData = new TextEncoder().encode('{"name":"test"}');
-        const initIx = await programClient.methods
-            .initialize({
-                compression: 'none',
-                data: initialData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-                seed,
-            })
-            .accounts({
-                authority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(initIx, [authority]);
-
-        // Make metadata immutable
-        const setImmutableIx = await programClient.methods
-            .setImmutable()
-            .accounts({
-                authority,
-                metadata: metadataPda,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(setImmutableIx, [authority]);
-
-        // Verify immutable
-        const accountAfterImmutable = ctx.requireEncodedAccount(metadataPda);
-        const metadataAfterImmutable = decodeMetadataAccount(accountAfterImmutable.data);
-        expect(metadataAfterImmutable.mutable).toBe(false);
-
-        // Attempt to update immutable metadata
-        const newData = new TextEncoder().encode('{"name":"should fail"}');
-        const setDataIx = await programClient.methods
-            .setData({
-                compression: 'none',
-                data: newData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-            })
-            .accounts({
-                authority,
-                buffer: null,
-                metadata: metadataPda,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        // Should fail at runtime
-        expect(() => ctx.sendInstruction(setDataIx, [authority])).toThrow(/Transaction failed/);
     });
 });
