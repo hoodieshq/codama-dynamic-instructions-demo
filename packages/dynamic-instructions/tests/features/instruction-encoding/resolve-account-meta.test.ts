@@ -107,4 +107,13 @@ describe('resolveAccountMeta: remaining accounts', () => {
         // Should only have regular accounts (mint + rent sysvar)
         expect(result).toHaveLength(2);
     });
+
+    test('should throw when remaining account argument is not an array', async () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        await expect(
+            resolveAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
+        ).rejects.toThrow('Remaining account argument "signers" must be an array of addresses');
+    });
 });

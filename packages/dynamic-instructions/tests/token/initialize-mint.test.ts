@@ -1,3 +1,4 @@
+import { getMintDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
@@ -30,8 +31,10 @@ describe('Token Program: initializeMint', () => {
 
         ctx.sendInstructions([createAccountIx, initMintIx], [payer, mintAccount]);
 
-        const encodedAccount = ctx.requireEncodedAccount(mintAccount);
-        expect(encodedAccount.owner).toBe(tokenClient.programAddress);
-        expect(encodedAccount.data.length).toBe(SPL_TOKEN_MINT_SIZE);
+        const mintData = getMintDecoder().decode(ctx.requireEncodedAccount(mintAccount).data);
+        expect(mintData.mintAuthority).toEqual({ __option: 'Some', value: payer });
+        expect(mintData.decimals).toBe(9);
+        expect(mintData.supply).toBe(0n);
+        expect(mintData.freezeAuthority).toEqual({ __option: 'None' });
     });
 });

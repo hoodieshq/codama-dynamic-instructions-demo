@@ -1,3 +1,4 @@
+import { getMintDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
@@ -8,6 +9,7 @@ describe('Token Program: initializeMint2', () => {
         const ctx = new SvmTestContext({ defaultPrograms: true });
         const payer = ctx.createFundedAccount();
         const mintAccount = ctx.createAccount();
+        const freezeAuthority = ctx.createAccount();
 
         const mintRent = ctx.getMinimumBalanceForRentExemption(BigInt(SPL_TOKEN_MINT_SIZE));
 
@@ -24,14 +26,16 @@ describe('Token Program: initializeMint2', () => {
             .instruction();
 
         const initMintIx = await tokenClient.methods
-            .initializeMint2({ decimals: 9, mintAuthority: payer })
+            .initializeMint2({ decimals: 6, freezeAuthority, mintAuthority: payer })
             .accounts({ mint: mintAccount })
             .instruction();
 
         ctx.sendInstructions([createAccountIx, initMintIx], [payer, mintAccount]);
 
-        const encodedAccount = ctx.requireEncodedAccount(mintAccount);
-        expect(encodedAccount.owner).toBe(tokenClient.programAddress);
-        expect(encodedAccount.data.length).toBe(SPL_TOKEN_MINT_SIZE);
+        const mintData = getMintDecoder().decode(ctx.requireEncodedAccount(mintAccount).data);
+        expect(mintData.mintAuthority).toEqual({ __option: 'Some', value: payer });
+        expect(mintData.decimals).toBe(6);
+        expect(mintData.supply).toBe(0n);
+        expect(mintData.freezeAuthority).toEqual({ __option: 'Some', value: freezeAuthority });
     });
 });

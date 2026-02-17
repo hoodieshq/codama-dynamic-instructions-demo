@@ -1,7 +1,8 @@
+import { AccountState, getTokenDecoder } from '@solana-program/token';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../test-utils';
-import { createMint, createTokenAccount, SPL_TOKEN_ACCOUNT_SIZE, tokenClient } from './token-test-utils';
+import { createMint, createTokenAccount } from './token-test-utils';
 
 describe('Token Program: initializeAccount', () => {
     test('should initialize a token account', async () => {
@@ -14,8 +15,10 @@ describe('Token Program: initializeAccount', () => {
         await createMint(ctx, payer, mintAccount, payer);
         await createTokenAccount(ctx, payer, tokenAccount, mintAccount, owner);
 
-        const encodedAccount = ctx.requireEncodedAccount(tokenAccount);
-        expect(encodedAccount.owner).toBe(tokenClient.programAddress);
-        expect(encodedAccount.data.length).toBe(SPL_TOKEN_ACCOUNT_SIZE);
+        const tokenData = getTokenDecoder().decode(ctx.requireEncodedAccount(tokenAccount).data);
+        expect(tokenData.mint).toBe(mintAccount);
+        expect(tokenData.owner).toBe(owner);
+        expect(tokenData.amount).toBe(0n);
+        expect(tokenData.state).toBe(AccountState.Initialized);
     });
 });
