@@ -50,10 +50,19 @@ interface DefinedTypeNode {
     type: TypeNode;
 }
 
+interface RemainingAccountsNode {
+    kind: string;
+    isOptional?: boolean;
+    isSigner?: boolean | 'either';
+    isWritable?: boolean;
+    value: { kind: string; name: string };
+}
+
 interface InstructionNode {
     name: string;
     arguments: FieldNode[];
     accounts: AccountNode[];
+    remainingAccounts?: RemainingAccountsNode[];
 }
 
 interface IdlRoot {
@@ -137,8 +146,9 @@ export type MethodBuilder<TAccounts> = {
 
         // Build args interface
         const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
+        const remainingAccountArgs = (ix.remainingAccounts ?? []).filter(ra => ra.value.kind === 'argumentValueNode');
         let argsRef = 'void';
-        if (args.length > 0) {
+        if (args.length > 0 || remainingAccountArgs.length > 0) {
             const argsInterfaceName = `${typeName}Args`;
             output += `export type ${argsInterfaceName} = {\n`;
             for (const arg of args) {
@@ -146,6 +156,10 @@ export type MethodBuilder<TAccounts> = {
                 const isOptional = arg.type.kind === 'optionTypeNode';
                 const sep = isOptional ? '?:' : ':';
                 output += `    ${arg.name}${sep} ${tsType};\n`;
+            }
+            for (const ra of remainingAccountArgs) {
+                const sep = ra.isOptional ? '?:' : ':';
+                output += `    ${ra.value.name}${sep} Address[];\n`;
             }
             output += '};\n\n';
             argsRef = argsInterfaceName;
@@ -166,10 +180,11 @@ export type MethodBuilder<TAccounts> = {
         }
 
         // Generate method type
-        const methodSignature =
-            argsRef === 'void'
-                ? `() => MethodBuilder<${accountsInterfaceName}>`
-                : `(args: ${argsRef}) => MethodBuilder<${accountsInterfaceName}>`;
+        const hasRequiredArgs = args.some(arg => arg.type.kind !== 'optionTypeNode');
+        const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
+        const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
+        const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;
+        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}>`;
         output += `export type ${typeName}Method = ${methodSignature};\n\n`;
     }
 

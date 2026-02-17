@@ -1,3 +1,4 @@
+import { address } from '@solana/addresses';
 import { getU32Encoder, getU64Encoder } from '@solana/codecs';
 import { getInitializeInstructionDataDecoder } from '@solana-program/program-metadata';
 import type { InstructionNode, RootNode } from 'codama';
@@ -132,5 +133,53 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
         const encoded = encodeInstructionArguments(root, ix, {});
         const discriminator = 6;
         expect(encoded).toEqual(new Uint8Array([discriminator]));
+    });
+});
+
+describe('Instruction validation: remaining account arguments', () => {
+    const ADDR_1 = address('11111111111111111111111111111111');
+    const ADDR_2 = address('22222222222222222222222222222222222222222222');
+
+    test('should not reject remaining account args as extra keys', () => {
+        // initializeMultisig has remainingAccounts referencing "signers" argumentValueNode
+        // superstruct's object() rejects unknown keys, so "signers" must be stripped before validation
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        expect(() => validateArgumentsInput(root, ix, { m: 2, signers: [ADDR_1, ADDR_2] })).not.toThrow();
+    });
+
+    test('should still validate regular arguments when remaining account args are present', () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        // m is a required number argument — passing a string should fail validation
+        expect(() => validateArgumentsInput(root, ix, { m: 'invalid', signers: [ADDR_1] })).toThrow(ValidationError);
+    });
+
+    test('should not reject optional remaining account args when omitted', () => {
+        // transfer has optional multiSigners remaining accounts
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'transfer');
+
+        expect(() => validateArgumentsInput(root, ix, { amount: 100 })).not.toThrow();
+    });
+
+    test('should not reject optional remaining account args when provided', () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'transfer');
+
+        expect(() => validateArgumentsInput(root, ix, { amount: 100, multiSigners: [ADDR_1] })).not.toThrow();
+    });
+
+    test('should not encode remaining account args as instruction data', () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        const withSigners = encodeInstructionArguments(root, ix, { m: 2, signers: [ADDR_1, ADDR_2] });
+        const withoutSigners = encodeInstructionArguments(root, ix, { m: 2 });
+
+        // Remaining account args should not affect encoded data
+        expect(withSigners).toEqual(withoutSigners);
     });
 });

@@ -69,6 +69,12 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
 
     if (!requiredArguments.length) return;
 
+    // Strip remaining account argument names so superstruct's object() doesn't reject them as extra keys
+    const remainingAccountArgNames = getRemainingAccountArgNames(ixNode);
+    const filteredInput = remainingAccountArgNames.length
+        ? Object.fromEntries(Object.entries(argumentsInput).filter(([key]) => !remainingAccountArgNames.includes(key)))
+        : argumentsInput;
+
     const ArgumentsInputValidator = createIxArgumentsValidator(
         ixNode.name,
         requiredArguments,
@@ -76,7 +82,7 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     );
 
     try {
-        assert(argumentsInput, ArgumentsInputValidator);
+        assert(filteredInput, ArgumentsInputValidator);
     } catch (error) {
         const { failures } = error as StructError;
         const message = failures().map(failure => {
@@ -103,4 +109,10 @@ function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: Argum
 
 function isIxArgumentOmitted(node: InstructionArgumentNode) {
     return node.defaultValueStrategy === 'omitted';
+}
+
+function getRemainingAccountArgNames(ixNode: InstructionNode): string[] {
+    return (ixNode.remainingAccounts ?? [])
+        .filter(node => node.value.kind === 'argumentValueNode')
+        .map(node => node.value.name);
 }
