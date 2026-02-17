@@ -40,8 +40,8 @@ export type SvmTestContextConfig = {
  * Tests work exclusively with Address types while the context handles
  * keypair management and transaction building behind the scenes.
  *
- * By default, the context includes standard builtins (system program, etc.)
- * and sysvars. Use the config parameter to include additional programs.
+ * By default, the context includes standard builtins (system program, etc.).
+ * Use the config parameter to include additional programs.
  */
 export class SvmTestContext {
     private readonly svm: LiteSVM;
