@@ -3,7 +3,7 @@ import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
-import { toAddress } from '../../../shared/address';
+import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../../shared/types';
 import { resolveAccountAddress } from './resolve-account-address';
@@ -61,26 +61,57 @@ export async function resolveAccountMeta(
         }),
     );
 
-    // FIXME: Handle remaining accounts:
-    // Can be provided via argument, e.g argumentValueNode("signers"), multisig signers in Token Program
+    const accountMetas: AccountMeta[] = resolvedAccounts
+        // omitted optional accounts
+        .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null)
+        .map(acc => ({
+            address: acc.address,
+            role: acc.role,
+        }));
+
+    // Resolve remaining accounts from argument values
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
-    return (
-        resolvedAccounts
-            // omitted optional accounts
-            .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null)
-            .map(acc => {
-                return {
-                    address: acc.address,
-                    role: acc.role,
-                };
-            })
-    );
+    for (const remainingNode of ixNode.remainingAccounts ?? []) {
+        if (remainingNode.value.kind !== 'argumentValueNode') {
+            throw new AccountError(`Unsupported remaining accounts value kind: "${remainingNode.value.kind}"`);
+        }
+        const addresses = argumentsInput[remainingNode.value.name];
+        if (addresses === undefined) continue;
+        if (!Array.isArray(addresses)) {
+            throw new AccountError(
+                `Remaining account argument "${remainingNode.value.name}" must be an array of addresses`,
+            );
+        }
+        const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
+        for (let i = 0; i < addresses.length; i++) {
+            const addr: unknown = addresses[i];
+            if (typeof addr !== 'string' && !isPublicKeyLike(addr)) {
+                throw new AccountError(
+                    `Remaining account argument "${remainingNode.value.name}[${i}]" must be an address string or PublicKey, got ${typeof addr}`,
+                );
+            }
+            accountMetas.push({ address: toAddress(addr), role });
+        }
+    }
+
+    return accountMetas;
 }
 
 // Optional accounts can be omitted
 // Accounts with default values can be omitted, as they can be resolved from default value
 function isIxAccountRequired(ixAccountNode: InstructionAccountNode) {
     return !ixAccountNode.isOptional && !ixAccountNode.defaultValue;
+}
+
+// TODO: 'either' is treated as signer — this works for Token Program multisig signers,
+// but may need refinement for programs where 'either' accounts are sometimes non-signers.
+function getRemainingAccountRole(isSigner?: boolean | 'either', isWritable?: boolean): AccountRole {
+    const signer = isSigner === true || isSigner === 'either';
+    const writable = isWritable === true;
+    if (writable && signer) return AccountRole.WRITABLE_SIGNER;
+    if (writable) return AccountRole.WRITABLE;
+    if (signer) return AccountRole.READONLY_SIGNER;
+    return AccountRole.READONLY;
 }
 
 function getAccountRole(acc: InstructionAccountNode): AccountRole {
