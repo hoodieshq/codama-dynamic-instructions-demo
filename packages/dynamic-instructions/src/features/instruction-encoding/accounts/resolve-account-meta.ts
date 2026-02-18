@@ -72,7 +72,9 @@ export async function resolveAccountMeta(
     // Resolve remaining accounts from argument values
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
-        if (remainingNode.value.kind !== 'argumentValueNode') continue;
+        if (remainingNode.value.kind !== 'argumentValueNode') {
+            throw new AccountError(`Unsupported remaining accounts value kind: "${remainingNode.value.kind}"`);
+        }
         const addresses = argumentsInput[remainingNode.value.name];
         if (addresses === undefined) continue;
         if (!Array.isArray(addresses)) {

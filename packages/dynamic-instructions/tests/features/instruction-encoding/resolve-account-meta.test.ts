@@ -7,18 +7,6 @@ import { describe, expect, test } from 'vitest';
 import { resolveAccountMeta } from '../../../src/features/instruction-encoding/accounts/resolve-account-meta';
 import { loadIdl } from '../../test-utils';
 
-function loadRoot(idlFileName: string): RootNode {
-    const idl = loadIdl(idlFileName);
-    const json = JSON.stringify(idl);
-    return createFromJson(json).getRoot();
-}
-
-function getInstruction(root: RootNode, name: string): InstructionNode {
-    const ix = root.program.instructions.find(i => i.name === name);
-    if (!ix) throw new Error(`Instruction ${name} not found`);
-    return ix;
-}
-
 const ADDR_1 = address('11111111111111111111111111111111');
 const ADDR_2 = address('22222222222222222222222222222222222222222222');
 const ADDR_3 = address('33333333333333333333333333333333333333333333');
@@ -117,6 +105,24 @@ describe('resolveAccountMeta: remaining accounts', () => {
         ).rejects.toThrow('Remaining account argument "signers" must be an array of addresses');
     });
 
+    test('should throw when remaining account value kind is not argumentValueNode', async () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        // Replace the argumentValueNode with an unsupported value kind
+        const remainingAccount = ix.remainingAccounts?.[0];
+        const modifiedRemainingAccount = Object.assign({}, remainingAccount, {
+            value: { kind: 'resolverValueNode', name: 'someResolver' },
+        }) as typeof remainingAccount;
+        const modifiedIx: InstructionNode = Object.assign({}, ix, {
+            remainingAccounts: [modifiedRemainingAccount],
+        });
+
+        await expect(resolveAccountMeta(root, modifiedIx, { m: 2 }, { multisig: MULTISIG_ADDR })).rejects.toThrow(
+            'Unsupported remaining accounts value kind: "resolverValueNode"',
+        );
+    });
+
     test('should throw when remaining account array contains invalid element types', async () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'initializeMultisig');
@@ -126,3 +132,15 @@ describe('resolveAccountMeta: remaining accounts', () => {
         ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
     });
 });
+
+function loadRoot(idlFileName: string): RootNode {
+    const idl = loadIdl(idlFileName);
+    const json = JSON.stringify(idl);
+    return createFromJson(json).getRoot();
+}
+
+function getInstruction(root: RootNode, name: string): InstructionNode {
+    const ix = root.program.instructions.find(i => i.name === name);
+    if (!ix) throw new Error(`Instruction ${name} not found`);
+    return ix;
+}
