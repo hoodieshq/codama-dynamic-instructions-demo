@@ -133,7 +133,7 @@ export async function setupCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
 /**
  * Helper to create common required accounts for non-canonical PMP use cases.
  * - Creates Upgradable Program Accounts for LiteSVM.
- * - Creates a non-canonical PDA (arbtrary authority), i.e [programAddress, authority, seed].
+ * - Creates a non-canonical PDA (arbitrary authority), i.e [programAddress, authority, seed].
  */
 export async function setupNonCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
     const authority = ctx.createFundedAccount();
@@ -267,7 +267,7 @@ export async function deriveCanonicalPda(programAddress: Address, seed: string) 
     return pda;
 }
 
-/** Derives a non-canonical PDA (arbtrary authority), i.e [programAddress, authority, seed]. */
+/** Derives a non-canonical PDA (arbitrary authority), i.e [programAddress, authority, seed]. */
 export async function deriveNonCanonicalPda(programAddress: Address, authority: Address, seed: string) {
     const seed16Bytes = encodeSeedForPda(seed);
     const addressEncoder = getAddressEncoder();

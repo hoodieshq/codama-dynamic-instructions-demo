@@ -117,6 +117,9 @@ describe('Program Metadata: close', () => {
 
         const destinationBalanceAfter = ctx.getBalanceOrZero(destination);
         expect(destinationBalanceAfter).toBeGreaterThan(destinationBalanceBefore);
+
+        const closedAccount = ctx.fetchEncodedAccount(bufferAccount);
+        expect(closedAccount).toBeNull();
     });
 
     test('should fail to close immutable metadata', async () => {
