@@ -24,6 +24,8 @@ export type SvmTestContextConfig = {
     readonly defaultPrograms?: boolean;
     /** Include standard precompiles (ed25519, secp256k1). Default: false. */
     readonly precompiles?: boolean;
+    /** Include standard sysvars (clock, rent, etc.). Default: false. */
+    readonly sysvars?: boolean;
 };
 
 /**
@@ -38,8 +40,8 @@ export type SvmTestContextConfig = {
  * Tests work exclusively with Address types while the context handles
  * keypair management and transaction building behind the scenes.
  *
- * By default, the context includes standard builtins (system program, etc.)
- * and sysvars. Use the config parameter to include additional programs.
+ * By default, the context includes standard builtins (system program, etc.).
+ * Use the config parameter to include additional programs.
  */
 export class SvmTestContext {
     private readonly svm: LiteSVM;
@@ -59,6 +61,9 @@ export class SvmTestContext {
         }
         if (config.precompiles) {
             svm = svm.withPrecompiles();
+        }
+        if (config.sysvars) {
+            svm = svm.withSysvars();
         }
         this.svm = svm;
         this.accounts = new Map();
