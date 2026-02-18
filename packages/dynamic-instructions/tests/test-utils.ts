@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { createFromJson, type RootNode } from 'codama';
+
 import type { IdlInput, ProgramClient } from '../src';
 import { createProgramClient } from '../src';
 
@@ -25,6 +27,12 @@ export function loadIdl(idlFileName: string, baseDir?: string): IdlInput {
 export function createTestProgramClient<T = ProgramClient>(idlFileName: string): T {
     const idl = loadIdl(idlFileName);
     return createProgramClient<T>(idl);
+}
+
+export function loadRoot(idlFileName: string): RootNode {
+    const idl = loadIdl(idlFileName);
+    const json = JSON.stringify(idl);
+    return createFromJson(json).getRoot();
 }
 
 export { SvmTestContext, type EncodedAccount } from './svm-test-context';

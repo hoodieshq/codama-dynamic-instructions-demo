@@ -2,7 +2,6 @@ import { address } from '@solana/addresses';
 import { getU32Encoder, getU64Encoder } from '@solana/codecs';
 import { getInitializeInstructionDataDecoder } from '@solana-program/program-metadata';
 import type { InstructionNode, RootNode } from 'codama';
-import { createFromJson } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -11,13 +10,7 @@ import {
 } from '../../../src/features/instruction-encoding/arguments';
 import { concatBytes, getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../../src/shared/errors';
-import { loadIdl } from '../../test-utils';
-
-function loadRoot(idlFileName: string): RootNode {
-    const idl = loadIdl(idlFileName);
-    const json = JSON.stringify(idl);
-    return createFromJson(json).getRoot();
-}
+import { loadRoot } from '../../test-utils';
 
 function getInstruction(root: RootNode, name: string): InstructionNode {
     const ix = root.program.instructions.find(i => i.name === name);

@@ -1,11 +1,10 @@
 import { address } from '@solana/addresses';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
-import { createFromJson } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { resolveAccountMeta } from '../../../src/features/instruction-encoding/accounts/resolve-account-meta';
-import { loadIdl } from '../../test-utils';
+import { loadRoot } from '../../test-utils';
 
 const ADDR_1 = address('11111111111111111111111111111111');
 const ADDR_2 = address('22222222222222222222222222222222222222222222');
@@ -132,12 +131,6 @@ describe('resolveAccountMeta: remaining accounts', () => {
         ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
     });
 });
-
-function loadRoot(idlFileName: string): RootNode {
-    const idl = loadIdl(idlFileName);
-    const json = JSON.stringify(idl);
-    return createFromJson(json).getRoot();
-}
 
 function getInstruction(root: RootNode, name: string): InstructionNode {
     const ix = root.program.instructions.find(i => i.name === name);
