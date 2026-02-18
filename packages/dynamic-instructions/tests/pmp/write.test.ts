@@ -1,12 +1,10 @@
 import { AccountDiscriminator } from '@solana-program/program-metadata';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
-import { createTestProgramClient, SvmTestContext } from '../test-utils';
-import { decodeBufferAccount, loadPmpProgram } from './helpers';
+import { SvmTestContext } from '../test-utils';
+import { allocateBufferAccount, decodeBufferAccount, loadPmpProgram, programClient } from './helpers';
 
 describe('Program Metadata: write', () => {
-    const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
     let ctx: SvmTestContext;
 
     beforeEach(() => {
@@ -15,31 +13,22 @@ describe('Program Metadata: write', () => {
     });
 
     test('should write inline data to buffer', async () => {
-        const bufferAndAuthority = ctx.createFundedAccount();
-
-        const allocateIx = await programClient.methods
-            .allocate({ seed: null })
-            .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
-                program: null,
-                programData: null,
-            })
-            .instruction();
+        const feePayer = ctx.createFundedAccount();
+        const { bufferAccount } = await allocateBufferAccount(ctx);
 
         const testData = new TextEncoder().encode('Hello, PMP!');
         const writeIx = await programClient.methods
             .write({ data: testData, offset: 0 })
             .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
+                authority: bufferAccount,
+                buffer: bufferAccount,
                 sourceBuffer: null,
             })
             .instruction();
 
-        ctx.sendInstructions([allocateIx, writeIx], [bufferAndAuthority]);
+        ctx.sendInstruction(writeIx, [feePayer, bufferAccount]);
 
-        const account = ctx.requireEncodedAccount(bufferAndAuthority);
+        const account = ctx.requireEncodedAccount(bufferAccount);
         const buffer = decodeBufferAccount(account.data);
 
         expect(buffer.discriminator).toBe(AccountDiscriminator.Buffer);
@@ -50,24 +39,15 @@ describe('Program Metadata: write', () => {
     });
 
     test('should write data at offset', async () => {
-        const bufferAndAuthority = ctx.createFundedAccount();
-
-        const allocateIx = await programClient.methods
-            .allocate({ seed: null })
-            .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
-                program: null,
-                programData: null,
-            })
-            .instruction();
+        const feePayer = ctx.createFundedAccount();
+        const { bufferAccount } = await allocateBufferAccount(ctx);
 
         const dataA = new TextEncoder().encode('AAAA');
         const writeIxA = await programClient.methods
             .write({ data: dataA, offset: 0 })
             .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
+                authority: bufferAccount,
+                buffer: bufferAccount,
                 sourceBuffer: null,
             })
             .instruction();
@@ -77,15 +57,15 @@ describe('Program Metadata: write', () => {
         const writeIxB = await programClient.methods
             .write({ data: dataB, offset: dataBoffset })
             .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
+                authority: bufferAccount,
+                buffer: bufferAccount,
                 sourceBuffer: null,
             })
             .instruction();
 
-        ctx.sendInstructions([allocateIx, writeIxA, writeIxB], [bufferAndAuthority]);
+        ctx.sendInstructions([writeIxA, writeIxB], [feePayer, bufferAccount]);
 
-        const account = ctx.requireEncodedAccount(bufferAndAuthority);
+        const account = ctx.requireEncodedAccount(bufferAccount);
         const buffer = decodeBufferAccount(account.data);
 
         expect(buffer.discriminator).toBe(AccountDiscriminator.Buffer);
@@ -101,24 +81,15 @@ describe('Program Metadata: write', () => {
     });
 
     test('should write data in chunks', async () => {
-        const bufferAndAuthority = ctx.createFundedAccount();
-
-        const allocateIx = await programClient.methods
-            .allocate({ seed: null })
-            .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
-                program: null,
-                programData: null,
-            })
-            .instruction();
+        const feePayer = ctx.createFundedAccount();
+        const { bufferAccount } = await allocateBufferAccount(ctx);
 
         const chunk1 = new TextEncoder().encode('Hello');
         const writeIx1 = await programClient.methods
             .write({ data: chunk1, offset: 0 })
             .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
+                authority: bufferAccount,
+                buffer: bufferAccount,
                 sourceBuffer: null,
             })
             .instruction();
@@ -128,15 +99,15 @@ describe('Program Metadata: write', () => {
         const writeIx2 = await programClient.methods
             .write({ data: chunk2, offset: chunk2Offset })
             .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
+                authority: bufferAccount,
+                buffer: bufferAccount,
                 sourceBuffer: null,
             })
             .instruction();
 
-        ctx.sendInstructions([allocateIx, writeIx1, writeIx2], [bufferAndAuthority]);
+        ctx.sendInstructions([writeIx1, writeIx2], [feePayer, bufferAccount]);
 
-        const account = ctx.requireEncodedAccount(bufferAndAuthority);
+        const account = ctx.requireEncodedAccount(bufferAccount);
         const buffer = decodeBufferAccount(account.data);
 
         expect(buffer.discriminator).toBe(AccountDiscriminator.Buffer);

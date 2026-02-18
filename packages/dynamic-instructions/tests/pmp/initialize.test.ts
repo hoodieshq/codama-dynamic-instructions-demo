@@ -1,23 +1,20 @@
-import path from 'node:path';
-
-import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import { type Address } from '@solana/addresses';
 import type { Some } from '@solana/codecs';
 import { AccountDiscriminator, Compression, DataSource, Encoding, Format } from '@solana-program/program-metadata';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
-import { createTestProgramClient, SvmTestContext } from '../test-utils';
+import { SvmTestContext } from '../test-utils';
 import {
     decodeBufferAccount,
     decodeMetadataAccount,
-    encodeSeedForPda,
     loadPmpProgram,
     PMP_PROGRAM_ID,
-    setUpgradeableProgramAccounts,
+    programClient,
+    setupCanonicalPda,
+    setupNonCanonicalPda,
 } from './helpers';
 
 describe('Program Metadata: initialize', () => {
-    const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
     let ctx: SvmTestContext;
 
     beforeEach(() => {
@@ -26,26 +23,8 @@ describe('Program Metadata: initialize', () => {
     });
 
     test('should initialize canonical metadata with direct data (ifTrue condition branch)', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-        const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            authority,
-        );
-
         const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
+        const { authority, programAddress, programDataAddress, pda: metadataPda } = await setupCanonicalPda(ctx, seed);
 
         const testData = new TextEncoder().encode('{"name":"test"}');
 
@@ -95,27 +74,8 @@ describe('Program Metadata: initialize', () => {
     });
 
     test('should initialize non-canonical metadata (ifFalse condition branch)', async () => {
-        const authority = ctx.createFundedAccount();
-        const programDataAuthority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-        const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
-
-        const { programAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            programDataAuthority,
-        );
-
         const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), addressEncoder.encode(authority), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
+        const { authority, programAddress, pda: metadataPda } = await setupNonCanonicalPda(ctx, seed);
 
         const testData = new TextEncoder().encode('non-canonical data');
 
@@ -165,26 +125,8 @@ describe('Program Metadata: initialize', () => {
     });
 
     test('should initialize metadata from pre-allocated buffer', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-        const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            authority,
-        );
-
         const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
+        const { authority, programAddress, programDataAddress, pda: metadataPda } = await setupCanonicalPda(ctx, seed);
 
         // Allocate the metadata PDA as a canonical buffer
         const allocateIx = await programClient.methods
@@ -247,26 +189,8 @@ describe('Program Metadata: initialize', () => {
     });
 
     test('should initialize with different encoding and format', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-        const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            authority,
-        );
-
         const seed = 'config';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
+        const { authority, programAddress, programDataAddress, pda: metadataPda } = await setupCanonicalPda(ctx, seed);
 
         const testData = new TextEncoder().encode('dG9tbCBkYXRh');
 

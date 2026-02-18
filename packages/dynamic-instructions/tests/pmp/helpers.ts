@@ -53,6 +53,106 @@ export function loadPmpProgram(ctx: SvmTestContext, programAddress: Address): vo
     ctx.loadProgram(programAddress, programPath);
 }
 
+/** Helper for creating canonical Metadata. */
+export async function initializeCanonicalMetadata(ctx: SvmTestContext, options?: { data?: Uint8Array; seed?: string }) {
+    const seed = options?.seed ?? 'idl';
+    const data = options?.data ?? new TextEncoder().encode('{"name":"test"}');
+    const result = await setupCanonicalPda(ctx, seed);
+
+    const initIx = await programClient.methods
+        .initialize({
+            compression: 'none',
+            data,
+            dataSource: 'direct',
+            encoding: 'utf8',
+            format: 'json',
+            seed,
+        })
+        .accounts({
+            authority: result.authority,
+            program: result.programAddress,
+            programData: result.programDataAddress,
+        })
+        .instruction();
+    ctx.sendInstruction(initIx, [result.authority]);
+
+    return result;
+}
+
+/** Helper for creating non-canonical Metadata. */
+export async function initializeNonCanonicalMetadata(
+    ctx: SvmTestContext,
+    options?: { data?: Uint8Array; seed?: string },
+) {
+    const seed = options?.seed ?? 'idl';
+    const data = options?.data ?? new TextEncoder().encode('non-canonical data');
+    const result = await setupNonCanonicalPda(ctx, seed);
+
+    const initIx = await programClient.methods
+        .initialize({
+            compression: 'none',
+            data,
+            dataSource: 'direct',
+            encoding: 'utf8',
+            format: 'json',
+            seed,
+        })
+        .accounts({
+            authority: result.authority,
+            program: result.programAddress,
+            programData: null,
+        })
+        .instruction();
+    ctx.sendInstruction(initIx, [result.authority]);
+
+    return result;
+}
+
+/**
+ * Helper to create common required accounts for canonical PMP use cases.
+ * - Creates Upgradable Program Accounts for LiteSVM.
+ * - Creates a canonical PDA (program upgradeAuthority), i.e [programAddress, seed].
+ */
+export async function setupCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
+    const authority = ctx.createFundedAccount();
+    const testProgramAddress = ctx.createAccount();
+
+    const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
+        ctx,
+        exampleProgramPath,
+        testProgramAddress,
+        authority,
+    );
+
+    const pda = await deriveCanonicalPda(programAddress, seed);
+    ctx.airdropToAddress(pda, BigInt(10_000_000_000));
+
+    return { authority, pda, programAddress, programDataAddress };
+}
+
+/**
+ * Helper to create common required accounts for non-canonical PMP use cases.
+ * - Creates Upgradable Program Accounts for LiteSVM.
+ * - Creates a non-canonical PDA (arbtrary authority), i.e [programAddress, authority, seed].
+ */
+export async function setupNonCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
+    const authority = ctx.createFundedAccount();
+    const programDataAuthority = ctx.createFundedAccount();
+    const testProgramAddress = ctx.createAccount();
+
+    const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
+        ctx,
+        exampleProgramPath,
+        testProgramAddress,
+        programDataAuthority,
+    );
+
+    const pda = await deriveNonCanonicalPda(programAddress, authority, seed);
+    ctx.airdropToAddress(pda, BigInt(10_000_000_000));
+
+    return { authority, pda, programAddress, programDataAddress, programDataAuthority };
+}
+
 /**
  * Manually creates BPF Loader Upgradeable accounts for a program in LiteSVM.
  * since LiteSVM's loadProgram() doesn't create ProgramData accounts
@@ -116,6 +216,7 @@ function encodeProgramDataAccount(authority: Address | null) {
         ['slot', getU64Encoder()],
         ['authority', getOptionEncoder(getAddressEncoder())],
     ]);
+
     return encoder.encode({
         authority: authority ? some(authority) : none(),
         discriminator: 3,
@@ -129,132 +230,29 @@ function encodeProgramAccount(programDataAddress: Address) {
         ['discriminator', getU32Encoder()],
         ['programData', getAddressEncoder()],
     ]);
+
     return encoder.encode({
         discriminator: 2,
         programData: programDataAddress,
     });
 }
-/**
- * Helper to create common required accounts for canonical PMP use cases.
- * - Creates Upgradable Program Accounts for LiteSVM.
- * - Creates a canonical PDA (program upgradeAuthority), i.e [programAddress, seed].
- */
-export async function setupCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
-    const authority = ctx.createFundedAccount();
-    const testProgramAddress = ctx.createAccount();
-
-    const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-        ctx,
-        exampleProgramPath,
-        testProgramAddress,
-        authority,
-    );
-
-    const pda = await deriveCanonicalPda(programAddress, seed);
-    ctx.airdropToAddress(pda, BigInt(10_000_000_000));
-
-    return { authority, pda, programAddress, programDataAddress };
-}
-
-/**
- * Helper to create common required accounts for non-canonical PMP use cases.
- * - Creates Upgradable Program Accounts for LiteSVM.
- * - Creates a non-canonical PDA (arbtrary authority), i.e [programAddress, authority, seed].
- */
-export async function setupNonCanonicalPda(ctx: SvmTestContext, seed = 'idl') {
-    const authority = ctx.createFundedAccount();
-    const programDataAuthority = ctx.createFundedAccount();
-    const testProgramAddress = ctx.createAccount();
-
-    const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-        ctx,
-        exampleProgramPath,
-        testProgramAddress,
-        programDataAuthority,
-    );
-
-    const pda = await deriveNonCanonicalPda(programAddress, authority, seed);
-    ctx.airdropToAddress(pda, BigInt(10_000_000_000));
-
-    return { authority, pda, programAddress, programDataAddress, programDataAuthority };
-}
-
-/** Helper for creating canonical Metadata. */
-export async function initializeCanonicalMetadata(ctx: SvmTestContext, options?: { data?: Uint8Array; seed?: string }) {
-    const seed = options?.seed ?? 'idl';
-    const data = options?.data ?? new TextEncoder().encode('{"name":"test"}');
-
-    const result = await setupCanonicalPda(ctx, seed);
-
-    const initIx = await programClient.methods
-        .initialize({
-            compression: 'none',
-            data,
-            dataSource: 'direct',
-            encoding: 'utf8',
-            format: 'json',
-            seed,
-        })
-        .accounts({
-            authority: result.authority,
-            program: result.programAddress,
-            programData: result.programDataAddress,
-        })
-        .instruction();
-
-    ctx.sendInstruction(initIx, [result.authority]);
-
-    return result;
-}
-
-/** Helper for creating non-canonical Metadata. */
-export async function initializeNonCanonicalMetadata(
-    ctx: SvmTestContext,
-    options?: { data?: Uint8Array; seed?: string },
-) {
-    const seed = options?.seed ?? 'idl';
-    const data = options?.data ?? new TextEncoder().encode('non-canonical data');
-
-    const result = await setupNonCanonicalPda(ctx, seed);
-
-    const initIx = await programClient.methods
-        .initialize({
-            compression: 'none',
-            data,
-            dataSource: 'direct',
-            encoding: 'utf8',
-            format: 'json',
-            seed,
-        })
-        .accounts({
-            authority: result.authority,
-            program: result.programAddress,
-            programData: null,
-        })
-        .instruction();
-
-    ctx.sendInstruction(initIx, [result.authority]);
-
-    return result;
-}
 
 /** Helper for allocating Buffer. Used for extending, closing or adding data */
-export async function allocateKeypairBuffer(ctx: SvmTestContext) {
-    const bufferAndAuthority = ctx.createFundedAccount();
+export async function allocateBufferAccount(ctx: SvmTestContext) {
+    const bufferAccount = ctx.createFundedAccount();
 
     const allocateIx = await programClient.methods
         .allocate({ seed: null })
         .accounts({
-            authority: bufferAndAuthority,
-            buffer: bufferAndAuthority,
+            authority: bufferAccount,
+            buffer: bufferAccount,
             program: null,
             programData: null,
         })
         .instruction();
+    ctx.sendInstruction(allocateIx, [bufferAccount]);
 
-    ctx.sendInstruction(allocateIx, [bufferAndAuthority]);
-
-    return { bufferAuthority: bufferAndAuthority };
+    return { bufferAccount };
 }
 
 /** Derives a canonical PDA (upgradeAuthority), i.e [programAddress, seed]. */
@@ -265,6 +263,7 @@ export async function deriveCanonicalPda(programAddress: Address, seed: string) 
         programAddress: programClient.programAddress,
         seeds: [addressEncoder.encode(programAddress), seed16Bytes],
     });
+
     return pda;
 }
 
@@ -276,5 +275,6 @@ export async function deriveNonCanonicalPda(programAddress: Address, authority: 
         programAddress: programClient.programAddress,
         seeds: [addressEncoder.encode(programAddress), addressEncoder.encode(authority), seed16Bytes],
     });
+
     return pda;
 }

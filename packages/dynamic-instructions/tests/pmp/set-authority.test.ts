@@ -1,17 +1,11 @@
-import path from 'node:path';
-
-import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import type { Address } from '@solana/addresses';
 import type { Some } from '@solana/codecs';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
-import { createTestProgramClient, SvmTestContext } from '../test-utils';
-import { decodeMetadataAccount, encodeSeedForPda, loadPmpProgram, setUpgradeableProgramAccounts } from './helpers';
+import { SvmTestContext } from '../test-utils';
+import { decodeMetadataAccount, initializeCanonicalMetadata, loadPmpProgram, programClient } from './helpers';
 
 describe('Program Metadata: setAuthority', () => {
-    const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
-    const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
-    const PMP_PROGRAM_ID = programClient.programAddress;
     let ctx: SvmTestContext;
 
     beforeEach(() => {
@@ -20,44 +14,13 @@ describe('Program Metadata: setAuthority', () => {
     });
 
     test('should set new authority on canonical metadata', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
+        const {
             authority,
-        );
+            programAddress,
+            programDataAddress,
+            pda: metadataPda,
+        } = await initializeCanonicalMetadata(ctx);
 
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
-
-        const testData = new TextEncoder().encode('{"name":"test"}');
-        const initIx = await programClient.methods
-            .initialize({
-                compression: 'none',
-                data: testData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-                seed,
-            })
-            .accounts({
-                authority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(initIx, [authority]);
         const accountBefore = ctx.requireEncodedAccount(metadataPda);
         const metadataBefore = decodeMetadataAccount(accountBefore.data);
         expect(metadataBefore.authority).toEqual({ __option: 'None' });
@@ -88,44 +51,12 @@ describe('Program Metadata: setAuthority', () => {
     });
 
     test('should remove authority from canonical metadata', async () => {
-        const authority = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
+        const {
             authority,
-        );
-
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
-
-        const testData = new TextEncoder().encode('{"name":"test"}');
-        const initIx = await programClient.methods
-            .initialize({
-                compression: 'none',
-                data: testData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-                seed,
-            })
-            .accounts({
-                authority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(initIx, [authority]);
+            programAddress,
+            programDataAddress,
+            pda: metadataPda,
+        } = await initializeCanonicalMetadata(ctx);
 
         // Set authority
         const someAuthority = ctx.createAccount();

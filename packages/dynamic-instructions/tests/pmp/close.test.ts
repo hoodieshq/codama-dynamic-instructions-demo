@@ -1,21 +1,17 @@
-import path from 'node:path';
-
-import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import { type Address } from '@solana/addresses';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
-import { createTestProgramClient, SvmTestContext } from '../test-utils';
+import { SvmTestContext } from '../test-utils';
 import {
+    allocateBufferAccount,
     decodeBufferAccount,
-    encodeSeedForPda,
+    initializeCanonicalMetadata,
     loadPmpProgram,
-    PMP_PROGRAM_ID,
-    setUpgradeableProgramAccounts,
+    programClient,
+    setupCanonicalPda,
 } from './helpers';
 
 describe('Program Metadata: close', () => {
-    const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
-    const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
     let ctx: SvmTestContext;
 
     beforeEach(() => {
@@ -24,29 +20,11 @@ describe('Program Metadata: close', () => {
     });
 
     test('should close canonical PDA buffer', async () => {
-        const authority = ctx.createFundedAccount();
         const destination = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
-            authority,
-        );
-
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [bufferPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(bufferPda, BigInt(10_000_000_000));
+        const { authority, programAddress, programDataAddress, pda: bufferPda } = await setupCanonicalPda(ctx);
 
         const allocateIx = await programClient.methods
-            .allocate({ seed })
+            .allocate({ seed: 'idl' })
             .accounts({
                 authority,
                 buffer: bufferPda,
@@ -83,45 +61,13 @@ describe('Program Metadata: close', () => {
     });
 
     test('should close mutable metadata', async () => {
-        const authority = ctx.createFundedAccount();
         const destination = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
+        const {
             authority,
-        );
-
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
-
-        const testData = new TextEncoder().encode('{"name":"test"}');
-        const initIx = await programClient.methods
-            .initialize({
-                compression: 'none',
-                data: testData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-                seed,
-            })
-            .accounts({
-                authority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(initIx, [authority]);
+            programAddress,
+            programDataAddress,
+            pda: metadataPda,
+        } = await initializeCanonicalMetadata(ctx);
 
         const destinationBalanceBefore = ctx.getBalanceOrZero(destination);
 
@@ -145,24 +91,12 @@ describe('Program Metadata: close', () => {
         expect(destinationBalanceAfter).toBeGreaterThan(destinationBalanceBefore);
     });
 
-    test('should close keypair buffer', async () => {
+    test('should close buffer account', async () => {
         const feePayer = ctx.createFundedAccount();
-        const bufferAndAuthority = ctx.createFundedAccount();
         const destination = ctx.createFundedAccount();
+        const { bufferAccount } = await allocateBufferAccount(ctx);
 
-        const allocateIx = await programClient.methods
-            .allocate({ seed: null })
-            .accounts({
-                authority: bufferAndAuthority,
-                buffer: bufferAndAuthority,
-                program: null,
-                programData: null,
-            })
-            .instruction();
-
-        ctx.sendInstruction(allocateIx, [bufferAndAuthority]);
-
-        const buffer = ctx.requireEncodedAccount(bufferAndAuthority);
+        const buffer = ctx.requireEncodedAccount(bufferAccount);
         const decoded = decodeBufferAccount(buffer.data);
         expect(decoded.canonical).toBe(false);
 
@@ -171,60 +105,28 @@ describe('Program Metadata: close', () => {
         const closeIx = await programClient.methods
             .close()
             .accounts({
-                account: bufferAndAuthority,
-                authority: bufferAndAuthority,
+                account: bufferAccount,
+                authority: bufferAccount,
                 destination,
                 program: null,
                 programData: null,
             })
             .instruction();
 
-        ctx.sendInstruction(closeIx, [feePayer, bufferAndAuthority]);
+        ctx.sendInstruction(closeIx, [feePayer, bufferAccount]);
 
         const destinationBalanceAfter = ctx.getBalanceOrZero(destination);
         expect(destinationBalanceAfter).toBeGreaterThan(destinationBalanceBefore);
     });
 
     test('should fail to close immutable metadata', async () => {
-        const authority = ctx.createFundedAccount();
         const destination = ctx.createFundedAccount();
-        const testProgramAddress = ctx.createAccount();
-
-        const { programAddress, programDataAddress } = await setUpgradeableProgramAccounts(
-            ctx,
-            exampleProgramPath,
-            testProgramAddress,
+        const {
             authority,
-        );
-
-        const seed = 'idl';
-        const seed16Bytes = encodeSeedForPda(seed);
-        const addressEncoder = getAddressEncoder();
-        const [metadataPda] = await getProgramDerivedAddress({
-            programAddress: PMP_PROGRAM_ID,
-            seeds: [addressEncoder.encode(programAddress), seed16Bytes],
-        });
-
-        ctx.airdropToAddress(metadataPda, BigInt(10_000_000_000));
-
-        const testData = new TextEncoder().encode('{"name":"test"}');
-        const initIx = await programClient.methods
-            .initialize({
-                compression: 'none',
-                data: testData,
-                dataSource: 'direct',
-                encoding: 'utf8',
-                format: 'json',
-                seed,
-            })
-            .accounts({
-                authority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(initIx, [authority]);
+            programAddress,
+            programDataAddress,
+            pda: metadataPda,
+        } = await initializeCanonicalMetadata(ctx);
 
         const setImmutableIx = await programClient.methods
             .setImmutable()
