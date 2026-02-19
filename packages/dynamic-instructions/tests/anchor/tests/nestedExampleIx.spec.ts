@@ -1,0 +1,556 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { getNodeCodec } from '@codama/dynamic-codecs';
+import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import { none, some } from '@solana/codecs';
+import type { RootNode } from 'codama';
+import { beforeEach, describe, expect, test } from 'vitest';
+
+import type { NestedExampleArgs } from '../../generated/example-idl-types';
+import { SvmTestContext } from '../../test-utils';
+import { bytesToCodecFormat, createTestContext, programClient } from './helpers';
+
+describe('anchor-example: nestedExampleIx', () => {
+    let ctx: SvmTestContext;
+    let payer: Address;
+
+    beforeEach(() => {
+        ({ ctx, payer } = createTestContext());
+    });
+
+    test('should encode nested struct with scalar enums, bytes, fixed array, and none inner enum', async () => {
+        const pubkeyArg = ctx.createAccount();
+        const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'arm', 'bar');
+
+        const ix = await programClient.methods
+            .nestedExample({
+                input: {
+                    header: { command: { __kind: 'start' }, version: 1 },
+                    innerEnum: { __kind: 'none' },
+                    innerStruct: {
+                        bytes: new Uint8Array([1, 2, 3]),
+                        enumsArray: ['arm', 'car'],
+                        name: 'hello',
+                        optionalPubkey: null,
+                        seedEnum: 'bar',
+                        value: BigInt(100),
+                    },
+                    pubkey: pubkeyArg,
+                    seedEnum: 'arm',
+                },
+            })
+            .accounts({ pdaAccount, signer: payer })
+            .instruction();
+
+        ctx.sendInstruction(ix, [payer]);
+
+        expect(ix.data?.length).toBeGreaterThan(0);
+        const exampleAccountData = ctx.requireEncodedAccount(pdaAccount).data;
+
+        // const exampleAccountAnchor = decodeDataAccountExample(exampleAccountData);
+        // console.log('exampleAccountAnchor', JSON.stringify(exampleAccountAnchor, null, 2));
+
+        const exampleAccount = decodeAccountExample(programClient.root, exampleAccountData);
+        expect(exampleAccount).toMatchObject({
+            input: {
+                header: { command: { __kind: 'Start' }, version: 1 },
+                innerEnum: { __kind: 'None' },
+                innerStruct: {
+                    bytes: bytesToCodecFormat(new Uint8Array([1, 2, 3])),
+                    enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('car')],
+                    name: 'hello',
+                    optionalPubkey: none(),
+                    seedEnum: seedEnumToNumber('bar'),
+                    value: 100n,
+                },
+                pubkey: pubkeyArg,
+                seedEnum: seedEnumToNumber('arm'),
+            },
+        });
+    });
+
+    test('should encode Command::Continue with reason string [enumStructVariantTypeNode]', async () => {
+        const pubkeyArg = ctx.createAccount();
+        const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'bar', 'arm');
+
+        const ix = await programClient.methods
+            .nestedExample({
+                input: {
+                    header: { command: { __kind: 'continue', reason: 'keep going' }, version: 2 },
+                    innerEnum: { __kind: 'none' },
+                    innerStruct: {
+                        bytes: new Uint8Array([]),
+                        enumsArray: ['bar', 'bar'],
+                        name: 'test',
+                        optionalPubkey: null,
+                        seedEnum: 'arm',
+                        value: BigInt(0),
+                    },
+                    pubkey: pubkeyArg,
+                    seedEnum: 'bar',
+                },
+            })
+            .accounts({ pdaAccount, signer: payer })
+            .instruction();
+
+        ctx.sendInstruction(ix, [payer]);
+        expect(ix.data?.length).toBeGreaterThan(0);
+        const exampleAccountData = ctx.requireEncodedAccount(pdaAccount).data;
+        const exampleAccount = decodeAccountExample(programClient.root, exampleAccountData);
+
+        expect(exampleAccount).toMatchObject({
+            input: {
+                header: {
+                    command: {
+                        __kind: 'Continue',
+                        reason: 'keep going',
+                    },
+                    version: 2,
+                },
+                innerEnum: { __kind: 'None' },
+                innerStruct: {
+                    bytes: bytesToCodecFormat(new Uint8Array([])),
+                    enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('bar')],
+                    name: 'test',
+                    optionalPubkey: none(),
+                    seedEnum: seedEnumToNumber('arm'),
+                    value: 0n,
+                },
+                pubkey: pubkeyArg,
+                seedEnum: seedEnumToNumber('bar'),
+            },
+        });
+    });
+
+    test('should encode InnerEnum::TokenTransfer [enumStructVariantTypeNode->enumEmptyVariantTypeNode]', async () => {
+        const pubkeyArg = ctx.createAccount();
+        const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'car', 'car');
+
+        const ix = await programClient.methods
+            .nestedExample({
+                input: {
+                    header: { command: { __kind: 'stop' }, version: 1 },
+                    innerEnum: { __kind: 'tokenTransfer', amount: BigInt(500), tokenType: { __kind: 'sPL' } },
+                    innerStruct: {
+                        bytes: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
+                        enumsArray: ['car', 'arm'],
+                        name: 'transfer',
+                        optionalPubkey: null,
+                        seedEnum: 'car',
+                        value: BigInt(999),
+                    },
+                    pubkey: pubkeyArg,
+                    seedEnum: 'car',
+                },
+            })
+            .accounts({ pdaAccount, signer: payer })
+            .instruction();
+
+        ctx.sendInstruction(ix, [payer]);
+        expect(ix.data?.length).toBeGreaterThan(0);
+        const exampleAccountData = ctx.requireEncodedAccount(pdaAccount).data;
+        const exampleAccount = decodeAccountExample(programClient.root, exampleAccountData);
+
+        expect(exampleAccount).toMatchObject({
+            input: {
+                header: {
+                    command: {
+                        __kind: 'Stop',
+                    },
+                    version: 1,
+                },
+                innerEnum: {
+                    __kind: 'TokenTransfer',
+                    amount: 500n,
+                    tokenType: { __kind: 'SPL' },
+                },
+                innerStruct: {
+                    bytes: bytesToCodecFormat(new Uint8Array([0xde, 0xad, 0xbe, 0xef])),
+                    enumsArray: [seedEnumToNumber('car'), seedEnumToNumber('arm')],
+                    name: 'transfer',
+                    optionalPubkey: none(),
+                    seedEnum: seedEnumToNumber('car'),
+                    value: 999n,
+                },
+                pubkey: pubkeyArg,
+                seedEnum: seedEnumToNumber('car'),
+            },
+        });
+    });
+
+    test('should encode InnerEnum::TokenTransfer enum (3 levels deep)', async () => {
+        const pubkeyArg = ctx.createAccount();
+        const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'arm', 'arm');
+
+        const ix = await programClient.methods
+            .nestedExample({
+                input: {
+                    header: { command: { __kind: 'start' }, version: 1 },
+                    innerEnum: {
+                        __kind: 'tokenTransfer',
+                        amount: BigInt(1),
+                        tokenType: { __kind: 'nFT', collection: 'DegenApes' },
+                    },
+                    innerStruct: {
+                        bytes: new Uint8Array([]),
+                        enumsArray: ['arm', 'arm'],
+                        name: 'nft-test',
+                        optionalPubkey: null,
+                        seedEnum: 'arm',
+                        value: BigInt(1),
+                    },
+                    pubkey: pubkeyArg,
+                    seedEnum: 'arm',
+                },
+            })
+            .accounts({ pdaAccount, signer: payer })
+            .instruction();
+
+        ctx.sendInstruction(ix, [payer]);
+        expect(ix.data?.length).toBeGreaterThan(0);
+        const exampleAccountData = ctx.requireEncodedAccount(pdaAccount).data;
+        const exampleAccount = decodeAccountExample(programClient.root, exampleAccountData);
+
+        expect(exampleAccount).toMatchObject({
+            input: {
+                header: {
+                    command: {
+                        __kind: 'Start',
+                    },
+                    version: 1,
+                },
+                innerEnum: {
+                    __kind: 'TokenTransfer',
+                    amount: 1n,
+                    tokenType: { __kind: 'NFT', collection: 'DegenApes' },
+                },
+                innerStruct: {
+                    bytes: bytesToCodecFormat(new Uint8Array([])),
+                    enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('arm')],
+                    name: 'nft-test',
+                    optionalPubkey: none(),
+                    seedEnum: seedEnumToNumber('arm'),
+                    value: 1n,
+                },
+                pubkey: pubkeyArg,
+                seedEnum: seedEnumToNumber('arm'),
+            },
+        });
+    });
+
+    test('should encode Stake inner enum and optional pubkey (Some)', async () => {
+        const pubkeyArg = ctx.createAccount();
+        const optionalPubkey = ctx.createAccount();
+        const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'bar', 'car');
+
+        const ix = await programClient.methods
+            .nestedExample({
+                input: {
+                    header: { command: { __kind: 'start' }, version: 3 },
+                    innerEnum: { __kind: 'stake', duration: BigInt(86400) },
+                    innerStruct: {
+                        bytes: new Uint8Array([10, 20]),
+                        enumsArray: ['bar', 'car'],
+                        name: 'staker',
+                        optionalPubkey,
+                        seedEnum: 'car',
+                        value: BigInt(42),
+                    },
+                    pubkey: pubkeyArg,
+                    seedEnum: 'bar',
+                },
+            })
+            .accounts({ pdaAccount, signer: payer })
+            .instruction();
+
+        ctx.sendInstruction(ix, [payer]);
+        expect(ix.data?.length).toBeGreaterThan(0);
+        const exampleAccountData = ctx.requireEncodedAccount(pdaAccount).data;
+        const exampleAccount = decodeAccountExample(programClient.root, exampleAccountData);
+
+        expect(exampleAccount).toMatchObject({
+            input: {
+                header: {
+                    command: {
+                        __kind: 'Start',
+                    },
+                    version: 3,
+                },
+                innerEnum: {
+                    __kind: 'Stake',
+                    duration: 86400n,
+                },
+                innerStruct: {
+                    bytes: bytesToCodecFormat(new Uint8Array([10, 20])),
+                    enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('car')],
+                    name: 'staker',
+                    optionalPubkey: some(optionalPubkey),
+                    seedEnum: seedEnumToNumber('car'),
+                    value: 42n,
+                },
+                pubkey: pubkeyArg,
+                seedEnum: seedEnumToNumber('bar'),
+            },
+        });
+    });
+
+    describe('should validate nestedExampleIx arguments', () => {
+        let pubkeyArg: Address;
+        let pdaAccount: Address;
+
+        beforeEach(async () => {
+            pubkeyArg = ctx.createAccount();
+            pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'arm', 'bar');
+        });
+
+        const makeValidArgs = (pubkey: Address): NestedExampleArgs['input'] => ({
+            header: { command: { __kind: 'start' }, version: 1 },
+            innerEnum: { __kind: 'none' },
+            innerStruct: {
+                bytes: new Uint8Array([1, 2, 3]),
+                enumsArray: ['arm', 'car'],
+                name: 'hello',
+                optionalPubkey: null,
+                seedEnum: 'bar',
+                value: BigInt(100),
+            },
+            pubkey,
+            seedEnum: 'arm',
+        });
+
+        test('should throw when input is missing', async () => {
+            await expect(
+                programClient.methods
+                    .nestedExample({} as unknown as NestedExampleArgs)
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "input"/);
+        });
+
+        test('should throw when header is missing', async () => {
+            const { header, ...args } = makeValidArgs(pubkeyArg);
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input: args as unknown as NestedExampleArgs['input'],
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "header"/);
+        });
+
+        test('should throw when innerStruct is missing', async () => {
+            const { innerStruct: _, ...args } = makeValidArgs(pubkeyArg);
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input: args as unknown as NestedExampleArgs['input'],
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "innerStruct"/);
+        });
+
+        test('should throw when pubkey is missing', async () => {
+            const { pubkey: _, ...args } = makeValidArgs(pubkeyArg);
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input: args as unknown as NestedExampleArgs['input'],
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "pubkey"/);
+        });
+
+        test('should throw when header.version is string', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                header: { command: { __kind: 'start' }, version: 'one' as unknown as number },
+            } as unknown as NestedExampleArgs['input'];
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "version"/);
+        });
+
+        test('should throw when innerStruct.value is string', async () => {
+            const validInput = makeValidArgs(pubkeyArg);
+            const { innerStruct } = validInput;
+            const input = {
+                ...validInput,
+                innerStruct: {
+                    ...innerStruct,
+                    value: 'hundred-of-thousands' as unknown as bigint,
+                },
+            } as unknown as NestedExampleArgs['input'];
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "value"/);
+        });
+
+        test('should throw for invalid seedEnum variant', async () => {
+            const input = { ...makeValidArgs(pubkeyArg), seedEnum: 'invalidVariant' as unknown as 'arm' };
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "seedEnum"/);
+        });
+
+        test('should throw for invalid innerEnum __kind', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerEnum: { __kind: 'nonExistent' } as unknown as NestedExampleArgs['input']['innerEnum'],
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "innerEnum"/);
+        });
+
+        test('should throw for invalid header.command __kind', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                header: {
+                    command: { __kind: 'invalidCommand' } as unknown as NestedExampleArgs['input']['header']['command'],
+                    version: 1,
+                },
+            };
+            await expect(
+                programClient.methods.nestedExample({ input }).accounts({ pdaAccount, signer: payer }).instruction(),
+            ).rejects.toThrow(/Invalid argument "command"/);
+        });
+
+        test('should throw when enumsArray has wrong size', async () => {
+            const validInput = makeValidArgs(pubkeyArg);
+            const { innerStruct } = validInput;
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerStruct: {
+                    ...innerStruct,
+                    enumsArray: ['arm'] as unknown as ('arm' | 'bar' | 'car')[],
+                },
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "enumsArray"/);
+        });
+
+        test('should throw when enumsArray has invalid enum value', async () => {
+            // TODO: improve error from validation
+            // + Received:
+            // "Invalid argument \"1\", \"value\": invalid. Message: Expected a value of type `nestedExample_input_0_defined_type_struct_innerStruct_defined_type_struct_enumsArray_array_defined_type_EnumVariant`, but received: `\"invalid\"`
+            // Invalid argument \"2\", \"value\": 123. Message: Expected a value of type `nestedExample_input_0_defined_type_struct_innerStruct_defined_type_struct_enumsArray_array_defined_type_EnumVariant`, but received: `123`
+            const validInput = makeValidArgs(pubkeyArg);
+            const { innerStruct } = validInput;
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerStruct: {
+                    ...innerStruct,
+                    enumsArray: ['arm', 'invalid', 123] as unknown as ('arm' | 'bar' | 'car')[],
+                },
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+                // ).rejects.toThrow(/Invalid argument "enumsArray"/);
+            ).rejects.toThrow(/Invalid argument "1"/);
+        });
+
+        test('should throw when bytes is string instead of Uint8Array', async () => {
+            const validInput = makeValidArgs(pubkeyArg);
+            const { innerStruct } = validInput;
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerStruct: { ...innerStruct, bytes: 'notbytes' as unknown as Uint8Array },
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ pdaAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "bytes"/);
+        });
+
+        test('should throw for invalid pubkey string', async () => {
+            const input = { ...makeValidArgs(pubkeyArg), pubkey: 'not-a-valid-address' as unknown as Address };
+            await expect(
+                programClient.methods.nestedExample({ input }).accounts({ pdaAccount, signer: payer }).instruction(),
+            ).rejects.toThrow(/Invalid argument "pubkey"/);
+        });
+    });
+});
+
+function decodeAccountExample(root: RootNode, data: Uint8Array) {
+    const accountNode = root.program.accounts.find(a => a.name === 'accountExample');
+    if (!accountNode) {
+        throw new Error('Could not find account node "accountExample" node in IDL');
+    }
+
+    const codec = getNodeCodec([root, root.program, accountNode], {
+        bytesEncoding: 'base16',
+    });
+    const decoded = codec.decode(Uint8Array.from(data));
+
+    return decoded;
+}
+
+async function deriveNestedExamplePda(
+    programAddress: Address,
+    pubkey: Address,
+    seedEnum: 'arm' | 'bar' | 'car',
+    innerSeedEnum: 'arm' | 'bar' | 'car',
+): Promise<Address> {
+    const index: Record<string, number> = { arm: 0, bar: 1, car: 2 };
+    const [pda] = await getProgramDerivedAddress({
+        programAddress,
+        seeds: [
+            'pda_account',
+            getAddressEncoder().encode(pubkey),
+            new Uint8Array([index[seedEnum]!]),
+            new Uint8Array([index[innerSeedEnum]!]),
+        ],
+    });
+    return pda;
+}
+
+export function seedEnumToNumber(enumValue: string) {
+    switch (enumValue.toLowerCase()) {
+        case 'arm':
+            return 0;
+        case 'bar':
+            return 1;
+        case 'car':
+            return 2;
+        default:
+            throw new Error(`Unknown enum value: ${enumValue}`);
+    }
+}

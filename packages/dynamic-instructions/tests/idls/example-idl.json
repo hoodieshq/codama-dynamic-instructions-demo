@@ -13,7 +13,6 @@
             {
                 "kind": "accountNode",
                 "name": "accountExample",
-                "size": 48,
                 "docs": [],
                 "data": {
                     "kind": "structTypeNode",
@@ -38,19 +37,11 @@
                         },
                         {
                             "kind": "structFieldTypeNode",
-                            "name": "inner",
+                            "name": "input",
                             "docs": [],
                             "type": {
                                 "kind": "definedTypeLinkNode",
-                                "name": "inner"
-                            }
-                        },
-                        {
-                            "kind": "structFieldTypeNode",
-                            "name": "address",
-                            "docs": [],
-                            "type": {
-                                "kind": "publicKeyTypeNode"
+                                "name": "structAndEnumsInput"
                             }
                         }
                     ]
@@ -720,46 +711,11 @@
                     },
                     {
                         "kind": "instructionArgumentNode",
-                        "name": "header",
+                        "name": "input",
                         "docs": [],
                         "type": {
                             "kind": "definedTypeLinkNode",
-                            "name": "innerHeader"
-                        }
-                    },
-                    {
-                        "kind": "instructionArgumentNode",
-                        "name": "innerStruct",
-                        "docs": [],
-                        "type": {
-                            "kind": "definedTypeLinkNode",
-                            "name": "innerStruct"
-                        }
-                    },
-                    {
-                        "kind": "instructionArgumentNode",
-                        "name": "innerEnum",
-                        "docs": [],
-                        "type": {
-                            "kind": "definedTypeLinkNode",
-                            "name": "innerEnum"
-                        }
-                    },
-                    {
-                        "kind": "instructionArgumentNode",
-                        "name": "seedEnum",
-                        "docs": [],
-                        "type": {
-                            "kind": "definedTypeLinkNode",
-                            "name": "seedEnum"
-                        }
-                    },
-                    {
-                        "kind": "instructionArgumentNode",
-                        "name": "pubkey",
-                        "docs": [],
-                        "type": {
-                            "kind": "publicKeyTypeNode"
+                            "name": "structAndEnumsInput"
                         }
                     }
                 ],
@@ -1494,26 +1450,6 @@
             },
             {
                 "kind": "definedTypeNode",
-                "name": "inner",
-                "docs": [],
-                "type": {
-                    "kind": "structTypeNode",
-                    "fields": [
-                        {
-                            "kind": "structFieldTypeNode",
-                            "name": "seed",
-                            "docs": [],
-                            "type": {
-                                "kind": "numberTypeNode",
-                                "format": "u64",
-                                "endian": "le"
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                "kind": "definedTypeNode",
                 "name": "innerEnum",
                 "docs": [],
                 "type": {
@@ -1727,6 +1663,60 @@
                         "format": "u8",
                         "endian": "le"
                     }
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "structAndEnumsInput",
+                "docs": [],
+                "type": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "header",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerHeader"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "innerStruct",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerStruct"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "innerEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "seedEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "seedEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "pubkey",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        }
+                    ]
                 }
             },
             {

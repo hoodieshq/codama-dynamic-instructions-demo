@@ -9,6 +9,47 @@ pub struct StructAndEnumsInput {
     pub seed_enum: SeedEnum,
     pub pubkey: Pubkey,
 }
+// Implement Space trait for all types at module scope
+use anchor_lang::Space;
+
+impl Space for StructAndEnumsInput {
+	const INIT_SPACE: usize =
+		InnerHeader::INIT_SPACE
+		+ InnerStruct::INIT_SPACE
+		+ InnerEnum::INIT_SPACE
+		+ SeedEnum::INIT_SPACE
+		+ 32; // Pubkey
+}
+
+impl Space for InnerHeader {
+	const INIT_SPACE: usize = 4 + Command::INIT_SPACE;
+}
+
+impl Space for InnerStruct {
+	const INIT_SPACE: usize =
+		8 // value: u64
+		+ 4 + 32 // name: String (max 32, adjust as needed)
+		+ SeedEnum::INIT_SPACE
+		+ 4 + 32 // bytes: Vec<u8> (max 32, adjust as needed)
+		+ 1 + 32 // optional_pubkey: Option<Pubkey>
+		+ 2 * SeedEnum::INIT_SPACE; // enums_array
+}
+
+impl Space for Command {
+	const INIT_SPACE: usize = 1 + 4 + 64; // discriminant + String (max 64, adjust as needed)
+}
+
+impl Space for InnerEnum {
+	const INIT_SPACE: usize = 1 + 8 + TokenType::INIT_SPACE;
+}
+
+impl Space for SeedEnum {
+	const INIT_SPACE: usize = 1;
+}
+
+impl Space for TokenType {
+	const INIT_SPACE: usize = 1 + 4 + 64;
+}
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InnerHeader {
@@ -107,8 +148,7 @@ pub fn inner_enum_seed(inner_enum: &InnerEnum) -> [u8; 8] {
 #[account]
 #[derive(InitSpace)]
 pub struct AccountExample {
-    pub inner: Inner,
-    pub address: Pubkey,
+    pub input: StructAndEnumsInput,
 }
 
 #[derive(Default, AnchorSerialize, AnchorDeserialize, Clone)]
@@ -121,26 +161,30 @@ pub fn handler(
 	_ctx: Context<NestedStructsAndEnums>,
 	input: StructAndEnumsInput,
 ) -> Result<()> {
+    let pda_account = &mut _ctx.accounts.pda_account;
 	msg!("Version: {}", input.header.version);
-	match input.header.command {
-		Command::Start => msg!("Command: Start"),
-		Command::Stop => msg!("Command: Stop"),
-		Command::Continue { reason } => msg!("Command: Continue, reason: {}", reason),
-	}
-	msg!("InnerStruct value: {}", input.inner_struct.value);
-	msg!("InnerStruct name: {}", input.inner_struct.name);
-	match input.inner_enum {
-		InnerEnum::TokenTransfer { amount, token_type } => {
-			msg!("InnerEnum::TokenTransfer: amount {}", amount);
-			match token_type {
-				TokenType::SPL => msg!("TokenType: SPL"),
-				TokenType::NFT { collection } => msg!("TokenType: NFT, collection: {}", collection),
-			}
-		}
-		InnerEnum::Stake { duration } => {
-			msg!("InnerEnum::Stake: duration {}", duration);
-		}
-		InnerEnum::None => msg!("InnerEnum: None"),
-	}
+	// match input.header.command {
+	// 	Command::Start => msg!("Command: Start"),
+	// 	Command::Stop => msg!("Command: Stop"),
+	// 	Command::Continue { reason } => msg!("Command: Continue, reason: {}", reason.clone()),
+	// }
+	// msg!("InnerStruct value: {}", input.inner_struct.value);
+	// msg!("InnerStruct name: {}", input.inner_struct.name);
+	// match input.inner_enum {
+	// 	InnerEnum::TokenTransfer { amount, token_type } => {
+	// 		msg!("InnerEnum::TokenTransfer: amount {}", amount);
+	// 		match token_type {
+	// 			TokenType::SPL => msg!("TokenType: SPL"),
+	// 			TokenType::NFT { collection } => msg!("TokenType: NFT, collection: {}", collection),
+	// 		}
+	// 	}
+	// 	InnerEnum::Stake { duration } => {
+	// 		msg!("InnerEnum::Stake: duration {}", duration);
+	// 	}
+	// 	InnerEnum::None => msg!("InnerEnum: None"),
+	// }
+    // TODO: for demonstration we must store everything from StructAndEnumsInput in AccountExample, but for now we just store header and inner_struct
+// update pda_account here
+	pda_account.input = input.clone();
 	Ok(())
 }

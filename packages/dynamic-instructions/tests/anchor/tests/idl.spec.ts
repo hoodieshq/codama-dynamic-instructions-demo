@@ -1,27 +1,18 @@
-import path from 'node:path';
-
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import { type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { createProgramClient } from '../../../src';
-import type { ExampleProgramClient } from '../../generated/example-idl-types';
-import { loadIdl, SvmTestContext } from '../../test-utils';
+import { SvmTestContext } from '../../test-utils';
+import { createTestContext, programClient } from './helpers';
 
-describe('anchor-example', () => {
-    const idl = loadIdl('example-idl.json');
-    const programClient = createProgramClient<ExampleProgramClient>(idl);
-    const programSoPath = path.resolve(__dirname, '..', 'target', 'deploy', 'example.so');
-
+describe('anchor-example: commonIxs', () => {
     let ctx: SvmTestContext;
     let payer: Address;
 
     beforeEach(() => {
-        ctx = new SvmTestContext({ defaultPrograms: true });
-        ctx.loadProgram(programClient.programAddress, programSoPath);
-        payer = ctx.createFundedAccount();
+        ({ ctx, payer } = createTestContext());
     });
 
     describe('pubkeySeedIx', () => {
@@ -235,158 +226,7 @@ describe('anchor-example', () => {
             ).rejects.toThrow(/Circular dependency detected: pda[AB] -> pda[AB] -> pda[AB]/);
         });
     });
-
-    describe('nestedExampleIx', () => {
-        test('should encode nested struct with scalar enums, bytes, fixed array, and none inner enum', async () => {
-            const pubkeyArg = ctx.createAccount();
-            const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'arm', 'bar');
-
-            const ix = await programClient.methods
-                .nestedExample({
-                    header: { command: { __kind: 'start' }, version: 1 },
-                    innerEnum: { __kind: 'none' },
-                    innerStruct: {
-                        bytes: new Uint8Array([1, 2, 3]),
-                        enumsArray: ['arm', 'car'],
-                        name: 'hello',
-                        optionalPubkey: null,
-                        seedEnum: 'bar',
-                        value: BigInt(100),
-                    },
-                    pubkey: pubkeyArg,
-                    seedEnum: 'arm',
-                })
-                .accounts({ pdaAccount, signer: payer })
-                .instruction();
-
-            ctx.sendInstruction(ix, [payer]);
-        });
-
-        test('should encode Command::Continue with reason string [enumStructVariantTypeNode]', async () => {
-            const pubkeyArg = ctx.createAccount();
-            const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'bar', 'arm');
-
-            const ix = await programClient.methods
-                .nestedExample({
-                    header: { command: { __kind: 'continue', reason: 'keep going' }, version: 2 },
-                    innerEnum: { __kind: 'none' },
-                    innerStruct: {
-                        bytes: new Uint8Array([]),
-                        enumsArray: ['bar', 'bar'],
-                        name: 'test',
-                        optionalPubkey: null,
-                        seedEnum: 'arm',
-                        value: BigInt(0),
-                    },
-                    pubkey: pubkeyArg,
-                    seedEnum: 'bar',
-                })
-                .accounts({ pdaAccount, signer: payer })
-                .instruction();
-
-            ctx.sendInstruction(ix, [payer]);
-        });
-
-        test('should encode InnerEnum::TokenTransfer [enumStructVariantTypeNode->enumEmptyVariantTypeNode]', async () => {
-            const pubkeyArg = ctx.createAccount();
-            const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'car', 'car');
-
-            const ix = await programClient.methods
-                .nestedExample({
-                    header: { command: { __kind: 'stop' }, version: 1 },
-                    innerEnum: { __kind: 'tokenTransfer', amount: BigInt(500), tokenType: { __kind: 'sPL' } },
-                    innerStruct: {
-                        bytes: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
-                        enumsArray: ['car', 'arm'],
-                        name: 'transfer',
-                        optionalPubkey: null,
-                        seedEnum: 'car',
-                        value: BigInt(999),
-                    },
-                    pubkey: pubkeyArg,
-                    seedEnum: 'car',
-                })
-                .accounts({ pdaAccount, signer: payer })
-                .instruction();
-
-            ctx.sendInstruction(ix, [payer]);
-        });
-
-        test('should encode InnerEnum::TokenTransfer enum (3 levels deep)', async () => {
-            const pubkeyArg = ctx.createAccount();
-            const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'arm', 'arm');
-
-            const ix = await programClient.methods
-                .nestedExample({
-                    header: { command: { __kind: 'start' }, version: 1 },
-                    innerEnum: {
-                        __kind: 'tokenTransfer',
-                        amount: BigInt(1),
-                        tokenType: { __kind: 'nFT', collection: 'DegenApes' },
-                    },
-                    innerStruct: {
-                        bytes: new Uint8Array([]),
-                        enumsArray: ['arm', 'arm'],
-                        name: 'nft-test',
-                        optionalPubkey: null,
-                        seedEnum: 'arm',
-                        value: BigInt(1),
-                    },
-                    pubkey: pubkeyArg,
-                    seedEnum: 'arm',
-                })
-                .accounts({ pdaAccount, signer: payer })
-                .instruction();
-
-            ctx.sendInstruction(ix, [payer]);
-        });
-
-        test('should encode Stake inner enum and optional pubkey (Some)', async () => {
-            const pubkeyArg = ctx.createAccount();
-            const optionalPubkey = ctx.createAccount();
-            const pdaAccount = await deriveNestedExamplePda(programClient.programAddress, pubkeyArg, 'bar', 'car');
-
-            const ix = await programClient.methods
-                .nestedExample({
-                    header: { command: { __kind: 'start' }, version: 3 },
-                    innerEnum: { __kind: 'stake', duration: BigInt(86400) },
-                    innerStruct: {
-                        bytes: new Uint8Array([10, 20]),
-                        enumsArray: ['bar', 'car'],
-                        name: 'staker',
-                        optionalPubkey,
-                        seedEnum: 'car',
-                        value: BigInt(42),
-                    },
-                    pubkey: pubkeyArg,
-                    seedEnum: 'bar',
-                })
-                .accounts({ pdaAccount, signer: payer })
-                .instruction();
-
-            ctx.sendInstruction(ix, [payer]);
-        });
-    });
 });
-
-async function deriveNestedExamplePda(
-    programAddress: Address,
-    pubkey: Address,
-    seedEnum: 'arm' | 'bar' | 'car',
-    innerSeedEnum: 'arm' | 'bar' | 'car',
-): Promise<Address> {
-    const index: Record<string, number> = { arm: 0, bar: 1, car: 2 };
-    const [pda] = await getProgramDerivedAddress({
-        programAddress,
-        seeds: [
-            'pda_account',
-            getAddressEncoder().encode(pubkey),
-            new Uint8Array([index[seedEnum]!]),
-            new Uint8Array([index[innerSeedEnum]!]),
-        ],
-    });
-    return pda;
-}
 
 function decodeDataAccount1(
     root: RootNode,
