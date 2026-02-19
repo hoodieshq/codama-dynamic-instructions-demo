@@ -484,10 +484,6 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when enumsArray has invalid enum value', async () => {
-            // TODO: improve error from validation
-            // + Received:
-            // "Invalid argument \"1\", \"value\": invalid. Message: Expected a value of type `nestedExample_input_0_defined_type_struct_innerStruct_defined_type_struct_enumsArray_array_defined_type_EnumVariant`, but received: `\"invalid\"`
-            // Invalid argument \"2\", \"value\": 123. Message: Expected a value of type `nestedExample_input_0_defined_type_struct_innerStruct_defined_type_struct_enumsArray_array_defined_type_EnumVariant`, but received: `123`
             const validInput = makeValidArgs(pubkeyArg);
             const { innerStruct } = validInput;
             const input = {
@@ -504,8 +500,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-                // ).rejects.toThrow(/Invalid argument "enumsArray"/);
-            ).rejects.toThrow(/Invalid argument "1"/);
+            ).rejects.toThrow(/Invalid argument "enumsArray\[1\]/);
         });
 
         test('should throw when bytes is string instead of Uint8Array', async () => {

@@ -2,7 +2,7 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
-import type { StructError } from 'superstruct';
+import type { Failure, StructError } from 'superstruct';
 import { assert } from 'superstruct';
 
 import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
@@ -86,10 +86,26 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     } catch (error) {
         const { failures } = error as StructError;
         const message = failures().map(failure => {
-            return `Invalid argument "${failure.key}", "value": ${failure.value}. Message: ${failure.message}\n`;
+            const key = formatFailureKey(failure);
+            return `Invalid argument "${key}", "value": ${failure.value}. Message: ${failure.message}\n`;
         });
         throw new ValidationError(message.join(''));
     }
+}
+
+/**
+ * User friendly formatting for field key. Displays parent key for array elements, e.g. "itemsArray[1]"
+ * key is string for regular fields, but for array elements key is number
+ * path contains field path. Number represents index in array, e.g path: [ 'input', 'innerStruct', 'itemsArray', 1 ]
+ */
+function formatFailureKey(failure: Failure): string {
+    const key: unknown = failure.key;
+    const path = failure.path;
+    if (typeof key === 'number' && path.length > 1) {
+        const parentKey: unknown = path[path.length - 2];
+        return `${String(parentKey)}[${key}]`;
+    }
+    return String(key);
 }
 
 // Required arguments that should be validated and provided or be null/undefined if optional
