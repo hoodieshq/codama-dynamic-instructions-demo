@@ -12,50 +12,6 @@
         "accounts": [
             {
                 "kind": "accountNode",
-                "name": "accountExample",
-                "docs": [],
-                "data": {
-                    "kind": "structTypeNode",
-                    "fields": [
-                        {
-                            "kind": "structFieldTypeNode",
-                            "name": "discriminator",
-                            "defaultValueStrategy": "omitted",
-                            "docs": [],
-                            "type": {
-                                "kind": "fixedSizeTypeNode",
-                                "size": 8,
-                                "type": {
-                                    "kind": "bytesTypeNode"
-                                }
-                            },
-                            "defaultValue": {
-                                "kind": "bytesValueNode",
-                                "data": "9d68b6a9fd361e6f",
-                                "encoding": "base16"
-                            }
-                        },
-                        {
-                            "kind": "structFieldTypeNode",
-                            "name": "input",
-                            "docs": [],
-                            "type": {
-                                "kind": "definedTypeLinkNode",
-                                "name": "structAndEnumsInput"
-                            }
-                        }
-                    ]
-                },
-                "discriminators": [
-                    {
-                        "kind": "fieldDiscriminatorNode",
-                        "name": "discriminator",
-                        "offset": 0
-                    }
-                ]
-            },
-            {
-                "kind": "accountNode",
                 "name": "dataAccount1",
                 "docs": [],
                 "data": {
@@ -114,6 +70,50 @@
                                 "kind": "numberTypeNode",
                                 "format": "u8",
                                 "endian": "le"
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "nestedExampleAccount",
+                "docs": [],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "199431fafbc64cb8",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "input",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "structAndEnumsInput"
                             }
                         }
                     ]
@@ -670,7 +670,7 @@
                     },
                     {
                         "kind": "instructionAccountNode",
-                        "name": "pdaAccount",
+                        "name": "nestedExampleAccount",
                         "isWritable": true,
                         "isSigner": false,
                         "isOptional": false,
