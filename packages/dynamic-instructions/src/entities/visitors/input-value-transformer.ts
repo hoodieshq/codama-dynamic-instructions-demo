@@ -1,5 +1,5 @@
 import type { BytesEncoding, RootNode, TypeNode, Visitor } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { isNode, pascalCase, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
 import { ArgumentError } from '../../shared/errors';
@@ -119,7 +119,10 @@ export function getInputValueTransformerVisitor(
 
         visitEnumType(node) {
             // Scalar enums pass through (just numbers/strings)
-            // Data enums need variant transformation
+            // Data enums need variant transformation with PascalCase __kind
+            // because @codama/dynamic-codecs applies pascalCase() to variant names
+            // when building discriminated union codecs:
+            // https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L199
             return (input: unknown) => {
                 if (typeof input === 'number' || typeof input === 'string') {
                     return input;
@@ -135,7 +138,7 @@ export function getInputValueTransformerVisitor(
                 if (!variantNode) return input;
 
                 if (isNode(variantNode, 'enumEmptyVariantTypeNode')) {
-                    return input;
+                    return { ...input, __kind: pascalCase(String(__kind)) };
                 }
 
                 if (isNode(variantNode, 'enumStructVariantTypeNode')) {
@@ -150,7 +153,7 @@ export function getInputValueTransformerVisitor(
                             `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${typeof transformedFields}`,
                         );
                     }
-                    return { __kind, ...transformedFields };
+                    return { __kind: pascalCase(String(__kind)), ...transformedFields };
                 }
 
                 if (isNode(variantNode, 'enumTupleVariantTypeNode')) {
@@ -158,7 +161,7 @@ export function getInputValueTransformerVisitor(
                         throw new ArgumentError(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
                     });
                     if ('fields' in rest && Array.isArray(rest.fields)) {
-                        return { __kind, fields: tupleTransform(rest.fields) };
+                        return { __kind: pascalCase(String(__kind)), fields: tupleTransform(rest.fields) };
                     }
                 }
 

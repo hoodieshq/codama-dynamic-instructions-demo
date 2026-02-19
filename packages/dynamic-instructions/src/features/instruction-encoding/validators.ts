@@ -224,10 +224,14 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
 
 function EnumVariantValidator(nodeName: string, variantNames: string[]): StructUnknown {
     return define(`${nodeName}_EnumVariant`, (value: unknown) => {
-        // TODO: check nested enums
-        // Variant.name is CamelCaseString
-        if (typeof value !== 'string') return false;
-        return variantNames.includes(value);
+        // Scalar enum: plain string variant name (e.g. 'arm', 'bar')
+        if (typeof value === 'string') return variantNames.includes(value);
+        // Data enum variant: object with __kind (e.g. { __kind: 'tokenTransfer', amount: 1000 })
+        if (typeof value === 'object' && value !== null && '__kind' in value) {
+            const kind = (value as Record<string, unknown>)?.['__kind'];
+            return typeof kind === 'string' && variantNames.includes(kind);
+        }
+        return false;
     }) as StructUnknown;
 }
 
