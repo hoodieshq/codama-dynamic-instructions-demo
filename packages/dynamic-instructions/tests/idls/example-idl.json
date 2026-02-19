@@ -1609,6 +1609,101 @@
             },
             {
                 "kind": "definedTypeNode",
+                "name": "innerStruct",
+                "docs": [],
+                "type": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "value",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "name",
+                            "docs": [],
+                            "type": {
+                                "kind": "sizePrefixTypeNode",
+                                "type": {
+                                    "kind": "stringTypeNode",
+                                    "encoding": "utf8"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u32",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "seedEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "seedEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "bytes",
+                            "docs": [],
+                            "type": {
+                                "kind": "sizePrefixTypeNode",
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u32",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "optionalPubkey",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "enumsArray",
+                            "docs": [],
+                            "type": {
+                                "kind": "arrayTypeNode",
+                                "item": {
+                                    "kind": "definedTypeLinkNode",
+                                    "name": "seedEnum"
+                                },
+                                "count": {
+                                    "kind": "fixedCountNode",
+                                    "value": 2
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "kind": "definedTypeNode",
                 "name": "seedEnum",
                 "docs": [],
                 "type": {

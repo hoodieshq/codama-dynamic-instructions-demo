@@ -23,7 +23,6 @@ pub struct InnerStruct {
     pub seed_enum: SeedEnum,
     pub bytes: Vec<u8>,
     pub optional_pubkey: Option<Pubkey>,
-    pub enums_typle: (SeedEnum, u8),
     pub enums_array: [SeedEnum; 2],
 }
 
