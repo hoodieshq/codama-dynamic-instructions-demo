@@ -2,7 +2,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::Space;
 
-// All arguments are stored in the NestedExampleAccount.input field for testing
+// All arguments are stored in the NestedExampleAccount.input field for testing.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct StructAndEnumsInput {
 	pub header: InnerHeader,
@@ -18,7 +18,7 @@ pub struct NestedExampleAccount {
     pub input: StructAndEnumsInput,
 }
 
-// We need to implement Space for all structures as we store use them in NestedExampleAccount
+// We need to implement Space for all structures for size calculation.
 impl Space for StructAndEnumsInput {
 	const INIT_SPACE: usize =
 		InnerHeader::INIT_SPACE

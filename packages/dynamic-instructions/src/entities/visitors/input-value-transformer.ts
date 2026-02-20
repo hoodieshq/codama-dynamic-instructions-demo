@@ -133,12 +133,13 @@ export function getInputValueTransformerVisitor(
                 }
 
                 const { __kind, ...rest } = input;
+                const kindObj = { __kind: pascalCase(String(__kind)) };
                 const variantNode = node.variants.find(v => v.name === __kind);
 
                 if (!variantNode) return input;
 
                 if (isNode(variantNode, 'enumEmptyVariantTypeNode')) {
-                    return { ...input, __kind: pascalCase(String(__kind)) };
+                    return { ...input, ...kindObj };
                 }
 
                 if (isNode(variantNode, 'enumStructVariantTypeNode')) {
@@ -153,7 +154,7 @@ export function getInputValueTransformerVisitor(
                             `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${typeof transformedFields}`,
                         );
                     }
-                    return { __kind: pascalCase(String(__kind)), ...transformedFields };
+                    return { ...kindObj, ...transformedFields };
                 }
 
                 if (isNode(variantNode, 'enumTupleVariantTypeNode')) {
@@ -161,7 +162,7 @@ export function getInputValueTransformerVisitor(
                         throw new ArgumentError(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
                     });
                     if ('fields' in rest && Array.isArray(rest.fields)) {
-                        return { __kind: pascalCase(String(__kind)), fields: tupleTransform(rest.fields) };
+                        return { ...kindObj, fields: tupleTransform(rest.fields) };
                     }
                 }
 

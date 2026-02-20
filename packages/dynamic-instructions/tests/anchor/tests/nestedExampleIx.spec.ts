@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import { none, some } from '@solana/codecs';
@@ -8,7 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { NestedExampleArgs } from '../../generated/example-idl-types';
 import { SvmTestContext } from '../../test-utils';
-import { bytesToCodecFormat, createTestContext, programClient } from './helpers';
+import { bytesToBase16CodecFormat, createTestContext, programClient } from './helpers';
 
 describe('anchor-example: nestedExampleIx', () => {
     let ctx: SvmTestContext;
@@ -58,7 +56,7 @@ describe('anchor-example: nestedExampleIx', () => {
                 header: { command: { __kind: 'Start' }, version: 1 },
                 innerEnum: { __kind: 'None' },
                 innerStruct: {
-                    bytes: bytesToCodecFormat(new Uint8Array([1, 2, 3])),
+                    bytes: bytesToBase16CodecFormat(new Uint8Array([1, 2, 3])),
                     enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('car')],
                     name: 'hello',
                     optionalPubkey: none(),
@@ -116,7 +114,7 @@ describe('anchor-example: nestedExampleIx', () => {
                 },
                 innerEnum: { __kind: 'None' },
                 innerStruct: {
-                    bytes: bytesToCodecFormat(new Uint8Array([])),
+                    bytes: bytesToBase16CodecFormat(new Uint8Array([])),
                     enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('bar')],
                     name: 'test',
                     optionalPubkey: none(),
@@ -177,7 +175,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     tokenType: { __kind: 'SPL' },
                 },
                 innerStruct: {
-                    bytes: bytesToCodecFormat(new Uint8Array([0xde, 0xad, 0xbe, 0xef])),
+                    bytes: bytesToBase16CodecFormat(new Uint8Array([0xde, 0xad, 0xbe, 0xef])),
                     enumsArray: [seedEnumToNumber('car'), seedEnumToNumber('arm')],
                     name: 'transfer',
                     optionalPubkey: none(),
@@ -242,7 +240,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     tokenType: { __kind: 'NFT', collection: 'DegenApes' },
                 },
                 innerStruct: {
-                    bytes: bytesToCodecFormat(new Uint8Array([])),
+                    bytes: bytesToBase16CodecFormat(new Uint8Array([])),
                     enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('arm')],
                     name: 'nft-test',
                     optionalPubkey: none(),
@@ -303,7 +301,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     duration: 86400n,
                 },
                 innerStruct: {
-                    bytes: bytesToCodecFormat(new Uint8Array([10, 20])),
+                    bytes: bytesToBase16CodecFormat(new Uint8Array([10, 20])),
                     enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('car')],
                     name: 'staker',
                     optionalPubkey: some(optionalPubkey),
@@ -350,6 +348,7 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when header is missing', async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { header, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods
@@ -362,6 +361,7 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when innerStruct is missing', async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { innerStruct: _, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods
@@ -374,6 +374,7 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when pubkey is missing', async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { pubkey: _, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods
@@ -542,7 +543,6 @@ function decodeNestedExampleAccount(root: RootNode, data: Uint8Array) {
         bytesEncoding: 'base16',
     });
     const decoded = codec.decode(Uint8Array.from(data));
-
     return decoded;
 }
 
@@ -565,6 +565,7 @@ async function deriveNestedExamplePda(
     return pda;
 }
 
+/** SeedEnum enum is stored as a number. */
 export function seedEnumToNumber(enumValue: string) {
     switch (enumValue.toLowerCase()) {
         case 'arm':
