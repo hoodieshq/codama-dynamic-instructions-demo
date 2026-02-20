@@ -28,7 +28,7 @@ describe('anchor-example: nestedExampleIx', () => {
         const ix = await programClient.methods
             .nestedExample({
                 input: {
-                    header: { command: { __kind: 'start' }, version: 1 },
+                    header: { command: { __kind: 'start', fields: [42n] }, version: 1 },
                     innerEnum: { __kind: 'none' },
                     innerStruct: {
                         bytes: new Uint8Array([1, 2, 3]),
@@ -51,21 +51,19 @@ describe('anchor-example: nestedExampleIx', () => {
         const exampleAccountData = ctx.requireEncodedAccount(nestedExampleAccount).data;
 
         const exampleAccount = decodeNestedExampleAccount(programClient.root, exampleAccountData);
-        expect(exampleAccount).toMatchObject({
-            input: {
-                header: { command: { __kind: 'Start' }, version: 1 },
-                innerEnum: { __kind: 'None' },
-                innerStruct: {
-                    bytes: bytesToBase16CodecFormat(new Uint8Array([1, 2, 3])),
-                    enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('car')],
-                    name: 'hello',
-                    optionalPubkey: none(),
-                    seedEnum: seedEnumToNumber('bar'),
-                    value: 100n,
-                },
-                pubkey: pubkeyArg,
-                seedEnum: seedEnumToNumber('arm'),
+        expect(exampleAccount.input).toEqual({
+            header: { command: { __kind: 'Start', fields: [42n] }, version: 1 },
+            innerEnum: { __kind: 'None' },
+            innerStruct: {
+                bytes: bytesToBase16CodecFormat(new Uint8Array([1, 2, 3])),
+                enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('car')],
+                name: 'hello',
+                optionalPubkey: none(),
+                seedEnum: seedEnumToNumber('bar'),
+                value: 100n,
             },
+            pubkey: pubkeyArg,
+            seedEnum: seedEnumToNumber('arm'),
         });
     });
 
@@ -103,27 +101,25 @@ describe('anchor-example: nestedExampleIx', () => {
         const exampleAccountData = ctx.requireEncodedAccount(nestedExampleAccount).data;
         const exampleAccount = decodeNestedExampleAccount(programClient.root, exampleAccountData);
 
-        expect(exampleAccount).toMatchObject({
-            input: {
-                header: {
-                    command: {
-                        __kind: 'Continue',
-                        reason: 'keep going',
-                    },
-                    version: 2,
+        expect(exampleAccount.input).toEqual({
+            header: {
+                command: {
+                    __kind: 'Continue',
+                    reason: 'keep going',
                 },
-                innerEnum: { __kind: 'None' },
-                innerStruct: {
-                    bytes: bytesToBase16CodecFormat(new Uint8Array([])),
-                    enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('bar')],
-                    name: 'test',
-                    optionalPubkey: none(),
-                    seedEnum: seedEnumToNumber('arm'),
-                    value: 0n,
-                },
-                pubkey: pubkeyArg,
-                seedEnum: seedEnumToNumber('bar'),
+                version: 2,
             },
+            innerEnum: { __kind: 'None' },
+            innerStruct: {
+                bytes: bytesToBase16CodecFormat(new Uint8Array([])),
+                enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('bar')],
+                name: 'test',
+                optionalPubkey: none(),
+                seedEnum: seedEnumToNumber('arm'),
+                value: 0n,
+            },
+            pubkey: pubkeyArg,
+            seedEnum: seedEnumToNumber('bar'),
         });
     });
 
@@ -161,30 +157,28 @@ describe('anchor-example: nestedExampleIx', () => {
         const exampleAccountData = ctx.requireEncodedAccount(nestedExampleAccount).data;
         const exampleAccount = decodeNestedExampleAccount(programClient.root, exampleAccountData);
 
-        expect(exampleAccount).toMatchObject({
-            input: {
-                header: {
-                    command: {
-                        __kind: 'Stop',
-                    },
-                    version: 1,
+        expect(exampleAccount.input).toEqual({
+            header: {
+                command: {
+                    __kind: 'Stop',
                 },
-                innerEnum: {
-                    __kind: 'TokenTransfer',
-                    amount: 500n,
-                    tokenType: { __kind: 'SPL' },
-                },
-                innerStruct: {
-                    bytes: bytesToBase16CodecFormat(new Uint8Array([0xde, 0xad, 0xbe, 0xef])),
-                    enumsArray: [seedEnumToNumber('car'), seedEnumToNumber('arm')],
-                    name: 'transfer',
-                    optionalPubkey: none(),
-                    seedEnum: seedEnumToNumber('car'),
-                    value: 999n,
-                },
-                pubkey: pubkeyArg,
-                seedEnum: seedEnumToNumber('car'),
+                version: 1,
             },
+            innerEnum: {
+                __kind: 'TokenTransfer',
+                amount: 500n,
+                tokenType: { __kind: 'SPL' },
+            },
+            innerStruct: {
+                bytes: bytesToBase16CodecFormat(new Uint8Array([0xde, 0xad, 0xbe, 0xef])),
+                enumsArray: [seedEnumToNumber('car'), seedEnumToNumber('arm')],
+                name: 'transfer',
+                optionalPubkey: none(),
+                seedEnum: seedEnumToNumber('car'),
+                value: 999n,
+            },
+            pubkey: pubkeyArg,
+            seedEnum: seedEnumToNumber('car'),
         });
     });
 
@@ -200,7 +194,7 @@ describe('anchor-example: nestedExampleIx', () => {
         const ix = await programClient.methods
             .nestedExample({
                 input: {
-                    header: { command: { __kind: 'start' }, version: 1 },
+                    header: { command: { __kind: 'start', fields: [42n] }, version: 1 },
                     innerEnum: {
                         __kind: 'tokenTransfer',
                         amount: BigInt(1),
@@ -226,30 +220,29 @@ describe('anchor-example: nestedExampleIx', () => {
         const exampleAccountData = ctx.requireEncodedAccount(nestedExampleAccount).data;
         const exampleAccount = decodeNestedExampleAccount(programClient.root, exampleAccountData);
 
-        expect(exampleAccount).toMatchObject({
-            input: {
-                header: {
-                    command: {
-                        __kind: 'Start',
-                    },
-                    version: 1,
+        expect(exampleAccount.input).toEqual({
+            header: {
+                command: {
+                    __kind: 'Start',
+                    fields: [42n],
                 },
-                innerEnum: {
-                    __kind: 'TokenTransfer',
-                    amount: 1n,
-                    tokenType: { __kind: 'NFT', collection: 'DegenApes' },
-                },
-                innerStruct: {
-                    bytes: bytesToBase16CodecFormat(new Uint8Array([])),
-                    enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('arm')],
-                    name: 'nft-test',
-                    optionalPubkey: none(),
-                    seedEnum: seedEnumToNumber('arm'),
-                    value: 1n,
-                },
-                pubkey: pubkeyArg,
-                seedEnum: seedEnumToNumber('arm'),
+                version: 1,
             },
+            innerEnum: {
+                __kind: 'TokenTransfer',
+                amount: 1n,
+                tokenType: { __kind: 'NFT', collection: 'DegenApes' },
+            },
+            innerStruct: {
+                bytes: bytesToBase16CodecFormat(new Uint8Array([])),
+                enumsArray: [seedEnumToNumber('arm'), seedEnumToNumber('arm')],
+                name: 'nft-test',
+                optionalPubkey: none(),
+                seedEnum: seedEnumToNumber('arm'),
+                value: 1n,
+            },
+            pubkey: pubkeyArg,
+            seedEnum: seedEnumToNumber('arm'),
         });
     });
 
@@ -266,7 +259,7 @@ describe('anchor-example: nestedExampleIx', () => {
         const ix = await programClient.methods
             .nestedExample({
                 input: {
-                    header: { command: { __kind: 'start' }, version: 3 },
+                    header: { command: { __kind: 'start', fields: [321n] }, version: 3 },
                     innerEnum: { __kind: 'stake', duration: BigInt(86400) },
                     innerStruct: {
                         bytes: new Uint8Array([10, 20]),
@@ -288,29 +281,28 @@ describe('anchor-example: nestedExampleIx', () => {
         const exampleAccountData = ctx.requireEncodedAccount(nestedExampleAccount).data;
         const exampleAccount = decodeNestedExampleAccount(programClient.root, exampleAccountData);
 
-        expect(exampleAccount).toMatchObject({
-            input: {
-                header: {
-                    command: {
-                        __kind: 'Start',
-                    },
-                    version: 3,
+        expect(exampleAccount.input).toEqual({
+            header: {
+                command: {
+                    __kind: 'Start',
+                    fields: [321n],
                 },
-                innerEnum: {
-                    __kind: 'Stake',
-                    duration: 86400n,
-                },
-                innerStruct: {
-                    bytes: bytesToBase16CodecFormat(new Uint8Array([10, 20])),
-                    enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('car')],
-                    name: 'staker',
-                    optionalPubkey: some(optionalPubkey),
-                    seedEnum: seedEnumToNumber('car'),
-                    value: 42n,
-                },
-                pubkey: pubkeyArg,
-                seedEnum: seedEnumToNumber('bar'),
+                version: 3,
             },
+            innerEnum: {
+                __kind: 'Stake',
+                duration: 86400n,
+            },
+            innerStruct: {
+                bytes: bytesToBase16CodecFormat(new Uint8Array([10, 20])),
+                enumsArray: [seedEnumToNumber('bar'), seedEnumToNumber('car')],
+                name: 'staker',
+                optionalPubkey: some(optionalPubkey),
+                seedEnum: seedEnumToNumber('car'),
+                value: 42n,
+            },
+            pubkey: pubkeyArg,
+            seedEnum: seedEnumToNumber('bar'),
         });
     });
 
@@ -324,7 +316,7 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         const makeValidArgs = (pubkey: Address): NestedExampleArgs['input'] => ({
-            header: { command: { __kind: 'start' }, version: 1 },
+            header: { command: { __kind: 'start', fields: [123n] }, version: 1 },
             innerEnum: { __kind: 'none' },
             innerStruct: {
                 bytes: new Uint8Array([1, 2, 3]),
@@ -358,6 +350,85 @@ describe('anchor-example: nestedExampleIx', () => {
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
             ).rejects.toThrow(/Invalid argument "header"/);
+        });
+
+        test('should throw when command enum fields tuple payload is missing', async () => {
+            const input = makeValidArgs(pubkeyArg);
+            input.header.command = {
+                __kind: 'start',
+                fields: null,
+            } as unknown as NestedExampleArgs['input']['header']['command'];
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ nestedExampleAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "command"/);
+        });
+
+        test('should throw when innerEnum payload data is missing', async () => {
+            const input = makeValidArgs(pubkeyArg);
+            input.innerEnum = {
+                __kind: 'tokenTransfer',
+                amount: BigInt(1),
+                tokenType: { __kind: 'nFT', collection: 'Test' },
+            };
+            input.innerEnum.amount = undefined as unknown as bigint; // Force amount to be missing
+            await expect(
+                programClient.methods
+                    .nestedExample({
+                        input,
+                    })
+                    .accounts({ nestedExampleAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "amount"/);
+        });
+
+        test('should throw when tokenTransfer variant is missing all payload fields', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerEnum: { __kind: 'tokenTransfer' } as unknown as NestedExampleArgs['input']['innerEnum'],
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({ input })
+                    .accounts({ nestedExampleAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "amount"/);
+        });
+
+        test('should throw when tokenTransfer variant is missing tokenType', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                innerEnum: {
+                    __kind: 'tokenTransfer',
+                    amount: BigInt(1),
+                } as unknown as NestedExampleArgs['input']['innerEnum'],
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({ input })
+                    .accounts({ nestedExampleAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "tokenType"/);
+        });
+
+        test('should throw when continue variant is missing reason', async () => {
+            const input = {
+                ...makeValidArgs(pubkeyArg),
+                header: {
+                    command: { __kind: 'continue' } as unknown as NestedExampleArgs['input']['header']['command'],
+                    version: 1,
+                },
+            };
+            await expect(
+                programClient.methods
+                    .nestedExample({ input })
+                    .accounts({ nestedExampleAccount, signer: payer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "reason"/);
         });
 
         test('should throw when innerStruct is missing', async () => {
@@ -501,7 +572,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "enumsArray\[1\]/);
+            ).rejects.toThrow(/Invalid argument "enumsArray/);
         });
 
         test('should throw when bytes is string instead of Uint8Array', async () => {
@@ -543,7 +614,7 @@ function decodeNestedExampleAccount(root: RootNode, data: Uint8Array) {
         bytesEncoding: 'base16',
     });
     const decoded = codec.decode(Uint8Array.from(data));
-    return decoded;
+    return decoded as { discriminator: unknown; input: unknown };
 }
 
 async function deriveNestedExamplePda(
