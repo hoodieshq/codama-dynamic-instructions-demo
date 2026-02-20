@@ -1407,8 +1407,18 @@
                     "kind": "enumTypeNode",
                     "variants": [
                         {
-                            "kind": "enumEmptyVariantTypeNode",
-                            "name": "start"
+                            "kind": "enumTupleVariantTypeNode",
+                            "name": "start",
+                            "tuple": {
+                                "kind": "tupleTypeNode",
+                                "items": [
+                                    {
+                                        "kind": "numberTypeNode",
+                                        "format": "u64",
+                                        "endian": "le"
+                                    }
+                                ]
+                            }
                         },
                         {
                             "kind": "enumEmptyVariantTypeNode",

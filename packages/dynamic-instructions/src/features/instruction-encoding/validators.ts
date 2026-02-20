@@ -2,6 +2,7 @@ import type {
     ArrayTypeNode,
     CountNode,
     DefinedTypeNode,
+    EnumVariantTypeNode,
     InstructionAccountNode,
     InstructionArgumentNode,
     SetTypeNode,
@@ -213,8 +214,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return createValidatorForTypeNode(`${nodeName}_size_prefix`, node.type, definedTypes);
         }
         case 'enumTypeNode': {
-            const variantNames = node.variants.map(v => v.name);
-            return EnumVariantValidator(nodeName, variantNames);
+            return EnumVariantValidator(nodeName, node.variants, definedTypes);
         }
         case 'amountTypeNode': // unit with decimals
         case 'solAmountTypeNode': // equivalent to amountTypeNode with 9 decimals
@@ -222,19 +222,86 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     }
 }
 
-function EnumVariantValidator(nodeName: string, variantNames: string[]): StructUnknown {
+/**
+ * Validator for enum variants. Handles both scalar enums (where the value is just the variant name as a string)
+ * and enums with data (e.g. enum Command { Start, Continue { reason: String }})
+ */
+function EnumVariantValidator(
+    nodeName: string,
+    variants: EnumVariantTypeNode[],
+    definedTypes: DefinedTypeNode[],
+): StructUnknown {
+    const variantNames: string[] = variants.map(v => v.name);
+
+    // Eagerly build per-variant payload validators for struct and tuple variants
+    const variantValidators = new Map<string, StructUnknown>();
+    for (const variant of variants) {
+        if (variant.kind === 'enumStructVariantTypeNode') {
+            variantValidators.set(
+                variant.name,
+                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.struct as TypeNode, definedTypes),
+            );
+        } else if (variant.kind === 'enumTupleVariantTypeNode') {
+            variantValidators.set(
+                variant.name,
+                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.tuple as TypeNode, definedTypes),
+            );
+        }
+    }
+
     return define(`${nodeName}_EnumVariant`, (value: unknown) => {
         // Scalar enum: plain string variant name (e.g. 'arm', 'bar')
         if (typeof value === 'string')
             return variantNames.includes(value) || `Value ${value} of enumTypeNode is invalid!`;
+
         // Data enum variant: object with __kind (e.g. { __kind: 'tokenTransfer', amount: 1000 })
         if (typeof value === 'object' && value !== null && '__kind' in value) {
-            const kind = (value as Record<string, unknown>)?.['__kind'];
-            return (
-                (typeof kind === 'string' && variantNames.includes(kind)) ||
-                `enumTypeNode kind ${String(kind)} is invalid!`
-            );
+            const kind = (value as Record<string, unknown>)['__kind'];
+            if (typeof kind !== 'string') {
+                return `Value of type ${typeof value} of enumTypeNode is invalid!`;
+            }
+            if (!variantNames.includes(kind)) {
+                return `enumTypeNode kind ${kind} is invalid!`;
+            }
+
+            const variant = variants.find(v => v.name.toString() === kind)!;
+
+            if (variant.kind === 'enumEmptyVariantTypeNode') {
+                return true;
+            }
+
+            // Validations of enum payloads
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { __kind, ...rest } = value as Record<string, unknown>;
+            const payloadValidator = variantValidators.get(kind);
+            if (!payloadValidator) {
+                return true;
+            }
+
+            if (variant.kind === 'enumStructVariantTypeNode') {
+                const [error] = payloadValidator.validate(rest);
+                if (error) {
+                    for (const failure of error.failures()) {
+                        return `Invalid argument "${String(failure.key)}"`;
+                    }
+                    return `enumTypeNode variant '${kind}' has invalid payload`;
+                }
+                return true;
+            }
+
+            if (variant.kind === 'enumTupleVariantTypeNode') {
+                const fields = (rest as { fields?: unknown }).fields;
+                const [error] = payloadValidator.validate(fields);
+                if (error) {
+                    for (const failure of error.failures()) {
+                        return `Invalid argument "${String(failure.key)}"`;
+                    }
+                    return `enumTypeNode variant '${kind}' has invalid payload`;
+                }
+                return true;
+            }
         }
+
         return `Value ${String(value)} of enumTypeNode is invalid!`;
     }) as StructUnknown;
 }

@@ -40,12 +40,12 @@ impl Space for InnerHeader {
 // command: Command
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub enum Command {
-	Start,
+	Start(u64),
 	Stop,
 	Continue { reason: String },
 }
 impl Space for Command {
-	const INIT_SPACE: usize = 1 + 4 + 64; // discriminant + String (max 64 for simplicity)
+	const INIT_SPACE: usize = 1 + 8 + 4 + 64; // discriminant + u64 + String (max 64 for simplicity)
 }
 
 // inner_struct: InnerStruct
