@@ -396,13 +396,10 @@ function MapCountValidator(node: CountNode): StructUnknown | null {
         case 'fixedCountNode':
             return KeysLengthValidator(node.value);
         case 'remainderCountNode':
-            return null; // the number of items is unknown
-        // TODO: handle prefixed count. We want to understand its purpose and add validation if necessary
-        // DOCS: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/countNodes/PrefixedCountNode.md
-        // case "prefixedCountNode":
-        //   return null;
+        case 'prefixedCountNode':
+            return null; // the number of items is unknown or arbitrary, like vec![]
         default:
-            throw new Error(`Unsupported map count type: ${node.kind}`);
+            throw new Error(`Unsupported map count type: ${(node as { kind: string })?.kind}`);
     }
 }
 
@@ -433,14 +430,9 @@ function arrayValidator(
         case 'fixedCountNode': {
             return size(array(itemValidator), node.count.value) as StructUnknown;
         }
-        case 'remainderCountNode': {
-            return array(itemValidator) as StructUnknown;
-        }
+        case 'remainderCountNode':
         case 'prefixedCountNode': {
-            // TODO: check and handle these types later
-            // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/countNodes/PrefixedCountNode.md
-            // node.count.prefix.kind
-            throw new Error(`Node: ${nodeName}. Unsupported array count type: ${node.count.kind}`);
+            return array(itemValidator) as StructUnknown;
         }
         default: {
             // This should be unreachable with the current `CountNode` union but helps

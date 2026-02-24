@@ -1,6 +1,7 @@
 import { type Address, address } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
+import { TOKEN_2022_PROGRAM_ADDRESS } from '@solana-program/token-2022';
 import { FailedTransactionMetadata, LiteSVM, type TransactionMetadata } from 'litesvm';
 
 import { toLegacyTransactionInstruction } from '../src';
@@ -48,6 +49,7 @@ export class SvmTestContext {
     private readonly accounts: Map<Address, web3.Keypair>;
     private currentSlot: bigint;
 
+    readonly TOKEN_2022_PROGRAM_ADDRESS = TOKEN_2022_PROGRAM_ADDRESS;
     readonly TOKEN_PROGRAM_ADDRESS = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
     readonly ASSOCIATED_TOKEN_PROGRAM_ADDRESS = address('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
     readonly SYSTEM_PROGRAM_ADDRESS = address(web3.SystemProgram.programId.toBase58());
