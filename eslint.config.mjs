@@ -8,5 +8,15 @@ export default defineConfig([
     {
         files: ['**/*.ts', '**/*.(c|m)?js'],
         extends: [solanaConfig],
+        rules: {
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    destructuredArrayIgnorePattern: '^_',
+                },
+            ],
+        },
     },
 ]);

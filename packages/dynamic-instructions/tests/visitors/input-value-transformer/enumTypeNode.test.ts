@@ -55,7 +55,7 @@ describe('enumTypeNode', () => {
         const transformer = createInputValueTransformer(dataEnum, rootNodeMock);
 
         const input = { __kind: 'none' };
-        expect(transformer(input)).toEqual({ __kind: 'none' });
+        expect(transformer(input)).toEqual({ __kind: 'None' });
     });
 
     test('should transform bytes in struct variant', () => {
@@ -82,7 +82,7 @@ describe('enumTypeNode', () => {
         };
 
         expect(transformer(input)).toEqual({
-            __kind: 'withData',
+            __kind: 'WithData',
             data: ['base16', '010203'],
             id: 42,
         });
@@ -104,7 +104,7 @@ describe('enumTypeNode', () => {
         };
 
         expect(transformer(input)).toEqual({
-            __kind: 'withBytes',
+            __kind: 'WithBytes',
             fields: [['base16', 'dead'], 255],
         });
     });
@@ -166,7 +166,7 @@ describe('enumTypeNode', () => {
         };
 
         expect(transformer(input)).toEqual({
-            __kind: 'complex',
+            __kind: 'Complex',
             id: 100,
             key: ['base16', '0102'],
             nested: ['base16', '0506'],
@@ -195,7 +195,7 @@ describe('enumTypeNode', () => {
         };
 
         expect(transformer(input)).toEqual({
-            __kind: 'withArray',
+            __kind: 'WithArray',
             items: [
                 ['base16', '0102'],
                 ['base16', '0304'],
@@ -256,9 +256,9 @@ describe('enumTypeNode', () => {
         };
 
         expect(transformer(input)).toEqual({
-            __kind: 'outer',
+            __kind: 'Outer',
             inner: {
-                __kind: 'inner2',
+                __kind: 'Inner2',
                 data: ['base16', 'ffee'],
             },
         });

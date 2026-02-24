@@ -1,29 +1,18 @@
-import path from 'node:path';
-
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import { type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { createProgramClient } from '../../../src';
-import type { ExampleProgramClient } from '../../generated/example-idl-types';
-import { loadIdl, SvmTestContext } from '../../test-utils';
+import { SvmTestContext } from '../../test-utils';
+import { createTestContext, programClient } from './helpers';
 
-describe('anchor-example', () => {
-    const idl = loadIdl('example-idl.json');
-
-    const programClient = createProgramClient<ExampleProgramClient>(idl);
-
-    const programSoPath = path.resolve(__dirname, '..', 'target', 'deploy', 'example.so');
-
+describe('anchor-example: commonIxs', () => {
     let ctx: SvmTestContext;
     let payer: Address;
 
     beforeEach(() => {
-        ctx = new SvmTestContext({ defaultPrograms: true });
-        ctx.loadProgram(programClient.programAddress, programSoPath);
-        payer = ctx.createFundedAccount();
+        ({ ctx, payer } = createTestContext());
     });
 
     describe('pubkeySeedIx', () => {

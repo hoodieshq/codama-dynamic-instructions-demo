@@ -1,7 +1,7 @@
 {
     "kind": "rootNode",
     "standard": "codama",
-    "version": "1.3.7",
+    "version": "1.5.1",
     "program": {
         "kind": "programNode",
         "name": "example",
@@ -70,6 +70,50 @@
                                 "kind": "numberTypeNode",
                                 "format": "u8",
                                 "endian": "le"
+                            }
+                        }
+                    ]
+                },
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "accountNode",
+                "name": "nestedExampleAccount",
+                "docs": [],
+                "data": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "discriminator",
+                            "defaultValueStrategy": "omitted",
+                            "docs": [],
+                            "type": {
+                                "kind": "fixedSizeTypeNode",
+                                "size": 8,
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                }
+                            },
+                            "defaultValue": {
+                                "kind": "bytesValueNode",
+                                "data": "199431fafbc64cb8",
+                                "encoding": "base16"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "input",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "structAndEnumsInput"
                             }
                         }
                     ]
@@ -188,8 +232,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "06ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a9",
-                                            "encoding": "base16"
+                                            "data": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -243,8 +287,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "7369676e65725f616e645f617461",
-                                            "encoding": "base16"
+                                            "data": "jRu685RUxyrTMFKUptY",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -401,8 +445,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "6c6576656c31",
-                                            "encoding": "base16"
+                                            "data": "vyjhaZZA",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -448,8 +492,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "6c6576656c32",
-                                            "encoding": "base16"
+                                            "data": "vyjhaZZB",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -495,8 +539,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "6c6576656c33",
-                                            "encoding": "base16"
+                                            "data": "vyjhaZZC",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -542,8 +586,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "6c6576656c34",
-                                            "encoding": "base16"
+                                            "data": "vyjhaZZD",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -599,6 +643,79 @@
                             "kind": "bytesValueNode",
                             "data": "0a91d0f7e05f68d9",
                             "encoding": "base16"
+                        }
+                    }
+                ],
+                "discriminators": [
+                    {
+                        "kind": "fieldDiscriminatorNode",
+                        "name": "discriminator",
+                        "offset": 0
+                    }
+                ]
+            },
+            {
+                "kind": "instructionNode",
+                "name": "nestedExample",
+                "docs": [],
+                "optionalAccountStrategy": "programId",
+                "accounts": [
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "signer",
+                        "isWritable": true,
+                        "isSigner": true,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "nestedExampleAccount",
+                        "isWritable": true,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": []
+                    },
+                    {
+                        "kind": "instructionAccountNode",
+                        "name": "systemProgram",
+                        "isWritable": false,
+                        "isSigner": false,
+                        "isOptional": false,
+                        "docs": [],
+                        "defaultValue": {
+                            "kind": "publicKeyValueNode",
+                            "publicKey": "11111111111111111111111111111111",
+                            "identifier": "systemProgram"
+                        }
+                    }
+                ],
+                "arguments": [
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "discriminator",
+                        "defaultValueStrategy": "omitted",
+                        "docs": [],
+                        "type": {
+                            "kind": "fixedSizeTypeNode",
+                            "size": 8,
+                            "type": {
+                                "kind": "bytesTypeNode"
+                            }
+                        },
+                        "defaultValue": {
+                            "kind": "bytesValueNode",
+                            "data": "74d1961627e33e2f",
+                            "encoding": "base16"
+                        }
+                    },
+                    {
+                        "kind": "instructionArgumentNode",
+                        "name": "input",
+                        "docs": [],
+                        "type": {
+                            "kind": "definedTypeLinkNode",
+                            "name": "structAndEnumsInput"
                         }
                     }
                 ],
@@ -709,8 +826,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "73656564",
-                                            "encoding": "base16"
+                                            "data": "3x5dmD",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -822,8 +939,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "726563757273697665",
-                                            "encoding": "base16"
+                                            "data": "2TTMxGdnk9y5E",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -925,8 +1042,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "7064615f61",
-                                            "encoding": "base16"
+                                            "data": "DgTMS8g",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -972,8 +1089,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "7064615f62",
-                                            "encoding": "base16"
+                                            "data": "DgTMS8h",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -1075,8 +1192,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "6f7074696f6e616c5f616363",
-                                            "encoding": "base16"
+                                            "data": "36yLnDMJfhTHJWcBU",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -1198,8 +1315,8 @@
                                         },
                                         "value": {
                                             "kind": "bytesValueNode",
-                                            "data": "73656564",
-                                            "encoding": "base16"
+                                            "data": "3x5dmD",
+                                            "encoding": "base58"
                                         }
                                     },
                                     {
@@ -1281,7 +1398,383 @@
                 ]
             }
         ],
-        "definedTypes": [],
+        "definedTypes": [
+            {
+                "kind": "definedTypeNode",
+                "name": "command",
+                "docs": [],
+                "type": {
+                    "kind": "enumTypeNode",
+                    "variants": [
+                        {
+                            "kind": "enumTupleVariantTypeNode",
+                            "name": "start",
+                            "tuple": {
+                                "kind": "tupleTypeNode",
+                                "items": [
+                                    {
+                                        "kind": "numberTypeNode",
+                                        "format": "u64",
+                                        "endian": "le"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "stop"
+                        },
+                        {
+                            "kind": "enumStructVariantTypeNode",
+                            "name": "continue",
+                            "struct": {
+                                "kind": "structTypeNode",
+                                "fields": [
+                                    {
+                                        "kind": "structFieldTypeNode",
+                                        "name": "reason",
+                                        "docs": [],
+                                        "type": {
+                                            "kind": "sizePrefixTypeNode",
+                                            "type": {
+                                                "kind": "stringTypeNode",
+                                                "encoding": "utf8"
+                                            },
+                                            "prefix": {
+                                                "kind": "numberTypeNode",
+                                                "format": "u32",
+                                                "endian": "le"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                    }
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "innerEnum",
+                "docs": [],
+                "type": {
+                    "kind": "enumTypeNode",
+                    "variants": [
+                        {
+                            "kind": "enumStructVariantTypeNode",
+                            "name": "tokenTransfer",
+                            "struct": {
+                                "kind": "structTypeNode",
+                                "fields": [
+                                    {
+                                        "kind": "structFieldTypeNode",
+                                        "name": "amount",
+                                        "docs": [],
+                                        "type": {
+                                            "kind": "numberTypeNode",
+                                            "format": "u64",
+                                            "endian": "le"
+                                        }
+                                    },
+                                    {
+                                        "kind": "structFieldTypeNode",
+                                        "name": "tokenType",
+                                        "docs": [],
+                                        "type": {
+                                            "kind": "definedTypeLinkNode",
+                                            "name": "tokenType"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "kind": "enumStructVariantTypeNode",
+                            "name": "stake",
+                            "struct": {
+                                "kind": "structTypeNode",
+                                "fields": [
+                                    {
+                                        "kind": "structFieldTypeNode",
+                                        "name": "duration",
+                                        "docs": [],
+                                        "type": {
+                                            "kind": "numberTypeNode",
+                                            "format": "u64",
+                                            "endian": "le"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "none"
+                        }
+                    ],
+                    "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                    }
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "innerHeader",
+                "docs": [],
+                "type": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "version",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u32",
+                                "endian": "le"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "command",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "command"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "innerStruct",
+                "docs": [],
+                "type": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "value",
+                            "docs": [],
+                            "type": {
+                                "kind": "numberTypeNode",
+                                "format": "u64",
+                                "endian": "le"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "name",
+                            "docs": [],
+                            "type": {
+                                "kind": "sizePrefixTypeNode",
+                                "type": {
+                                    "kind": "stringTypeNode",
+                                    "encoding": "utf8"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u32",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "seedEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "seedEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "bytes",
+                            "docs": [],
+                            "type": {
+                                "kind": "sizePrefixTypeNode",
+                                "type": {
+                                    "kind": "bytesTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u32",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "optionalPubkey",
+                            "docs": [],
+                            "type": {
+                                "kind": "optionTypeNode",
+                                "fixed": false,
+                                "item": {
+                                    "kind": "publicKeyTypeNode"
+                                },
+                                "prefix": {
+                                    "kind": "numberTypeNode",
+                                    "format": "u8",
+                                    "endian": "le"
+                                }
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "enumsArray",
+                            "docs": [],
+                            "type": {
+                                "kind": "arrayTypeNode",
+                                "item": {
+                                    "kind": "definedTypeLinkNode",
+                                    "name": "seedEnum"
+                                },
+                                "count": {
+                                    "kind": "fixedCountNode",
+                                    "value": 2
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "seedEnum",
+                "docs": [],
+                "type": {
+                    "kind": "enumTypeNode",
+                    "variants": [
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "arm"
+                        },
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "bar"
+                        },
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "car"
+                        }
+                    ],
+                    "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                    }
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "structAndEnumsInput",
+                "docs": [],
+                "type": {
+                    "kind": "structTypeNode",
+                    "fields": [
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "header",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerHeader"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "innerStruct",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerStruct"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "innerEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "innerEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "seedEnum",
+                            "docs": [],
+                            "type": {
+                                "kind": "definedTypeLinkNode",
+                                "name": "seedEnum"
+                            }
+                        },
+                        {
+                            "kind": "structFieldTypeNode",
+                            "name": "pubkey",
+                            "docs": [],
+                            "type": {
+                                "kind": "publicKeyTypeNode"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "kind": "definedTypeNode",
+                "name": "tokenType",
+                "docs": [],
+                "type": {
+                    "kind": "enumTypeNode",
+                    "variants": [
+                        {
+                            "kind": "enumEmptyVariantTypeNode",
+                            "name": "sPL"
+                        },
+                        {
+                            "kind": "enumStructVariantTypeNode",
+                            "name": "nFT",
+                            "struct": {
+                                "kind": "structTypeNode",
+                                "fields": [
+                                    {
+                                        "kind": "structFieldTypeNode",
+                                        "name": "collection",
+                                        "docs": [],
+                                        "type": {
+                                            "kind": "sizePrefixTypeNode",
+                                            "type": {
+                                                "kind": "stringTypeNode",
+                                                "encoding": "utf8"
+                                            },
+                                            "prefix": {
+                                                "kind": "numberTypeNode",
+                                                "format": "u32",
+                                                "endian": "le"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                    }
+                }
+            }
+        ],
         "pdas": [],
         "errors": []
     },

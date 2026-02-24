@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
+
 use anchor_spl::{token::{Token, Mint, TokenAccount}, associated_token::AssociatedToken};
+mod nested_example;
+pub use nested_example::*;
 
 declare_id!("5xjPsgMHuoj4MrAPJVBrTomk5UAZvCxVtAdcWwgheoZs");
 
@@ -53,6 +56,10 @@ pub mod example {
     pub fn two_node_cycle_pda(ctx: Context<TwoNodeCyclePda>) -> Result<()> {
         Ok(())
     }
+
+    pub fn nested_example(ctx: Context<NestedStructsAndEnums>, input: StructAndEnumsInput) -> Result<()> {
+        nested_example::handler(ctx, input)
+    }
 }
 
 #[derive(Accounts)]
@@ -60,10 +67,10 @@ pub struct PubkeySeedIx<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        init, 
-        payer = signer, 
+        init,
+        payer = signer,
         space = 8 + 8 + 1 + 32 + 1,
-        seeds = [b"seed", signer.key().as_ref()], 
+        seeds = [b"seed", signer.key().as_ref()],
         bump
     )]
     pub new_account: Account<'info, DataAccount1>,
@@ -83,7 +90,7 @@ pub struct UpdateOptionalInput<'info> {
     pub signer: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"seed", signer.key().as_ref()], 
+        seeds = [b"seed", signer.key().as_ref()],
         bump = existing_account.bump
     )]
     pub existing_account: Account<'info, DataAccount1>,
@@ -96,7 +103,7 @@ pub struct UpdateOptionalAccount<'info> {
     pub signer: Signer<'info>,
     #[account(
         init,
-        seeds = [b"optional_acc".as_ref(), &id.to_le_bytes()], 
+        seeds = [b"optional_acc".as_ref(), &id.to_le_bytes()],
         payer = signer,
         space = 8 + StoreOptionalAccount::INIT_SPACE,
         bump,
@@ -129,7 +136,7 @@ pub struct StoreOptionalAccount {
 pub struct ExternalProgramsWithPdaIx<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    
+
     // mint and token_account are to check auto-resolution with external program
     #[account(
         init,
@@ -149,14 +156,14 @@ pub struct ExternalProgramsWithPdaIx<'info> {
     // dependent_account to check that auto-resolution and seeds derivation from both:
     // signer (accountInput) and token_account (another auto-derived account)
     #[account(
-        init, 
-        payer = signer, 
+        init,
+        payer = signer,
         space = 8 + DataAccount1::INIT_SPACE,
-        seeds = [b"signer_and_ata", signer.key().as_ref(), token_account.key().as_ref()], 
+        seeds = [b"signer_and_ata", signer.key().as_ref(), token_account.key().as_ref()],
         bump
     )]
     pub dependent_account: Account<'info, DataAccount1>,
-    
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -167,7 +174,7 @@ pub struct ExternalProgramsWithPdaIx<'info> {
 pub struct FourLevelPda<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -176,7 +183,7 @@ pub struct FourLevelPda<'info> {
         bump
     )]
     pub level1: Account<'info, DataAccount1>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -185,7 +192,7 @@ pub struct FourLevelPda<'info> {
         bump
     )]
     pub level2: Account<'info, DataAccount1>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -194,7 +201,7 @@ pub struct FourLevelPda<'info> {
         bump
     )]
     pub level3: Account<'info, DataAccount1>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -203,7 +210,7 @@ pub struct FourLevelPda<'info> {
         bump
     )]
     pub level4: Account<'info, DataAccount1>,
-    
+
     pub system_program: Program<'info, System>,
 }
 
@@ -211,7 +218,7 @@ pub struct FourLevelPda<'info> {
 pub struct SelfReferencePda<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -220,7 +227,7 @@ pub struct SelfReferencePda<'info> {
         bump
     )]
     pub recursive: Account<'info, DataAccount1>,
-    
+
     pub system_program: Program<'info, System>,
 }
 
@@ -228,7 +235,7 @@ pub struct SelfReferencePda<'info> {
 pub struct TwoNodeCyclePda<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -237,7 +244,7 @@ pub struct TwoNodeCyclePda<'info> {
         bump
     )]
     pub pda_a: Account<'info, DataAccount1>,
-    
+
     #[account(
         init,
         payer = signer,
@@ -246,7 +253,7 @@ pub struct TwoNodeCyclePda<'info> {
         bump
     )]
     pub pda_b: Account<'info, DataAccount1>,
-    
+
     pub system_program: Program<'info, System>,
 }
 
