@@ -9,7 +9,19 @@ import type {
     TypeNode,
 } from '@codama/nodes';
 import { isAddress } from '@solana/addresses';
-import { array, boolean, define, intersection, number, object, size, string, Struct, tuple } from 'superstruct';
+import {
+    array,
+    boolean,
+    define,
+    intersection,
+    number,
+    object,
+    size,
+    string,
+    Struct,
+    StructError,
+    tuple,
+} from 'superstruct';
 
 import { isPublicKeyLike } from '../../shared/address';
 
@@ -278,31 +290,28 @@ function EnumVariantValidator(
             }
 
             if (variant.kind === 'enumStructVariantTypeNode') {
-                const [error] = payloadValidator.validate(rest);
-                if (error) {
-                    for (const failure of error.failures()) {
-                        return `Invalid argument "${String(failure.key)}"`;
-                    }
-                    return `enumTypeNode variant '${kind}' has invalid payload`;
-                }
-                return true;
+                const [structError] = payloadValidator.validate(rest);
+                return structError ? formatErrorForEnumTypeNode(kind, structError) : true;
             }
 
             if (variant.kind === 'enumTupleVariantTypeNode') {
                 const fields = (rest as { fields?: unknown }).fields;
-                const [error] = payloadValidator.validate(fields);
-                if (error) {
-                    for (const failure of error.failures()) {
-                        return `Invalid argument "${String(failure.key)}"`;
-                    }
-                    return `enumTypeNode variant '${kind}' has invalid payload`;
-                }
-                return true;
+                const [structError] = payloadValidator.validate(fields);
+                return structError ? formatErrorForEnumTypeNode(kind, structError) : true;
             }
         }
 
         return `Value ${String(value)} of enumTypeNode is invalid!`;
     }) as StructUnknown;
+}
+
+function formatErrorForEnumTypeNode(enumVariantKind: string, error: StructError) {
+    const failures = error.failures();
+    const first = failures?.[0];
+    if (first) {
+        return `Invalid argument "${String(first.key)}"`;
+    }
+    return `enumTypeNode variant '${enumVariantKind}' has invalid payload`;
 }
 
 const SolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('SolanaAddress', (value: unknown) => {
