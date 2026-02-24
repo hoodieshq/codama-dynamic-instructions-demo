@@ -239,12 +239,12 @@ function EnumVariantValidator(
         if (variant.kind === 'enumStructVariantTypeNode') {
             variantValidators.set(
                 variant.name,
-                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.struct as TypeNode, definedTypes),
+                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.struct, definedTypes),
             );
         } else if (variant.kind === 'enumTupleVariantTypeNode') {
             variantValidators.set(
                 variant.name,
-                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.tuple as TypeNode, definedTypes),
+                createValidatorForTypeNode(`${nodeName}_${variant.name}`, variant.tuple, definedTypes),
             );
         }
     }
