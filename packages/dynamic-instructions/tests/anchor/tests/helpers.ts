@@ -21,5 +21,5 @@ export function createTestContext() {
  * To match bytes decoded by getNodeCodec.
  */
 export function bytesToBase16CodecFormat(bytes: Uint8Array) {
-    return ['base16', Buffer.from(bytes).toString('hex')];
+    return ['base16', Buffer.from(bytes).toString('hex')] as const;
 }
