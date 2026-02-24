@@ -340,8 +340,7 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when header is missing', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { header, ...args } = makeValidArgs(pubkeyArg);
+            const { header: _, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods
                     .nestedExample({
@@ -432,7 +431,6 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when innerStruct is missing', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { innerStruct: _, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods
@@ -445,7 +443,6 @@ describe('anchor-example: nestedExampleIx', () => {
         });
 
         test('should throw when pubkey is missing', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { pubkey: _, ...args } = makeValidArgs(pubkeyArg);
             await expect(
                 programClient.methods

@@ -271,7 +271,6 @@ function EnumVariantValidator(
             }
 
             // Validations of enum payloads
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { __kind, ...rest } = value as Record<string, unknown>;
             const payloadValidator = variantValidators.get(kind);
             if (!payloadValidator) {
