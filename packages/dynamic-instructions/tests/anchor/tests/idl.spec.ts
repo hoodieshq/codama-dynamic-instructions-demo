@@ -1,6 +1,6 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
-import { type Option, unwrapOption } from '@solana/codecs';
+import { getU64Encoder, type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -211,6 +211,31 @@ describe('anchor-example: commonIxs', () => {
         });
 
         ctx.sendInstruction(ix, [payer]);
+    });
+
+    describe('stringSeedPda', () => {
+        test('should derive PDA using raw string seed bytes (not size-prefixed)', async () => {
+            const name = 'hello';
+            const id = 7;
+
+            const ix = await programClient.methods
+                .stringSeedPda({ id, name })
+                .accounts({ signer: payer })
+                .instruction();
+
+            ctx.sendInstruction(ix, [payer]);
+
+            const [expectedPda] = await getProgramDerivedAddress({
+                programAddress: programClient.programAddress,
+                seeds: [getU64Encoder().encode(id), name],
+            });
+
+            const account = ctx.requireEncodedAccount(expectedPda);
+            expect(account.owner).toBe(programClient.programAddress);
+
+            const decoded = decodeDataAccount1(programClient.root, account.data);
+            expect(decoded.input).toBe(7n);
+        });
     });
 
     describe('Circular Dependency Detection', () => {

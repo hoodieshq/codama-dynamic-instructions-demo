@@ -11,6 +11,7 @@ import type {
     NumberValueNode,
     PublicKeyValueNode,
     StringValueNode,
+    TypeNode,
     Visitor,
 } from 'codama';
 import type { InstructionNode, RootNode } from 'codama';
@@ -30,6 +31,7 @@ type PdaSeedValueVisitorContext = {
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
     root: RootNode;
+    seedTypeNode?: TypeNode;
 };
 
 /**
@@ -53,7 +55,7 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
     | 'stringValueNode'
     // TODO: consider supporting the rest of ValueNodes: [ArrayValueNode, ConstantValueNode, EnumValueNode, MapValueNode, NoneValueNode, SetValueNode, SomeValueNode, StructValueNode, TupleValueNode]
 > {
-    const { root, ixNode, programId } = ctx;
+    const { root, ixNode, programId, seedTypeNode } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
     const resolutionPath = ctx.resolutionPath ?? [];
@@ -96,12 +98,17 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
             if (!ixArgumentNode) {
                 throw new AccountError(`Missing instruction argument node for PDA seed: ${node.name}`);
             }
-            const codec = getNodeCodec([root, root.program, ixNode, ixArgumentNode]);
             const argInput = argumentsInput[node.name];
             if (argInput === undefined || argInput === null) {
                 throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
             }
-            const transformer = createInputValueTransformer(ixArgumentNode.type, root, {
+
+            // Use the PDA seed's declared type (e.g. plain stringTypeNode) rather than
+            // the instruction argument's type (e.g. sizePrefixTypeNode) so the seed
+            // bytes match what the on-chain program derives.
+            const typeNode = seedTypeNode ?? ixArgumentNode.type;
+            const codec = getNodeCodec([root, root.program, ixNode, { ...ixArgumentNode, type: typeNode }]);
+            const transformer = createInputValueTransformer(typeNode, root, {
                 bytesEncoding: 'base16',
             });
             const transformedInput = transformer(argInput);

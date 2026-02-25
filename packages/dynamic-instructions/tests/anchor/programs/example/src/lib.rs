@@ -60,6 +60,12 @@ pub mod example {
     pub fn nested_example(ctx: Context<NestedStructsAndEnums>, input: StructAndEnumsInput) -> Result<()> {
         nested_example::handler(ctx, input)
     }
+
+    pub fn string_seed_pda(ctx: Context<StringSeedPda>, name: String, id: u64) -> Result<()> {
+        ctx.accounts.pda_account.input = id;
+        ctx.accounts.pda_account.bump = ctx.bumps.pda_account;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -254,6 +260,28 @@ pub struct TwoNodeCyclePda<'info> {
     )]
     pub pda_b: Account<'info, DataAccount1>,
 
+    pub system_program: Program<'info, System>,
+}
+
+// Reproducer for the PDA seed type mismatch:
+// The `name` argument is a Rust `String`, which Borsh serializes with a u32 length prefix
+// (sizePrefixTypeNode in Codama). But the PDA seed uses `name.as_bytes()` — raw UTF-8 bytes
+// without any prefix (stringTypeNode in Codama). Without the proper seedTypeNode in
+// pda-seed-value.ts, the library would encode the seed with the length prefix, deriving
+// the wrong PDA address.
+#[derive(Accounts)]
+#[instruction(name: String, id: u64)]
+pub struct StringSeedPda<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + DataAccount1::INIT_SPACE,
+        seeds = [&id.to_le_bytes(), name.as_bytes()],
+        bump
+    )]
+    pub pda_account: Account<'info, DataAccount1>,
     pub system_program: Program<'info, System>,
 }
 
