@@ -134,6 +134,7 @@ function resolveVariablePdaSeed({
         programId,
         resolutionPath: resolutionPath ?? [],
         root,
+        seedTypeNode: seedNode.type,
     });
 
     return visitOrElse(variableSeedValueNode.value, visitor, node => {
