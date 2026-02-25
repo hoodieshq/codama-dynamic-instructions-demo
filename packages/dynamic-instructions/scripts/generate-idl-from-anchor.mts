@@ -6,19 +6,23 @@ import { writeFile } from '@codama/renderers-core';
 
 const packageRoot = path.join(import.meta.dirname, '..');
 
-// Anchor outputs the IDL under `target/idl/<program>.json`.
-const idlPath = path.join(packageRoot, 'tests', 'anchor', 'target', 'idl', 'example.json');
-console.log(`Start generation from IDL: ${idlPath}`);
-const idl = JSON.parse(readFileSync(idlPath, 'utf-8'));
+const programs = ['example', 'blog'];
 
-console.log('Creating codama client..');
-const codama = createFromRoot(rootNodeFromAnchor(idl));
+for (const program of programs) {
+    // Anchor outputs the IDL under `target/idl/<program>.json`.
+    const idlPath = path.join(packageRoot, 'tests', 'anchor', 'target', 'idl', `${program}.json`);
+    console.log(`Start generation from IDL: ${idlPath}`);
+    const idl = JSON.parse(readFileSync(idlPath, 'utf-8'));
 
-const pathToIdl = path.join(packageRoot, 'tests', 'idls', 'example-idl.json');
-console.log(`Writing Codama IDL to: ${pathToIdl}`);
+    console.log('Creating codama client..');
+    const codama = createFromRoot(rootNodeFromAnchor(idl));
 
-const codamaJson = JSON.parse(codama.getJson());
-const json = JSON.stringify(codamaJson, null, 4) + '\n';
+    const pathToIdl = path.join(packageRoot, 'tests', 'idls', `${program}-idl.json`);
+    console.log(`Writing Codama IDL to: ${pathToIdl}`);
 
-await Promise.resolve(writeFile(pathToIdl, json));
-console.log('Done');
+    const codamaJson = JSON.parse(codama.getJson());
+    const json = JSON.stringify(codamaJson, null, 4) + '\n';
+
+    await Promise.resolve(writeFile(pathToIdl, json));
+    console.log(`Done: ${program}`);
+}

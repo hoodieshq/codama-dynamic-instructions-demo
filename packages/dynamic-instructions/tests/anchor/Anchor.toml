@@ -6,6 +6,7 @@ skip-lint = false
 
 [programs.localnet]
 anchor-codama = "5xjPsgMHuoj4MrAPJVBrTomk5UAZvCxVtAdcWwgheoZs"
+blog = "1rAs9KgDjEnMVrU1nJPWVhN4b6W4VEBxzcNJoeJpbVR"
 
 [registry]
 url = "https://api.apr.dev"
