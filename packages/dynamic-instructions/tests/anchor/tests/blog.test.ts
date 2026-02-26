@@ -97,6 +97,38 @@ describe('blog', () => {
         });
     });
 
+    describe('post PDA — updatePost auto-derives post from postId argument', () => {
+        test('should create a post then update it with auto-derived PDA', async () => {
+            // Create profile
+            const createProfileIx = await programClient.methods
+                .createProfile({ username: 'writer' })
+                .accounts({ authority: payer })
+                .instruction();
+            ctx.sendInstruction(createProfileIx, [payer]);
+
+            const [profilePda] = await programClient.pdas.profile({ authority: payer });
+
+            // Create post (manual PDA — Codama can't express profile.post_count dependency)
+            const [postPda] = await programClient.pdas.post({ postId: 0, profile: profilePda });
+            const createPostIx = await programClient.methods
+                .createPost({ content: 'Original content', title: 'Original' })
+                .accounts({ authority: payer, post: postPda })
+                .instruction();
+            ctx.sendInstruction(createPostIx, [payer]);
+
+            // Update post — post account should auto-derive from postId arg + profile account
+            const updatePostIx = await programClient.methods
+                .updatePost({ content: 'Updated content', postId: 0, title: 'Updated' })
+                .accounts({ author: profilePda, authority: payer })
+                .instruction();
+            ctx.sendInstruction(updatePostIx, [payer]);
+
+            const decoded = decodeAccount('post', postPda);
+            expect(decoded.title).toBe('Updated');
+            expect(decoded.content).toBe('Updated content');
+        });
+    });
+
     describe('reaction PDA — two pubkeys + u8 seed', () => {
         test('should create a reaction and read it back via pdas helper', async () => {
             // Setup: create profile + post
