@@ -159,7 +159,7 @@ function resolveConstantPdaSeed({
     root,
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
-    if (seedNode.kind !== 'constantPdaSeedNode') {
+    if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
     const visitor = createPdaSeedValueVisitor({
@@ -205,7 +205,7 @@ function resolveStandaloneConstantSeed(
     programAddress: Address,
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
-    if (seedNode.kind !== 'constantPdaSeedNode') {
+    if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
     const visitor = createPdaSeedValueVisitor({
