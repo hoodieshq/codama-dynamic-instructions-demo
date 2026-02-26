@@ -154,7 +154,7 @@ describe('Program Metadata: close', () => {
             })
             .instruction();
 
-        expect(() => ctx.sendInstruction(closeIx, [authority])).toThrow(/Transaction failed/);
+        expect(() => ctx.sendInstruction(closeIx, [authority])).toThrow(/invalid account data for instruction/);
     });
 
     test('should throw AccountError when destination is missing', async () => {

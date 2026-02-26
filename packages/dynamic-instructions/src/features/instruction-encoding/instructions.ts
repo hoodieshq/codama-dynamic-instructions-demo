@@ -1,7 +1,7 @@
 import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners, ResolversInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners } from '../../shared/types';
 import { resolveAccountMeta, validateAccountsInput } from './accounts';
 import { encodeInstructionArguments, validateArgumentsInput } from './arguments';
 

@@ -83,7 +83,7 @@ describe('Program Metadata: initialize', () => {
             metadataPda,
             authority,
             programAddress,
-            PMP_PROGRAM_ID, // with "programId" optionalAccountStrategy address is resolved to root.programId
+            programClient.programAddress, // with "programId" optionalAccountStrategy address is resolved to root.programId
             ctx.SYSTEM_PROGRAM_ADDRESS,
         ];
 
@@ -122,6 +122,43 @@ describe('Program Metadata: initialize', () => {
 
         const writtenData = metadata.data.slice(0, testData.length);
         expect(writtenData).toEqual(testData);
+    });
+
+    test('should reslove optional null system_program account according on optionalAccountStrategy', async () => {
+        const seed = 'idl';
+        const { authority, programAddress, programDataAddress, pda: metadataPda } = await setupCanonicalPda(ctx, seed);
+
+        const testData = new TextEncoder().encode('{"name":"test"}');
+
+        const expectedAccounts = [
+            metadataPda,
+            authority,
+            programAddress,
+            programDataAddress,
+            programClient.programAddress, // expect "programId" based on optionalAccountStrategy
+        ];
+
+        const ix = await programClient.methods
+            .initialize({
+                compression: 'none',
+                data: testData,
+                dataSource: 'direct',
+                encoding: 'utf8',
+                format: 'json',
+                seed,
+            })
+            .accounts({
+                authority,
+                program: programAddress,
+                programData: programDataAddress,
+                system: null, // explicit null should resolve to programId
+            })
+            .instruction();
+
+        expect(ix.accounts?.length).toBe(5);
+        ix.accounts?.forEach((ixAccount, i) => {
+            expect(expectedAccounts[i], `Invalid account: [${i}]`).toBe(ixAccount.address);
+        });
     });
 
     test('should initialize metadata from pre-allocated buffer', async () => {

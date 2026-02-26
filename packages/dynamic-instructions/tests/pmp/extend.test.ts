@@ -87,7 +87,7 @@ describe('Program Metadata: extend', () => {
             })
             .instruction();
 
-        expect(() => ctx.sendInstruction(extendIx, [wrongAuthority])).toThrow(/Transaction failed/);
+        expect(() => ctx.sendInstruction(extendIx, [wrongAuthority])).toThrow(/Incorrect authority provided/);
     });
 
     test('should throw ArgumentError when length argument is missing', async () => {
