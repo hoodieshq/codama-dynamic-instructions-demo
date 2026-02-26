@@ -1,3 +1,5 @@
+export type { ProgramDerivedAddress } from '@solana/addresses';
+
 export { isPublicKeyLike, toAddress } from './shared/address';
 export type { AddressInput, PublicKeyLike } from './shared/address';
 

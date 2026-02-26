@@ -1,5 +1,4 @@
-import type { Address } from '@solana/addresses';
-import { address } from '@solana/addresses';
+import { type Address, address, type ProgramDerivedAddress } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
 import { createFromJson } from 'codama';
@@ -7,6 +6,8 @@ import { createFromJson } from 'codama';
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import { deriveStandalonePDA } from '../instruction-encoding/pda';
+import { collectPdaNodes } from './collect-pdas';
 import { MethodsBuilder } from './methods-builder';
 
 export type IdlInput = object | string;
@@ -24,6 +25,8 @@ export type ProgramClient = {
     instructions: Map<string, InstructionNode>;
     /** Anchor-like facade namespace for building instructions. */
     methods: Record<string, (args?: ArgumentsInput) => ProgramMethodBuilder>;
+    /** Anchor-like facade namespace for standalone PDA derivation. */
+    pdas: Record<string, (seeds?: Record<string, unknown>) => Promise<ProgramDerivedAddress>>;
     /** Program id as an `Address`. */
     programAddress: Address;
     /** Parsed Codama root node for advanced use-cases. */
@@ -74,9 +77,27 @@ export function createProgramClient<TClient = ProgramClient>(
         },
     ) as ProgramClient['methods'];
 
+    const pdaNodes = collectPdaNodes(root);
+
+    const pdas = new Proxy(
+        {},
+        {
+            get(_target, prop) {
+                if (prop === 'then') return undefined;
+                if (typeof prop !== 'string') return undefined;
+
+                const pdaNode = pdaNodes.get(prop);
+                if (!pdaNode) return undefined;
+
+                return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, programAddress, seeds);
+            },
+        },
+    ) as ProgramClient['pdas'];
+
     return {
         instructions,
         methods,
+        pdas,
         programAddress,
         root,
     } as unknown as TClient;
