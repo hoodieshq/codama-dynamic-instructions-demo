@@ -168,7 +168,6 @@ import type { Instruction } from '@solana/instructions';
  */
 export type MethodBuilder<TAccounts, TSigners extends string[]> = {
     accounts(accounts: TAccounts): MethodBuilder<TAccounts, TSigners>;
-    resolvers(resolvers: unknown): MethodBuilder<TAccounts, TSigners>;
     signers(signers: TSigners): MethodBuilder<TAccounts, TSigners>;
     instruction(): Promise<Instruction>;
 };
@@ -222,7 +221,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[]> = {
             output += `export type ${accountsInterfaceName} = Record<string, Address | null | undefined>;\n\n`;
         }
 
-        // Collect all isSigner: "either" ambigous account names
+        // Collect all ambigous isSigner: "either" account names
         const eitherSignerAccounts = ix.accounts.filter(acc => acc.isSigner === 'either').map(acc => `'${acc.name}'`);
         if (eitherSignerAccounts.length > 0) {
             output += `export type ${typeName}Signers = (${eitherSignerAccounts.join(' | ')})[];\n\n`;

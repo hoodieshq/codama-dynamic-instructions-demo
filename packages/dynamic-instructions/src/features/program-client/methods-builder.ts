@@ -1,14 +1,14 @@
 import type { Instruction } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, EitherSigners } from '../../shared/types';
 import { createIxBuilder } from '../instruction-encoding/instructions';
 
 export type SignerInput = unknown;
 
 export class MethodsBuilder {
     private _accounts?: AccountsInput;
-    private _signers?: string[]; // "either" signers Account names
+    private _signers?: EitherSigners; // "either" signers Account names
 
     constructor(
         private readonly root: RootNode,
@@ -21,10 +21,9 @@ export class MethodsBuilder {
         return this;
     }
 
-
     // Explicitly provide Account names which must be Signers.
     // This is to help InstructionAccountNode resolution with ambiguous isSigner: "either". Other signers will be auto-resolved
-    signers(signers: string[]) {
+    signers(signers: EitherSigners) {
         this._signers = signers;
         return this;
     }

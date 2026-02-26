@@ -124,7 +124,7 @@ describe('Program Metadata: initialize', () => {
         expect(writtenData).toEqual(testData);
     });
 
-    test('should reslove optional null system_program account according on optionalAccountStrategy', async () => {
+    test('should resolve optional null system_program account according on optionalAccountStrategy', async () => {
         const seed = 'idl';
         const { authority, programAddress, programDataAddress, pda: metadataPda } = await setupCanonicalPda(ctx, seed);
 
@@ -135,7 +135,7 @@ describe('Program Metadata: initialize', () => {
             authority,
             programAddress,
             programDataAddress,
-            programClient.programAddress, // expect "programId" based on optionalAccountStrategy
+            programClient.programAddress, // expect root.programAddress based on optionalAccountStrategy
         ];
 
         const ix = await programClient.methods
@@ -151,7 +151,7 @@ describe('Program Metadata: initialize', () => {
                 authority,
                 program: programAddress,
                 programData: programDataAddress,
-                system: null, // explicit null should resolve to programId
+                system: null, // explicit null should resolve to root.programAddress
             })
             .instruction();
 
