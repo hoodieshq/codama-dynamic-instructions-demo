@@ -26,6 +26,7 @@ export async function resolveAccountMeta(
     ixNode: InstructionNode,
     argumentsInput: ArgumentsInput = {},
     accountsInput: AccountsInput = {},
+    signers: EitherSigners = [],
 ): Promise<AccountMeta[]> {
     const resolvedAccounts = await Promise.all(
         ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
@@ -56,7 +57,7 @@ export async function resolveAccountMeta(
                 // optionalAccountStrategy can decide whether to omit or substitute programId.
                 address: isAccountProvided ? toAddress(accountAddressInput) : resolvedAccountAddress,
                 optional: Boolean(ixAccountNode.isOptional),
-                role: getAccountRole(ixAccountNode),
+                role: getAccountRole(ixAccountNode, signers),
             };
         }),
     );
@@ -114,15 +115,23 @@ function getRemainingAccountRole(isSigner?: boolean | 'either', isWritable?: boo
     return AccountRole.READONLY;
 }
 
-function getAccountRole(acc: InstructionAccountNode): AccountRole {
-    if (acc.isWritable && acc.isSigner) {
+function getAccountRole(acc: InstructionAccountNode, signers: string[] | undefined): AccountRole {
+    const isSigner = isSignerAccount(acc, signers ?? []);
+    if (acc.isWritable && isSigner) {
         return AccountRole.WRITABLE_SIGNER;
     }
-    if (acc.isWritable && !acc.isSigner) {
+    if (acc.isWritable) {
         return AccountRole.WRITABLE;
     }
-    if (!acc.isWritable && acc.isSigner) {
+    if (isSigner) {
         return AccountRole.READONLY_SIGNER;
     }
     return AccountRole.READONLY;
+}
+
+function isSignerAccount(acc: InstructionAccountNode, signers: string[]) {
+    if (acc.isSigner === 'either') {
+        return signers.includes(acc.name);
+    }
+    return acc.isSigner === true;
 }

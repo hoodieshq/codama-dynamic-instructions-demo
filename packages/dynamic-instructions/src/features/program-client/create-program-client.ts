@@ -36,6 +36,7 @@ export type ProgramClient = {
 export type ProgramMethodBuilder = {
     accounts(accounts: AccountsInput): ProgramMethodBuilder;
     instruction(): Promise<Instruction>;
+    signers(signers: string[]): ProgramMethodBuilder;
 };
 
 /**

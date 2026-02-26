@@ -41,6 +41,7 @@ interface FieldNode {
 interface AccountNode {
     name: string;
     isOptional?: boolean;
+    isSigner?: boolean | 'either';
     defaultValue?: DefaultValueNode;
 }
 
@@ -165,8 +166,10 @@ import type { Instruction } from '@solana/instructions';
 /**
  * Method builder interface.
  */
-export type MethodBuilder<TAccounts> = {
-    accounts(accounts: TAccounts): MethodBuilder<TAccounts>;
+export type MethodBuilder<TAccounts, TSigners extends string[]> = {
+    accounts(accounts: TAccounts): MethodBuilder<TAccounts, TSigners>;
+    resolvers(resolvers: unknown): MethodBuilder<TAccounts, TSigners>;
+    signers(signers: TSigners): MethodBuilder<TAccounts, TSigners>;
     instruction(): Promise<Instruction>;
 };
 
@@ -196,18 +199,33 @@ export type MethodBuilder<TAccounts> = {
             argsRef = argsInterfaceName;
         }
 
+        // these ValueNodes don't have default value and must be provided if required.
+        const nonResolvableValueNodes = ['payerValueNode', 'identityValueNode'];
         // Build accounts interface
-        const accountFields = ix.accounts.filter(acc => acc.defaultValue == null);
+        function isAccAutoResolvable(acc: AccountNode): boolean {
+            if (acc.defaultValue == null) return false;
+            return !nonResolvableValueNodes.includes((acc.defaultValue as { kind?: string })?.kind ?? '');
+        }
         const accountsInterfaceName = `${typeName}Accounts`;
-        if (accountFields.length > 0) {
+        if (ix.accounts.length > 0) {
             output += `export type ${accountsInterfaceName} = {\n`;
-            for (const acc of accountFields) {
+            for (const acc of ix.accounts) {
+                // omittable are accounts with defaultValue that can be auto-resolved and hence ommited from .accounts() api.
+                // null will be auto-resolved according on ix optionalAccountStrategy.
+                // undefined will be auto-resolved according on defaultValue.
+                const omittable = isAccAutoResolvable(acc) ? '?' : '';
                 const type = acc.isOptional ? 'Address | null' : 'Address';
-                output += `    ${acc.name}: ${type};\n`;
+                output += `    ${acc.name}${omittable}: ${type};\n`;
             }
             output += '} & Record<string, Address | null | undefined>;\n\n';
         } else {
             output += `export type ${accountsInterfaceName} = Record<string, Address | null | undefined>;\n\n`;
+        }
+
+        // Collect all isSigner: "either" ambigous account names
+        const eitherSignerAccounts = ix.accounts.filter(acc => acc.isSigner === 'either').map(acc => `'${acc.name}'`);
+        if (eitherSignerAccounts.length > 0) {
+            output += `export type ${typeName}Signers = (${eitherSignerAccounts.join(' | ')})[];\n\n`;
         }
 
         // Generate method type
@@ -215,7 +233,7 @@ export type MethodBuilder<TAccounts> = {
         const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
         const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
         const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;
-        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}>`;
+        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}, ${eitherSignerAccounts.length > 0 ? `${typeName}Signers` : 'string[]'}>`;
         output += `export type ${typeName}Method = ${methodSignature};\n\n`;
     }
 

@@ -31,7 +31,22 @@ export async function resolveAccountAddress({
     resolutionPath,
     accountAddressInput,
 }: ResolveAccountAddressContext): Promise<Address | null> {
-    // Ensures accounts with explicit defaults (like System Program) are resolved correctly
+    // Optional accounts explicitly provided as null should be resolved based on optionalAccountStrategy
+    // With "programId" strategy, optional accounts are resolved to programId
+    // With "omitted" strategy, optional accounts must be excluded from accounts list
+    if (accountAddressInput === null && ixAccountNode.isOptional) {
+        switch (ixNode.optionalAccountStrategy) {
+            case 'omitted':
+                return null;
+            case 'programId':
+                return toAddress(root.program.publicKey);
+            default:
+                throw new AccountError(
+                    `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
+                );
+        }
+    }
+
     if (ixAccountNode.defaultValue) {
         const visitor = createAccountDefaultValueVisitor({
             accountAddressInput,
@@ -50,22 +65,6 @@ export async function resolveAccountAddress({
         });
 
         return addressValue;
-    }
-
-    // Handle optional accounts without defaultValue based on optionalAccountStrategy
-    // With "programId" strategy, optional accounts are resolved to programId
-    // With "omitted" strategy, optional accounts must be excluded from accounts list
-    if (!accountAddressInput && ixAccountNode.isOptional) {
-        switch (ixNode.optionalAccountStrategy) {
-            case 'omitted':
-                return null;
-            case 'programId':
-                return toAddress(root.program.publicKey);
-            default:
-                throw new AccountError(
-                    `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
-                );
-        }
     }
 
     throw new AccountError(
