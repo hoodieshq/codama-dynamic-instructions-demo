@@ -87,7 +87,6 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
         const { failures } = error as StructError;
         const message = failures().map(failure => {
             const key = formatFailureKey(failure);
-            return `Invalid argument "${key}", "value": ${failure.value}. Message: ${failure.message}\n`;
             return `Invalid argument "${key}", "value": ${JSON.stringify(failure.value)}. Message: ${failure.message}\n`;
         });
         throw new ValidationError(message.join(''));

@@ -185,7 +185,7 @@ describe('MPL Token Metadata: create', () => {
                 masterEdition: masterEditionPda,
                 mint,
                 payer,
-                splTokenProgram: ctx.TOKEN_PROGRAM_ADDRESS, // explicitly provide to skip auto-derivation with ResolverValueNode which is not suppoted yet
+                splTokenProgram: ctx.TOKEN_PROGRAM_ADDRESS, // explicitly provide to skip auto-derivation with ResolverValueNode which is not supported yet
             })
             .signers(['mint'])
             .instruction();
