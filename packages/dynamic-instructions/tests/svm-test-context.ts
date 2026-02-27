@@ -1,7 +1,8 @@
 import { type Address, address } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
-import { TOKEN_2022_PROGRAM_ADDRESS } from '@solana-program/token-2022';
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
+import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from '@solana-program/token-2022';
 import { FailedTransactionMetadata, LiteSVM, type TransactionMetadata } from 'litesvm';
 
 import { toLegacyTransactionInstruction } from '../src';
@@ -50,10 +51,11 @@ export class SvmTestContext {
     private currentSlot: bigint;
 
     readonly TOKEN_2022_PROGRAM_ADDRESS = TOKEN_2022_PROGRAM_ADDRESS;
-    readonly TOKEN_PROGRAM_ADDRESS = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-    readonly ASSOCIATED_TOKEN_PROGRAM_ADDRESS = address('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+    readonly TOKEN_PROGRAM_ADDRESS = TOKEN_PROGRAM_ADDRESS;
+    readonly ASSOCIATED_TOKEN_PROGRAM_ADDRESS = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
     readonly SYSTEM_PROGRAM_ADDRESS = address(web3.SystemProgram.programId.toBase58());
     readonly SYSVAR_RENT_ADDRESS = address(web3.SYSVAR_RENT_PUBKEY.toBase58());
+    readonly SYSVAR_INSTRUCTIONS_ADDRESS = address(web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBase58());
     readonly BPF_LOADER_UPGRADEABLE = address('BPFLoaderUpgradeab1e11111111111111111111111');
 
     constructor(config: SvmTestContextConfig = {}) {

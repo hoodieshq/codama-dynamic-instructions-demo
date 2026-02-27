@@ -228,9 +228,12 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         case 'enumTypeNode': {
             return EnumVariantValidator(nodeName, node.variants, definedTypes);
         }
-        case 'amountTypeNode': // unit with decimals
-        case 'solAmountTypeNode': // equivalent to amountTypeNode with 9 decimals
-            throw new Error(`Unsupported argument type: ${nodeName} of type ${node.kind}`);
+        case 'amountTypeNode': {
+            return AmountTypeValidator(nodeName);
+        }
+        case 'solAmountTypeNode': {
+            return AmountTypeValidator(nodeName);
+        }
     }
 }
 
@@ -440,4 +443,23 @@ function arrayValidator(
             throw new Error(`Node: ${nodeName}. Unsupported array count type`);
         }
     }
+}
+
+/**
+ * Validator for amountTypeNode and solAmountTypeNode.
+ * Accepts number, bigint, or string representing integer.
+ */
+function AmountTypeValidator(nodeName: string): StructUnknown {
+    return define(`AmountType_${nodeName}`, (value: unknown) => {
+        if (typeof value === 'number') {
+            return Number.isSafeInteger(value);
+        }
+        if (typeof value === 'bigint') {
+            return true;
+        }
+        if (typeof value === 'string') {
+            return /^\d+$/.test(value);
+        }
+        return `Value ${String(value)} of amountTypeNode ${nodeName} is invalid! Must be a number, bigint, or string representing an integer.`;
+    }) as StructUnknown;
 }
