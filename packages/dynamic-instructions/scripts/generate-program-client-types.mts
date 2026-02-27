@@ -209,7 +209,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[]> = {
         if (ix.accounts.length > 0) {
             output += `export type ${accountsInterfaceName} = {\n`;
             for (const acc of ix.accounts) {
-                // omittable are accounts with defaultValue that can be auto-resolved and hence ommited from .accounts() api.
+                // omittable are accounts with defaultValue that can be auto-resolved and hence ommitted from .accounts() api.
                 // null will be auto-resolved according on ix optionalAccountStrategy.
                 // undefined will be auto-resolved according on defaultValue.
                 const omittable = isAccAutoResolvable(acc) ? '?' : '';
@@ -221,7 +221,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[]> = {
             output += `export type ${accountsInterfaceName} = Record<string, Address | null | undefined>;\n\n`;
         }
 
-        // Collect all ambigous isSigner: "either" account names
+        // Collect all ambiguous isSigner: "either" account names
         const eitherSignerAccounts = ix.accounts.filter(acc => acc.isSigner === 'either').map(acc => `'${acc.name}'`);
         if (eitherSignerAccounts.length > 0) {
             output += `export type ${typeName}Signers = (${eitherSignerAccounts.join(' | ')})[];\n\n`;
