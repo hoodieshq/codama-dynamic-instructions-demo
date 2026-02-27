@@ -42,13 +42,13 @@ From repo root:
 
 ```bash
 # Build the dynamic-instructions package
-pnpm --filter @codama-monorepo-test/dynamic-instructions build
+pnpm --filter @hoodieshq/dynamic-instructions build
 
 # Run tests (requires Anchor + Solana CLI; builds Anchor program and generates IDL first)
-pnpm --filter @codama-monorepo-test/dynamic-instructions test
+pnpm --filter @hoodieshq/dynamic-instructions test
 
 # Watch mode: run unit tests on change (no Anchor build)
-pnpm --filter @codama-monorepo-test/dynamic-instructions dev
+pnpm --filter @hoodieshq/dynamic-instructions dev
 ```
 
 From `packages/dynamic-instructions`:
@@ -101,11 +101,11 @@ Generate strongly-typed clients from Codama IDLs:
 
 ```bash
 # Generate type-safe program client types (from repo root)
-pnpm --filter @codama-monorepo-test/dynamic-instructions generate-program-types
+pnpm --filter @hoodieshq/dynamic-instructions generate-program-types
 ```
 
 ```typescript
-import { createProgramClient } from '@codama-monorepo-test/dynamic-instructions';
+import { createProgramClient } from '@hoodieshq/dynamic-instructions';
 import { loadIdl } from './utils';
 import type { ExampleProgramClient } from './generated/example-idl-types';
 

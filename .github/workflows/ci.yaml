@@ -58,7 +58,7 @@ jobs:
         run: pnpm run build
 
       - name: Generate program types
-        run: pnpm --filter @codama-monorepo-test/dynamic-instructions generate-program-types
+        run: pnpm --filter @hoodieshq/dynamic-instructions generate-program-types
 
       - name: Check linting
         run: pnpm run lint

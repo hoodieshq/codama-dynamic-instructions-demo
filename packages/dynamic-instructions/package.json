@@ -1,8 +1,15 @@
 {
-    "name": "@codama-monorepo-test/dynamic-instructions",
+    "name": "@hoodieshq/dynamic-instructions",
     "version": "0.0.1",
-    "private": true,
     "description": "Tool to dynamically build instructions based on Codama IDLs",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hoodieshq/codama-dynamic-instructions-demo.git",
+        "directory": "packages/dynamic-instructions"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
     "exports": {
         "types": "./dist/types/index.d.ts",
         "react-native": "./dist/index.react-native.mjs",
