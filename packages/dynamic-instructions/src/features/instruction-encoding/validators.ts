@@ -447,7 +447,7 @@ function arrayValidator(
 
 /**
  * Validator for amountTypeNode and solAmountTypeNode.
- * Accepts number, bigint, or string representing integer.
+ * Accepts number, bigint.
  */
 function AmountTypeValidator(nodeName: string): StructUnknown {
     return define(`AmountType_${nodeName}`, (value: unknown) => {
@@ -456,9 +456,6 @@ function AmountTypeValidator(nodeName: string): StructUnknown {
         }
         if (typeof value === 'bigint') {
             return true;
-        }
-        if (typeof value === 'string') {
-            return /^\d+$/.test(value);
         }
         return `Value ${String(value)} of amountTypeNode ${nodeName} is invalid! Must be a number, bigint, or string representing an integer.`;
     }) as StructUnknown;
