@@ -4,10 +4,10 @@ Runtime Solana instruction builder from [Codama](https://github.com/codama-idl/c
 
 ## Overview
 
-Build type-safe `IInstruction` objects at runtime from any Codama IDL. Designed for Explorer UIs where users interact with arbitrary Solana programs without pre-generated client code.
+Build type-safe `Instruction` objects (from `@solana/instructions`) at runtime from any Codama IDL. Designed for Explorer UIs where users interact with arbitrary Solana programs without pre-generated client code.
 
-- Works with `@solana/kit` (v2) natively
-- Legacy `@solana/web3.js` (v1) support via compat layer
+- Works with `@solana/kit` natively
+- Legacy `@solana/web3.js` support via compat layer
 - Auto-derives PDA accounts, resolves defaults, encodes discriminators
 - Optional type generation for full TypeScript type safety
 
@@ -94,14 +94,14 @@ Accepts any of:
 
 ### Automatic resolution rules
 
-Accounts (pda, program ids) with `defaultValue` are resoved automatically and can be omitted from instruction builder.
+Accounts (pda, program ids) with `defaultValue` are resolved automatically, hence can be omitted.
 
-| Account scenario                                             | Type in `.accounts()`                  | Auto resolution                                                                              |
-| ------------------------------------------------------------ | -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Required account without `defaultValue`                      | `{ system_program: Address }`          | Must be provided                                                                             |
-| Required account with `defaultValue` (PDA, programId, etc.)  | `{ system_program?: Address }`         | Auto-resolved to `defaultValue` if omitted                                                   |
-| Optional account (`isOptional: true`) without `defaultValue` | `{ system_program: Address \| null`    | Resolved via `optionalAccountStrategy`, when provided as `null`                              |
-| Optional account (`isOptional: true`) with `defaultValue`    | `{ system_program?: Address \| null }` | - `null` resolves via `optionalAccountStrategy`<br>- `undefined` resolves via `defaultValue` |
+| Account scenario                                             | Type in `.accounts()`                 | Auto resolution                                                                              |
+| ------------------------------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Required account without `defaultValue`                      | `{ systemProgram: Address }`          | Must be provided                                                                             |
+| Required account with `defaultValue` (PDA, programId, etc.)  | `{ systemProgram?: Address }`         | Auto-resolved to `defaultValue` if omitted                                                   |
+| Optional account (`isOptional: true`) without `defaultValue` | `{ systemProgram: Address \| null }`  | Resolved via `optionalAccountStrategy`, when provided as `null`                              |
+| Optional account (`isOptional: true`) with `defaultValue`    | `{ systemProgram?: Address \| null }` | - `null` resolves via `optionalAccountStrategy`<br>- `undefined` resolves via `defaultValue` |
 
 ### Auto-derived accounts
 
@@ -197,7 +197,7 @@ All errors extend `CodamaError`:
 import { CodamaError, AccountError } from '@codama-monorepo-test/dynamic-instructions';
 
 try {
-    const ix = await client.methods.transfer({ amount: 100 }).accounts({}).instruction();
+    const ix = await client.methods.transferSol({ amount: 100 }).accounts({}).instruction();
 } catch (err) {
     if (err instanceof AccountError) {
         console.error('Account resolution failed:', err.message);
@@ -219,7 +219,3 @@ if (isPublicKeyLike(value)) {
     const addr = toAddress(value);
 }
 ```
-
-## License
-
-Apache-2.0
