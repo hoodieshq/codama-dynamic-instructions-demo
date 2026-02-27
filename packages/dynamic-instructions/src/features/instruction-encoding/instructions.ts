@@ -1,7 +1,7 @@
 import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput, BuildIxFn } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners } from '../../shared/types';
 import { resolveAccountMeta, validateAccountsInput } from './accounts';
 import { encodeInstructionArguments, validateArgumentsInput } from './arguments';
 
@@ -13,12 +13,13 @@ import { encodeInstructionArguments, validateArgumentsInput } from './arguments'
 export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildIxFn {
     const programAddress = address(root.program.publicKey);
 
-    return async (argumentsInput, accountsInput) => {
+    return async (argumentsInput, accountsInput, signers) => {
         const { argumentsData, accountsData } = await resolveInstructionData(
             root,
             ixNode,
             argumentsInput,
             accountsInput,
+            signers,
         );
 
         return {
@@ -34,6 +35,7 @@ export async function resolveInstructionData(
     instructionNode: InstructionNode,
     argumentsInput?: ArgumentsInput,
     accountsInput?: AccountsInput,
+    signers?: EitherSigners,
 ) {
     // Validate arguments according codama schema
     validateArgumentsInput(root, instructionNode, argumentsInput);
@@ -45,7 +47,7 @@ export async function resolveInstructionData(
     // Encodes arguments into buffer
     const argumentsData = encodeInstructionArguments(root, instructionNode, argumentsInput);
 
-    const accountsData = await resolveAccountMeta(root, instructionNode, argumentsInput, accountsInput);
+    const accountsData = await resolveAccountMeta(root, instructionNode, argumentsInput, accountsInput, signers);
 
     return { accountsData, argumentsData };
 }

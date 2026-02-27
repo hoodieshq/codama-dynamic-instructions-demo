@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { type Address, address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
+import { type Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/addresses';
 import { getOptionEncoder, getStructEncoder, getU32Encoder, getU64Encoder, none, some } from '@solana/codecs';
 import {
     type Buffer as PmpBuffer,
@@ -11,12 +11,11 @@ import {
 } from '@solana-program/program-metadata';
 
 import type { ProgramMetadataProgramClient } from '../generated/pmp-idl-types';
-import idl from '../idls/pmp-idl.json';
 import type { SvmTestContext } from '../svm-test-context';
 import { createTestProgramClient } from '../test-utils';
 
-export const PMP_PROGRAM_ID = address(idl.program.publicKey);
 export const programClient = createTestProgramClient<ProgramMetadataProgramClient>('pmp-idl.json');
+export const PMP_PROGRAM_ID = programClient.programAddress;
 export const exampleProgramPath = path.join(__dirname, '../dumps/pmp.so');
 
 /**
