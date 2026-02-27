@@ -55,10 +55,14 @@ export function createValueNodeVisitor(
     | 'tupleValueNode'
 > {
     return {
-        visitArrayValue: (node: ArrayValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitArrayValue: (node: ArrayValueNode) => ({
+            kind: node.kind,
+            value: node.items.map(item =>
+                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                    throw new AccountError(`Cannot resolve array item: ${n.kind}`);
+                }),
+            ),
+        }),
 
         visitBooleanValue: (node: BooleanValueNode) => ({
             kind: node.kind,
@@ -78,15 +82,22 @@ export function createValueNodeVisitor(
             });
         },
 
-        visitEnumValue: (node: EnumValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitEnumValue: (node: EnumValueNode) => ({
+            kind: node.kind,
+            value: node.variant,
+        }),
 
-        visitMapValue: (node: MapValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitMapValue: (node: MapValueNode) => ({
+            kind: node.kind,
+            value: node.entries.map(entry => ({
+                key: visitOrElse(entry.key, createValueNodeVisitor(ctx), n => {
+                    throw new AccountError(`Cannot resolve map key: ${n.kind}`);
+                }),
+                value: visitOrElse(entry.value, createValueNodeVisitor(ctx), n => {
+                    throw new AccountError(`Cannot resolve map value: ${n.kind}`);
+                }),
+            })),
+        }),
 
         visitNoneValue: (node: NoneValueNode) => ({
             kind: node.kind,
@@ -103,10 +114,14 @@ export function createValueNodeVisitor(
             value: address(node.publicKey),
         }),
 
-        visitSetValue: (node: SetValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitSetValue: (node: SetValueNode) => ({
+            kind: node.kind,
+            value: node.items.map(item =>
+                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                    throw new AccountError(`Cannot resolve set item: ${n.kind}`);
+                }),
+            ),
+        }),
 
         visitSomeValue: (node: SomeValueNode) => {
             const visitor = createValueNodeVisitor(ctx);
@@ -120,14 +135,25 @@ export function createValueNodeVisitor(
             value: node.string,
         }),
 
-        visitStructValue: (node: StructValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitStructValue: (node: StructValueNode) => ({
+            kind: node.kind,
+            value: Object.fromEntries(
+                node.fields.map(field => [
+                    field.name,
+                    visitOrElse(field.value, createValueNodeVisitor(ctx), n => {
+                        throw new AccountError(`Cannot resolve struct field ${field.name}: ${n.kind}`);
+                    }),
+                ]),
+            ),
+        }),
 
-        visitTupleValue: (node: TupleValueNode) => {
-            // FIXME: to be implemented
-            throw new AccountError(`Cannot resolve ValueNode: ${node.kind}`);
-        },
+        visitTupleValue: (node: TupleValueNode) => ({
+            kind: node.kind,
+            value: node.items.map(item =>
+                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                    throw new AccountError(`Cannot resolve tuple item: ${n.kind}`);
+                }),
+            ),
+        }),
     };
 }
