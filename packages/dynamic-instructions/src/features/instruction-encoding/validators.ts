@@ -88,13 +88,15 @@ function createValidatorForRemainderOptionTypeItem(
  */
 function StringValidatorForFixedSize(maxSize: number): StructUnknown {
     return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
-        if (typeof value !== 'string') return false;
-        // Accept any string that can fit in the fixed size
-        // The codec will handle padding short strings with zeros
+        if (typeof value !== 'string') {
+            return `Expected a string, received: ${typeof value}`;
+        }
         const encoder = new TextEncoder();
         const bytes = encoder.encode(value);
-        // Allow strings up to the maxSize (codec will pad if shorter)
-        return bytes.length <= maxSize;
+        return (
+            bytes.length <= maxSize ||
+            `String exceeds max size: ${bytes.length} bytes (UTF-8), limit is ${maxSize} bytes`
+        );
     }) as StructUnknown;
 }
 
@@ -129,8 +131,6 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             ]) as StructUnknown;
         }
         case 'stringTypeNode': {
-            // TODO: may be check encoding?
-            // node.encoding
             return string() as StructUnknown;
         }
         case 'fixedSizeTypeNode': {
@@ -175,7 +175,6 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
                 definedTypes,
             );
             const sizeValidator = MapCountValidator(node.count);
-            // node.
             const keyValueValidator = KeyValueValidator(nodeName, keyValidator, valueValidator);
             if (sizeValidator) {
                 return intersection([keyValueValidator, sizeValidator]) as StructUnknown;
@@ -215,8 +214,6 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             );
             return OptionValueValidator(`${nodeName}_remainder_option`, innerValidator);
         }
-        // TODO: check and handle later
-        // DOCS: TypeNode https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/README.md
         case 'hiddenPrefixTypeNode':
         case 'hiddenSuffixTypeNode':
         case 'sentinelTypeNode':
@@ -267,16 +264,19 @@ function EnumVariantValidator(
     return define(`${nodeName}_EnumVariant`, (value: unknown) => {
         // Scalar enum: plain string variant name (e.g. 'arm', 'bar')
         if (typeof value === 'string')
-            return variantNames.includes(value) || `Value ${value} of enumTypeNode is invalid!`;
+            return (
+                variantNames.includes(value) ||
+                `Invalid enum value "${value}". Expected one of: ${variantNames.join(', ')}`
+            );
 
         // Data enum variant: object with __kind (e.g. { __kind: 'tokenTransfer', amount: 1000 })
         if (typeof value === 'object' && value !== null && '__kind' in value) {
             const kind = (value as Record<string, unknown>)['__kind'];
             if (typeof kind !== 'string') {
-                return `Value of type ${typeof value} of enumTypeNode is invalid!`;
+                return `Expected __kind to be a string, received: ${typeof kind}`;
             }
             if (!variantNames.includes(kind)) {
-                return `enumTypeNode kind ${kind} is invalid!`;
+                return `Invalid enum variant "${kind}". Expected one of: ${variantNames.join(', ')}`;
             }
 
             const variant = variants.find(v => v.name.toString() === kind)!;
@@ -304,7 +304,7 @@ function EnumVariantValidator(
             }
         }
 
-        return `Value ${String(value)} of enumTypeNode is invalid!`;
+        return `Expected an enum variant (string or object with __kind), received: ${typeof value}`;
     }) as StructUnknown;
 }
 
@@ -314,35 +314,48 @@ function formatErrorForEnumTypeNode(enumVariantKind: string, error: StructError)
     if (first) {
         return `Invalid argument "${String(first.key)}"`;
     }
-    return `enumTypeNode variant '${enumVariantKind}' has invalid payload`;
+    return `Enum variant "${enumVariantKind}" has invalid payload`;
 }
 
 const SolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('SolanaAddress', (value: unknown) => {
-    if (typeof value === 'string') return isAddress(value);
-    if (isPublicKeyLike(value)) return isAddress(value.toBase58());
-    return false;
+    if (typeof value === 'string') {
+        return isAddress(value) || `Expected a valid Solana address (base58), received string: "${value}"`;
+    }
+    if (isPublicKeyLike(value)) {
+        return isAddress(value.toBase58()) || 'Expected a valid Solana address, received an invalid PublicKey';
+    }
+    return `Expected a Solana address (base58 string or PublicKey), received: ${typeof value}`;
 });
 
 const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define(
     'OptionalSolanaAddress',
     (value: unknown) => {
         if (value === undefined || value === null) return true;
-        const result = SolanaAddressValidator.validate(value);
-        return !result[0]; // [error|undefined, data|undefined]
+        const [error] = SolanaAddressValidator.validate(value);
+        if (!error) return true;
+        return error.failures()[0]?.message ?? 'Expected a valid Solana address or null/undefined';
     },
 );
 
 /** Accepts both number and bigint for u64/u128/i64/i128 instruction args. */
 const NumberOrBigintValidator: StructUnknown = /* @__PURE__ */ define('NumberOrBigint', (value: unknown) => {
-    if (typeof value === 'number') return Number.isSafeInteger(value);
+    if (typeof value === 'number') {
+        return Number.isSafeInteger(value) || `Expected a safe integer, received unsafe number: ${value}`;
+    }
     if (typeof value === 'bigint') return true;
-    return false;
+    return `Expected a number or bigint, received: ${typeof value}`;
 });
 
 const BytesLikeValidator: StructUnknown = /* @__PURE__ */ define('BytesLike', (value: unknown) => {
     if (value instanceof Uint8Array) return true;
-    if (!Array.isArray(value)) return false;
-    return value.every(n => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 255);
+    if (!Array.isArray(value)) {
+        return `Expected a Uint8Array or number[] (bytes 0-255), received: ${typeof value}`;
+    }
+    const invalidIndex = value.findIndex(n => typeof n !== 'number' || !Number.isInteger(n) || n < 0 || n > 255);
+    if (invalidIndex !== -1) {
+        return `Expected byte values (integers 0-255), invalid element at index ${invalidIndex}: ${String(value[invalidIndex])}`;
+    }
+    return true;
 });
 
 /**
@@ -351,10 +364,20 @@ const BytesLikeValidator: StructUnknown = /* @__PURE__ */ define('BytesLike', (v
  */
 function BytesWithSizeValidator(exactSize: number): StructUnknown {
     return define(`BytesWithSize_${exactSize}`, (value: unknown) => {
-        if (value instanceof Uint8Array) return value.length === exactSize;
-        if (!Array.isArray(value)) return false;
-        if (value.length !== exactSize) return false;
-        return value.every(n => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 255);
+        if (value instanceof Uint8Array) {
+            return value.length === exactSize || `Expected exactly ${exactSize} bytes, received ${value.length} bytes`;
+        }
+        if (!Array.isArray(value)) {
+            return `Expected a Uint8Array or number[] of exactly ${exactSize} bytes, received: ${typeof value}`;
+        }
+        if (value.length !== exactSize) {
+            return `Expected exactly ${exactSize} bytes, received ${value.length} elements`;
+        }
+        const invalidIndex = value.findIndex(n => typeof n !== 'number' || !Number.isInteger(n) || n < 0 || n > 255);
+        if (invalidIndex !== -1) {
+            return `Expected byte values (integers 0-255), invalid element at index ${invalidIndex}: ${String(value[invalidIndex])}`;
+        }
+        return true;
     }) as StructUnknown;
 }
 
@@ -362,18 +385,23 @@ function BytesWithSizeValidator(exactSize: number): StructUnknown {
 // SomeValueValidator validates the provided value (i.e. Some(value))
 function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_OptionValueValidator`, (value: unknown) => {
-        // Do not validate None value
         if (value === null || value === undefined) return true;
-        // if value was provided, then validate it
-        return !SomeValueValidator.validate(value)[0]; // error | undefined
+        const [error] = SomeValueValidator.validate(value);
+        if (!error) return true;
+        return error.failures()[0]?.message ?? 'Invalid value for optional field';
     }) as StructUnknown;
 }
 
 // Checks that all items in the array are unique
 const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems', (value: unknown) => {
-    if (!Array.isArray(value)) return false;
+    if (!Array.isArray(value)) {
+        return `Expected an array with unique items, received: ${typeof value}`;
+    }
     const uniqueItems = new Set(value);
-    return uniqueItems.size === value.length;
+    return (
+        uniqueItems.size === value.length ||
+        `Expected all items to be unique, found ${value.length - uniqueItems.size} duplicate(s)`
+    );
 }) as StructUnknown;
 
 // Validates every keys of an object according to KeyValidator
@@ -382,15 +410,17 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
 // DOCS: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/MapTypeNode.md
 function KeyValueValidator(name: string, KeyValidator: StructUnknown, ValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_KeyValueValidator`, (value: unknown) => {
-        if (typeof value !== 'object' || value === null) return false;
+        if (typeof value !== 'object' || value === null) {
+            return `Expected a map (object), received: ${typeof value}`;
+        }
         const record = value as Record<string, unknown>;
-        const isValidKeys = Object.keys(record).every(key => {
-            return !KeyValidator.validate(key)[0]; // [error|undefined, data|undefined]
-        });
-        const isValidValues = Object.values(record).every(v => {
-            return !ValueValidator.validate(v)[0]; // [error|undefined, data|undefined]
-        });
-        return isValidKeys && isValidValues;
+        const invalidKeys = Object.keys(record).filter(key => KeyValidator.validate(key)[0]);
+        const invalidValues = Object.keys(record).filter(key => ValueValidator.validate(record[key])[0]);
+        if (!invalidKeys.length && !invalidValues.length) return true;
+        const parts: string[] = [];
+        if (invalidKeys.length) parts.push(`invalid keys: ${invalidKeys.join(', ')}`);
+        if (invalidValues.length) parts.push(`invalid values: ${invalidValues.join(', ')}`);
+        return `Map validation failed: ${parts.join('; ')}`;
     }) as StructUnknown;
 }
 
@@ -411,10 +441,13 @@ function MapCountValidator(node: CountNode): StructUnknown | null {
 function KeysLengthValidator(count: number): StructUnknown {
     return define(`KeysLengthValidator_len_${count}`, (value: unknown) => {
         try {
-            if (typeof value !== 'object' || value === null) return false;
-            return Object.keys(value).length === count;
+            if (typeof value !== 'object' || value === null) {
+                return `Expected a map with exactly ${count} entries, received: ${typeof value}`;
+            }
+            const actual = Object.keys(value).length;
+            return actual === count || `Expected exactly ${count} map entries, received ${actual}`;
         } catch {
-            return false;
+            return `Expected a map with exactly ${count} entries`;
         }
     }) as StructUnknown;
 }
@@ -452,11 +485,11 @@ function arrayValidator(
 function AmountTypeValidator(nodeName: string): StructUnknown {
     return define(`AmountType_${nodeName}`, (value: unknown) => {
         if (typeof value === 'number') {
-            return Number.isSafeInteger(value);
+            return Number.isSafeInteger(value) || `Expected a safe integer, received unsafe number: ${value}`;
         }
         if (typeof value === 'bigint') {
             return true;
         }
-        return `Value ${String(value)} of amountTypeNode ${nodeName} is invalid! Must be a number, bigint, or string representing an integer.`;
+        return `Expected a number or bigint, received: ${typeof value}`;
     }) as StructUnknown;
 }

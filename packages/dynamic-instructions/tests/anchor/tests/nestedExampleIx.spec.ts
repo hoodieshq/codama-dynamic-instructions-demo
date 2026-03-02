@@ -348,7 +348,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "header"/);
+            ).rejects.toThrow(/Invalid argument "input.header"/);
         });
 
         test('should throw when command enum fields tuple payload is missing', async () => {
@@ -364,7 +364,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "command"/);
+            ).rejects.toThrow(/Invalid argument "input.header.command"/);
         });
 
         test('should throw when innerEnum payload data is missing', async () => {
@@ -427,7 +427,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "reason"/);
+            ).rejects.toThrow(/Invalid argument "input.header.command"/);
         });
 
         test('should throw when innerStruct is missing', async () => {
@@ -439,7 +439,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "innerStruct"/);
+            ).rejects.toThrow(/Invalid argument "input.innerStruct"/);
         });
 
         test('should throw when pubkey is missing', async () => {
@@ -451,7 +451,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "pubkey"/);
+            ).rejects.toThrow(/Invalid argument "input.pubkey"/);
         });
 
         test('should throw when header.version is string', async () => {
@@ -466,7 +466,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "version"/);
+            ).rejects.toThrow(/Invalid argument "input.header.version"/);
         });
 
         test('should throw when innerStruct.value is string', async () => {
@@ -486,7 +486,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "value"/);
+            ).rejects.toThrow(/Invalid argument "input.innerStruct.value"/);
         });
 
         test('should throw for invalid seedEnum variant', async () => {
@@ -498,7 +498,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "seedEnum"/);
+            ).rejects.toThrow(/Invalid argument "input.seedEnum"/);
         });
 
         test('should throw for invalid innerEnum __kind', async () => {
@@ -513,7 +513,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "innerEnum"/);
+            ).rejects.toThrow(/Invalid argument "input.innerEnum"/);
         });
 
         test('should throw for invalid header.command __kind', async () => {
@@ -529,7 +529,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "command"/);
+            ).rejects.toThrow(/Invalid argument "input.header.command"/);
         });
 
         test('should throw when enumsArray has wrong size', async () => {
@@ -549,7 +549,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "enumsArray"/);
+            ).rejects.toThrow(/Invalid argument "input.innerStruct.enumsArray/);
         });
 
         test('should throw when enumsArray has invalid enum value', async () => {
@@ -569,7 +569,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "enumsArray/);
+            ).rejects.toThrow(/Invalid argument "input.innerStruct.enumsArray/);
         });
 
         test('should throw when bytes is string instead of Uint8Array', async () => {
@@ -586,7 +586,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "bytes"/);
+            ).rejects.toThrow(/Invalid argument "input.innerStruct.bytes"/);
         });
 
         test('should throw for invalid pubkey string', async () => {
@@ -596,7 +596,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "pubkey"/);
+            ).rejects.toThrow(/Invalid argument "input.pubkey"/);
         });
     });
 });

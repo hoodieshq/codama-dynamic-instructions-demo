@@ -330,6 +330,6 @@ describe('Program Metadata: initialize', () => {
                     programData: null,
                 })
                 .instruction(),
-        ).rejects.toThrow(/Invalid argument "seed", "value": undefined/);
+        ).rejects.toThrow(/Invalid argument "seed", value: undefined/);
     });
 });

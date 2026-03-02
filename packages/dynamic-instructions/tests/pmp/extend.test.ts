@@ -103,7 +103,7 @@ describe('Program Metadata: extend', () => {
                     programData: null,
                 })
                 .instruction(),
-        ).rejects.toThrow(/Invalid argument "length", "value": undefined/);
+        ).rejects.toThrow(/Invalid argument "length", value: undefined/);
     });
 
     test('should throw AccountError when required account is missing', async () => {

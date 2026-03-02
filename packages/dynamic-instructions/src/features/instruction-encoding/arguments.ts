@@ -86,26 +86,37 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     } catch (error) {
         const { failures } = error as StructError;
         const message = failures().map(failure => {
-            const key = formatFailureKey(failure);
-            return `Invalid argument "${key}", "value": ${failure.value}. Message: ${failure.message}\n`;
+            const fieldPath = formatFailurePath(failure);
+            const value = formatFailureValue(failure.value);
+            return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
         });
         throw new ValidationError(message.join(''));
     }
 }
 
-/**
- * User friendly formatting for field key. Displays parent key for array elements, e.g. "itemsArray[1]"
- * key is string for regular fields, but for array elements key is number
- * path contains field path. Number represents index in array, e.g path: [ 'input', 'innerStruct', 'itemsArray', 1 ]
- */
-function formatFailureKey(failure: Failure): string {
-    const key: unknown = failure.key;
+/** Formats a full dotted path from failure, e.g. "command", "innerStruct.pubkey", "enumsArray[1]" */
+function formatFailurePath(failure: Failure): string {
     const path = failure.path;
-    if (typeof key === 'number' && path.length > 1) {
-        const parentKey: unknown = path[path.length - 2];
-        return `${String(parentKey)}[${key}]`;
+    if (!path || path.length === 0) return String(failure.key ?? '');
+    return path
+        .map((segment, i) => {
+            if (typeof segment === 'number') {
+                return `[${segment}]`;
+            }
+            return `${i === 0 ? '' : '.'}${String(segment)}`;
+        })
+        .join('');
+}
+
+function formatFailureValue(value: unknown): string {
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return '[object]';
+        }
     }
-    return String(key);
+    return String(value as unknown);
 }
 
 // Required arguments that should be validated and provided or be null/undefined if optional
