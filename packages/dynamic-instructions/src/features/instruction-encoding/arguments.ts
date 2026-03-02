@@ -108,15 +108,22 @@ function formatFailurePath(failure: Failure): string {
         .join('');
 }
 
+/**
+ * Formats failure values for error messages, truncating long values and stringifying objects.
+ */
+const MAX_VALUE_LENGTH = 120;
 function formatFailureValue(value: unknown): string {
+    let raw: string;
     if (typeof value === 'object') {
         try {
-            return JSON.stringify(value);
+            raw = JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
         } catch {
             return '[object]';
         }
+    } else {
+        raw = String(value as unknown);
     }
-    return String(value as unknown);
+    return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}…` : raw;
 }
 
 // Required arguments that should be validated and provided or be null/undefined if optional

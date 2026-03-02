@@ -24,6 +24,7 @@ import {
 } from 'superstruct';
 
 import { isPublicKeyLike } from '../../shared/address';
+import { formatValueType } from '../../shared/util';
 
 type StructUnknown = Struct<unknown, unknown>;
 
@@ -89,7 +90,7 @@ function createValidatorForRemainderOptionTypeItem(
 function StringValidatorForFixedSize(maxSize: number): StructUnknown {
     return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
         if (typeof value !== 'string') {
-            return `Expected a string, received: ${typeof value}`;
+            return `Expected a string, received: ${formatValueType(value)}`;
         }
         const encoder = new TextEncoder();
         const bytes = encoder.encode(value);
@@ -273,7 +274,7 @@ function EnumVariantValidator(
         if (typeof value === 'object' && value !== null && '__kind' in value) {
             const kind = (value as Record<string, unknown>)['__kind'];
             if (typeof kind !== 'string') {
-                return `Expected __kind to be a string, received: ${typeof kind}`;
+                return `Expected __kind to be a string, received: ${formatValueType(kind)}`;
             }
             if (!variantNames.includes(kind)) {
                 return `Invalid enum variant "${kind}". Expected one of: ${variantNames.join(', ')}`;
@@ -304,7 +305,7 @@ function EnumVariantValidator(
             }
         }
 
-        return `Expected an enum variant (string or object with __kind), received: ${typeof value}`;
+        return `Expected an enum variant (string or object with __kind), received: ${formatValueType(value)}`;
     }) as StructUnknown;
 }
 
@@ -312,7 +313,7 @@ function formatErrorForEnumTypeNode(enumVariantKind: string, error: StructError)
     const failures = error.failures();
     const first = failures?.[0];
     if (first) {
-        return `Invalid argument "${String(first.key)}"`;
+        return `Enum variant "${enumVariantKind}" has invalid "${String(first.key)}"`;
     }
     return `Enum variant "${enumVariantKind}" has invalid payload`;
 }
@@ -324,7 +325,7 @@ const SolanaAddressValidator: StructUnknown = /* @__PURE__ */ define('SolanaAddr
     if (isPublicKeyLike(value)) {
         return isAddress(value.toBase58()) || 'Expected a valid Solana address, received an invalid PublicKey';
     }
-    return `Expected a Solana address (base58 string or PublicKey), received: ${typeof value}`;
+    return `Expected a Solana address (base58 string or PublicKey), received: ${formatValueType(value)}`;
 });
 
 const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define(
@@ -343,13 +344,13 @@ const NumberOrBigintValidator: StructUnknown = /* @__PURE__ */ define('NumberOrB
         return Number.isSafeInteger(value) || `Expected a safe integer, received unsafe number: ${value}`;
     }
     if (typeof value === 'bigint') return true;
-    return `Expected a number or bigint, received: ${typeof value}`;
+    return `Expected a number or bigint, received: ${formatValueType(value)}`;
 });
 
 const BytesLikeValidator: StructUnknown = /* @__PURE__ */ define('BytesLike', (value: unknown) => {
     if (value instanceof Uint8Array) return true;
     if (!Array.isArray(value)) {
-        return `Expected a Uint8Array or number[] (bytes 0-255), received: ${typeof value}`;
+        return `Expected a Uint8Array or number[] (bytes 0-255), received: ${formatValueType(value)}`;
     }
     const invalidIndex = value.findIndex(n => typeof n !== 'number' || !Number.isInteger(n) || n < 0 || n > 255);
     if (invalidIndex !== -1) {
@@ -368,7 +369,7 @@ function BytesWithSizeValidator(exactSize: number): StructUnknown {
             return value.length === exactSize || `Expected exactly ${exactSize} bytes, received ${value.length} bytes`;
         }
         if (!Array.isArray(value)) {
-            return `Expected a Uint8Array or number[] of exactly ${exactSize} bytes, received: ${typeof value}`;
+            return `Expected a Uint8Array or number[] of exactly ${exactSize} bytes, received: ${formatValueType(value)}`;
         }
         if (value.length !== exactSize) {
             return `Expected exactly ${exactSize} bytes, received ${value.length} elements`;
@@ -395,7 +396,7 @@ function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): 
 // Checks that all items in the array are unique
 const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems', (value: unknown) => {
     if (!Array.isArray(value)) {
-        return `Expected an array with unique items, received: ${typeof value}`;
+        return `Expected an array with unique items, received: ${formatValueType(value)}`;
     }
     const uniqueItems = new Set(value);
     return (
@@ -411,7 +412,7 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
 function KeyValueValidator(name: string, KeyValidator: StructUnknown, ValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_KeyValueValidator`, (value: unknown) => {
         if (typeof value !== 'object' || value === null) {
-            return `Expected a map (object), received: ${typeof value}`;
+            return `Expected a map (object), received: ${formatValueType(value)}`;
         }
         const record = value as Record<string, unknown>;
         const invalidKeys = Object.keys(record).filter(key => KeyValidator.validate(key)[0]);
@@ -442,7 +443,7 @@ function KeysLengthValidator(count: number): StructUnknown {
     return define(`KeysLengthValidator_len_${count}`, (value: unknown) => {
         try {
             if (typeof value !== 'object' || value === null) {
-                return `Expected a map with exactly ${count} entries, received: ${typeof value}`;
+                return `Expected a map with exactly ${count} entries, received: ${formatValueType(value)}`;
             }
             const actual = Object.keys(value).length;
             return actual === count || `Expected exactly ${count} map entries, received ${actual}`;
@@ -490,6 +491,6 @@ function AmountTypeValidator(nodeName: string): StructUnknown {
         if (typeof value === 'bigint') {
             return true;
         }
-        return `Expected a number or bigint, received: ${typeof value}`;
+        return `Expected a number or bigint, received: ${formatValueType(value)}`;
     }) as StructUnknown;
 }

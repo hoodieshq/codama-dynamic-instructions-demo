@@ -382,7 +382,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "amount"/);
+            ).rejects.toThrow(/Enum variant "tokenTransfer" has invalid "amount"/);
         });
 
         test('should throw when tokenTransfer variant is missing all payload fields', async () => {
@@ -395,7 +395,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "amount"/);
+            ).rejects.toThrow(/Enum variant "tokenTransfer" has invalid "amount"/);
         });
 
         test('should throw when tokenTransfer variant is missing tokenType', async () => {
@@ -411,7 +411,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "tokenType"/);
+            ).rejects.toThrow(/Enum variant "tokenTransfer" has invalid "tokenType"/);
         });
 
         test('should throw when continue variant is missing reason', async () => {
@@ -427,7 +427,7 @@ describe('anchor-example: nestedExampleIx', () => {
                     .nestedExample({ input })
                     .accounts({ nestedExampleAccount, signer: payer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "input.header.command"/);
+            ).rejects.toThrow(/Invalid argument "input.header.command".*"reason"/);
         });
 
         test('should throw when innerStruct is missing', async () => {

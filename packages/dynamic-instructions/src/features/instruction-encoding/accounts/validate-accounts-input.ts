@@ -19,10 +19,10 @@ export function validateAccountsInput(ixNode: InstructionNode, accountsInput: Ac
         const structError = error as StructError;
         const key = structError.key as string;
         const value = structError.value as unknown;
-        if (!value) {
+        if (value == null) {
             throw new AccountError(`Missing required account: ${key}. Expected a valid Solana address`);
         } else {
-            throw new AccountError(`Invalid address of "${key}" account: ${String(value)}`);
+            throw new AccountError(`Invalid address of "${key}" account: ${value as string}`);
         }
     }
 }

@@ -16,3 +16,11 @@ export function detectCircularDependency(nodeName: string, resolutionPath: Resol
 export function isObjectRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 }
+
+export function formatValueType(value: unknown): string {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return `array (length ${value.length})`;
+    if (value instanceof Uint8Array) return `Uint8Array (length ${value.length})`;
+    if (typeof value === 'object') return 'object';
+    return typeof value;
+}
