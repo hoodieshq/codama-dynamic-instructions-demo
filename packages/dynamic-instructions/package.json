@@ -2,6 +2,7 @@
     "name": "@hoodieshq/dynamic-instructions",
     "version": "0.0.1",
     "description": "Tool to dynamically build instructions based on Codama IDLs",
+    "license": "MIT",
     "repository": {
         "type": "git",
         "url": "https://github.com/hoodieshq/codama-dynamic-instructions-demo.git",
