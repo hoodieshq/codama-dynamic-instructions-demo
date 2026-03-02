@@ -8,13 +8,17 @@ import type {
     ArgumentValueNode,
     BooleanValueNode,
     BytesValueNode,
+    ConstantValueNode,
+    NoneValueNode,
     NumberValueNode,
     PublicKeyValueNode,
+    SomeValueNode,
     StringValueNode,
     TypeNode,
     Visitor,
 } from 'codama';
 import type { InstructionNode, RootNode } from 'codama';
+import { visitOrElse } from 'codama';
 
 import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
@@ -43,17 +47,21 @@ type PdaSeedValueVisitorContext = {
  * Doc: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/PdaSeedValueNode.md
  * Visit AccountValueNode, ArgumentValueNode, ValueNode, ProgramIdValueNode
  */
-export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visitor<
+export function createPdaSeedValueVisitor(
+    ctx: PdaSeedValueVisitorContext,
+): Visitor<
     Promise<ReadonlyUint8Array>,
     | 'accountValueNode'
     | 'argumentValueNode'
     | 'booleanValueNode'
     | 'bytesValueNode'
+    | 'constantValueNode'
+    | 'noneValueNode'
     | 'numberValueNode'
     | 'programIdValueNode'
     | 'publicKeyValueNode'
+    | 'someValueNode'
     | 'stringValueNode'
-    // TODO: consider supporting the rest of ValueNodes: [ArrayValueNode, ConstantValueNode, EnumValueNode, MapValueNode, NoneValueNode, SetValueNode, SomeValueNode, StructValueNode, TupleValueNode]
 > {
     const { root, ixNode, programId, seedTypeNode } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
@@ -122,6 +130,15 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
             return Promise.resolve(encodedValue);
         },
 
+        visitConstantValue: (node: ConstantValueNode) => {
+            const innerVisitor = createPdaSeedValueVisitor(ctx);
+            return visitOrElse(node.value, innerVisitor, innerNode => {
+                throw new AccountError(`Unsupported constant PDA seed value: ${innerNode.kind}`);
+            });
+        },
+
+        visitNoneValue: (_node: NoneValueNode) => Promise.resolve(new Uint8Array(0)),
+
         visitNumberValue: (node: NumberValueNode) => Promise.resolve(new Uint8Array([node.number])),
 
         // Constant / standalone value nodes.
@@ -129,6 +146,13 @@ export function createPdaSeedValueVisitor(ctx: PdaSeedValueVisitorContext): Visi
 
         visitPublicKeyValue: (node: PublicKeyValueNode) =>
             Promise.resolve(getAddressEncoder().encode(address(node.publicKey))),
+
+        visitSomeValue: (node: SomeValueNode) => {
+            const innerVisitor = createPdaSeedValueVisitor(ctx);
+            return visitOrElse(node.value, innerVisitor, innerNode => {
+                throw new AccountError(`Unsupported some PDA seed value: ${innerNode.kind}`);
+            });
+        },
 
         visitStringValue: (node: StringValueNode) => Promise.resolve(getUtf8Codec().encode(node.string)),
     };

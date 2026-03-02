@@ -319,6 +319,7 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
         case 'postOffsetTypeNode':
             return codamaTypeToTS(type.type, definedTypes);
         case 'amountTypeNode':
+        case 'solAmountTypeNode':
             return 'number | bigint';
         case 'structTypeNode': {
             if (!type.fields || type.fields.length === 0) return '{}';
