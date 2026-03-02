@@ -1,4 +1,4 @@
-# @codama-monorepo-test/dynamic-instructions
+# @hoodieshq/dynamic-instructions
 
 Runtime Solana instruction builder from [Codama](https://github.com/codama-idl/codama) IDLs — no code generation required.
 
@@ -14,7 +14,7 @@ Build type-safe `Instruction` objects (from `@solana/instructions`) at runtime f
 ## Installation
 
 ```bash
-pnpm add @codama-monorepo-test/dynamic-instructions
+pnpm add @hoodieshq/dynamic-instructions
 ```
 
 ## Quick Start
@@ -22,7 +22,7 @@ pnpm add @codama-monorepo-test/dynamic-instructions
 ### Untyped (no code generation)
 
 ```typescript
-import { createProgramClient } from '@codama-monorepo-test/dynamic-instructions';
+import { createProgramClient } from '@hoodieshq/dynamic-instructions';
 import idl from './my-program-idl.json';
 
 const client = createProgramClient(idl);
@@ -36,7 +36,7 @@ const instruction = await client.methods
 ### Typed (with generated types)
 
 ```typescript
-import { createProgramClient } from '@codama-monorepo-test/dynamic-instructions';
+import { createProgramClient } from '@hoodieshq/dynamic-instructions';
 import type { MyProgramClient } from './generated/my-program-types';
 import idl from './my-program-idl.json';
 
@@ -170,7 +170,7 @@ import {
     toLegacyTransactionInstruction,
     toLegacyAccountMeta,
     toVersionedTransaction,
-} from '@codama-monorepo-test/dynamic-instructions';
+} from '@hoodieshq/dynamic-instructions';
 
 // Convert a single instruction
 const legacyIx = toLegacyTransactionInstruction(instruction);
@@ -194,7 +194,7 @@ All errors extend `CodamaError`:
 | `ArgumentError`   | Argument encoding failure                                           |
 
 ```typescript
-import { CodamaError, AccountError } from '@codama-monorepo-test/dynamic-instructions';
+import { CodamaError, AccountError } from '@hoodieshq/dynamic-instructions';
 
 try {
     const ix = await client.methods.transferSol({ amount: 100 }).accounts({}).instruction();
@@ -208,7 +208,7 @@ try {
 ## Utilities
 
 ```typescript
-import { toAddress, isPublicKeyLike } from '@codama-monorepo-test/dynamic-instructions';
+import { toAddress, isPublicKeyLike } from '@hoodieshq/dynamic-instructions';
 
 // Convert any AddressInput to Address
 const addr = toAddress('11111111111111111111111111111111');

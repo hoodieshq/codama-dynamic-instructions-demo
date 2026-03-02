@@ -1,5 +1,5 @@
 {
-    "name": "codama-monorepo-test",
+    "name": "codama-dynamic-instructions-demo",
     "private": true,
     "scripts": {
         "build": "turbo run build --log-order grouped",
