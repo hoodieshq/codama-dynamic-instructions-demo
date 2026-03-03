@@ -168,7 +168,7 @@ import type { InstructionNode, RootNode } from 'codama';
 import type { ${addressImports} } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 
-export type ResolverFn = (args: Record<string, unknown>, accounts: Record<string, unknown>) => Promise<unknown> | unknown;
+export type ResolverFn<TArgumentsInput = Record<string, unknown>, TAccountsInput = Record<string, unknown>> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
 
 /**
  * Method builder interface.
@@ -242,7 +242,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
             const resolversTypeName = `${typeName}Resolvers`;
             output += `export type ${resolversTypeName} = {\n`;
             for (const name of resolverNames) {
-                output += `    ${name}: ResolverFn;\n`;
+                output += `    ${name}: ResolverFn<${argsRef === 'void' ? 'Record<string, unknown>' : argsRef}, ${accountsInterfaceName}>;\n`;
             }
             output += '};\n\n';
             resolversRef = resolversTypeName;
