@@ -117,6 +117,12 @@ describe('MPL Token Metadata: create with resolvers', () => {
         // optional optionalAccountStrategy=programId → resolves to program ID
         expect(ix.accounts?.length).toBe(9);
         expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+
+        ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
+        const [metadataPda] = await findMetadataPda({ mint });
+        const metadataAccountInfo = ctx.requireEncodedAccount(metadataPda);
+        const metadata = getMetadataDecoder().decode(metadataAccountInfo.data);
+        expect(metadata.tokenStandard).toEqual(some(TokenStandard.Fungible));
     });
 
     test('should use user-provided account and bypass resolver', async () => {
@@ -148,6 +154,12 @@ describe('MPL Token Metadata: create with resolvers', () => {
             .instruction();
 
         expect(ix.accounts!.at(-1)!.address).toBe(splTokenProgramMock);
+
+        ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
+        const [metadataPda] = await findMetadataPda({ mint });
+        const metadataAccountInfo = ctx.requireEncodedAccount(metadataPda);
+        const metadata = getMetadataDecoder().decode(metadataAccountInfo.data);
+        expect(metadata.tokenStandard).toEqual(some(TokenStandard.Fungible));
     });
 
     test('should work without calling .resolvers() (backward compatibility)', async () => {
@@ -172,6 +184,12 @@ describe('MPL Token Metadata: create with resolvers', () => {
         expect(ix.programAddress).toBe(programClient.programAddress);
         expect(ix.accounts?.length).toBe(9);
         expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+
+        ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
+        const [metadataPda] = await findMetadataPda({ mint });
+        const metadataAccountInfo = ctx.requireEncodedAccount(metadataPda);
+        const metadata = getMetadataDecoder().decode(metadataAccountInfo.data);
+        expect(metadata.tokenStandard).toEqual(some(TokenStandard.Fungible));
     });
 
     test('should fallback to optionalAccountStrategy when no resolver and no account provided', async () => {
@@ -198,5 +216,11 @@ describe('MPL Token Metadata: create with resolvers', () => {
 
         expect(ix.accounts?.length).toBe(9);
         expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+
+        ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
+        const [metadataPda] = await findMetadataPda({ mint });
+        const metadataAccountInfo = ctx.requireEncodedAccount(metadataPda);
+        const metadata = getMetadataDecoder().decode(metadataAccountInfo.data);
+        expect(metadata.tokenStandard).toEqual(some(TokenStandard.Fungible));
     });
 });

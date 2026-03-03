@@ -5,7 +5,13 @@ import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
 import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
-import type { AccountsInput, ArgumentsInput, EitherSigners, ResolutionPath, ResolversInput } from '../../../shared/types';
+import type {
+    AccountsInput,
+    ArgumentsInput,
+    EitherSigners,
+    ResolutionPath,
+    ResolversInput,
+} from '../../../shared/types';
 import { resolveAccountAddress } from './resolve-account-address';
 
 type ResolvedAccount = {

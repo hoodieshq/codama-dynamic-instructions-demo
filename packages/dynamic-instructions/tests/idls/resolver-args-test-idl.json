@@ -7,7 +7,9 @@
         "name": "resolverArgsTest",
         "publicKey": "9oHr11Q3pmPsAkFNzQS3JjK5RJA9hwvwrSgF2MXvs22C",
         "version": "0.1.0",
-        "docs": ["This is manually generated IDL. Used in tests/resolver-args for testing arguments resolution via custom resolvers."],
+        "docs": [
+            "This is manually generated IDL. Used in tests/resolver-args for testing arguments resolution via custom resolvers."
+        ],
         "pdas": [],
         "accounts": [],
         "definedTypes": [],
