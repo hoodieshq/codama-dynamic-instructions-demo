@@ -79,6 +79,7 @@ client.methods
     .myInstruction(args) // provide instruction arguments
     .accounts(accounts) // provide account addresses
     .signers(['accountName']) // optionally mark ambiguous accounts as signers
+    .resolvers({ customResolver: async (argumentsInput, accountsInput) => {} }) // optionally provide custom resolver according on resolverValueNode in IDL
     .instruction(); // Promise<Instruction>
 ```
 
@@ -121,7 +122,7 @@ Pass `null` for optional accounts to be resolved according on `optionalAccountSt
 .accounts({
     authority,
     program: programAddress,
-    programData: null,  // optional — resolved via optionalAccountStrategy
+    programData: null,  // optional - resolved via optionalAccountStrategy
 })
 ```
 
@@ -200,7 +201,7 @@ const tx = toVersionedTransaction(instruction, {
 
 ## Error Handling
 
-All errors extend `CodamaError`:
+All errors extend `DynamicInstructionsError`:
 
 | Error             | When                                                                |
 | ----------------- | ------------------------------------------------------------------- |
@@ -209,7 +210,7 @@ All errors extend `CodamaError`:
 | `ArgumentError`   | Argument encoding failure                                           |
 
 ```typescript
-import { CodamaError, AccountError } from '@hoodieshq/dynamic-instructions';
+import { DynamicInstructionsError, AccountError } from '@hoodieshq/dynamic-instructions';
 
 try {
     const ix = await client.methods.transferSol({ amount: 100 }).accounts({}).instruction();

@@ -64,7 +64,7 @@ export function createConditionNodeValueVisitor(
         visitResolverValue: async (node: ResolverValueNode) => {
             const resolverFn = resolversInput?.[node.name];
             if (!resolverFn) {
-                // Missing resolver returns undefined -> ifFalse branch
+                // undefined directs to ifFalse branch
                 return undefined;
             }
             return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});

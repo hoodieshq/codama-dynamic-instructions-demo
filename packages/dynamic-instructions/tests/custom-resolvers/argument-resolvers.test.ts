@@ -19,8 +19,8 @@ const u8Encoder = getU8Encoder();
 const stringEncoder = addEncoderSizePrefix(utf8Encoder, u32Encoder);
 
 /**
- * Concat arguments to ix data bytes for createItem:
- *   [discriminator: u8] [name: utf8] + [description: optional(utf8)] + [tags: optional(u8)]
+ * Concat arguments for createItem ix data bytes:
+ * [discriminator: u8] + [name: utf8] + [description: optional(utf8)] + [tags: optional(u8)]
  */
 function expectedData({
     name,
@@ -98,7 +98,7 @@ describe('Custom resolvers: arguments ResolverValueNode', () => {
                 resolveDescription: (args, accounts) => {
                     Object.assign(capturedArgs, args);
                     Object.assign(capturedAccounts, accounts);
-                    return Promise.resolve(capturedArgs);
+                    return Promise.resolve(null);
                 },
             })
             .instruction();

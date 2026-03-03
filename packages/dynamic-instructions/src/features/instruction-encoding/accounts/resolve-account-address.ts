@@ -33,8 +33,6 @@ export async function resolveAccountAddress({
     accountAddressInput,
 }: ResolveAccountAddressContext): Promise<Address | null> {
     // Optional accounts explicitly provided as null should be resolved based on optionalAccountStrategy
-    // With "programId" strategy, optional accounts are resolved to programId
-    // With "omitted" strategy, optional accounts must be excluded from accounts list
     if (accountAddressInput === null && ixAccountNode.isOptional) {
         return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
     }
@@ -57,7 +55,7 @@ export async function resolveAccountAddress({
             );
         });
 
-        // conditionalValueNode with undefined ifFalse branch retruns null.
+        // conditionalValueNode with ifFalse branch returns null.
         // This should be resolved via optionalAccountStrategy for optional accounts.
         if (addressValue === null && ixAccountNode.isOptional) {
             return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
@@ -71,6 +69,11 @@ export async function resolveAccountAddress({
     );
 }
 
+/**
+ * Optional account resolution via instruction strategy.
+ * With "programId" strategy, optional accounts are resolved to programId
+ * With "omitted" strategy, optional accounts must be excluded from accounts list
+ */
 function resolveOptionalAccountWithStrategy(
     root: RootNode,
     ixNode: InstructionNode,

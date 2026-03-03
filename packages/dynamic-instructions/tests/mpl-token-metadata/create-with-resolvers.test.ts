@@ -113,8 +113,8 @@ describe('MPL Token Metadata: create with resolvers', () => {
             })
             .instruction();
 
-        // resolver returns false -> no ifFalse → conditional returns null
-        // optional optionalAccountStrategy=programId → resolves to program ID
+        // resolver returns false -> ifFalse is undefined -> conditional returns null
+        // optional optionalAccountStrategy=programId resolves to program ID
         expect(ix.accounts?.length).toBe(9);
         expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
 
@@ -144,7 +144,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
                 splTokenProgram: splTokenProgramMock,
             })
             .resolvers({
-                // This resolver should NOT be called since splTokenProgram is explicitly provided
+                // This resolver should not be called since splTokenProgram is explicitly provided
                 resolveIsNonFungibleOrIsMintSigner: async () => {
                     return await Promise.reject(
                         new Error('Resolver should not be called for explicitly provided account'),
@@ -162,7 +162,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
         expect(metadata.tokenStandard).toEqual(some(TokenStandard.Fungible));
     });
 
-    test('should work without calling .resolvers() (backward compatibility)', async () => {
+    test('should work without calling .resolvers()', async () => {
         const payer = ctx.createFundedAccount();
         const mintAuthority = ctx.createFundedAccount();
         const mint = ctx.createAccount();

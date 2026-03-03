@@ -1,5 +1,4 @@
-import { getNodeCodec } from '@codama/dynamic-codecs';
-import type { ReadonlyUint8Array } from '@solana/codecs';
+import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 import type { Failure, StructError } from 'superstruct';
@@ -15,9 +14,9 @@ import { createIxArgumentsValidator } from './validators';
 /**
  * Resolves argument defaults from user-provided resolvers.
  * For each argument that has a resolverValueNode and is not provided by argumentsInput,
- * try to invoke the corresponding resolver function and add the result to the returned input.
+ * try to invoke the corresponding resolver function and fill ArgumentsInput with the resolved values.
  */
-export async function resolveArgumentDefaults(
+export async function resolveArgumentDefaultsFromCustomResolvers(
     ixNode: InstructionNode,
     argumentsInput: ArgumentsInput = {},
     accountsInput: AccountsInput = {},
@@ -28,11 +27,10 @@ export async function resolveArgumentDefaults(
     const allArguments = [...ixNode.arguments, ...(ixNode.extraArguments ?? [])];
     for (const argumentNode of allArguments) {
         if (resolved[argumentNode.name] !== undefined) continue;
-        if (argumentNode.defaultValueStrategy === 'omitted') continue;
+        if (isIxArgumentOmitted(argumentNode)) continue;
         if (!isNode(argumentNode.defaultValue, 'resolverValueNode')) continue;
 
-        const resolverName = argumentNode.defaultValue.name;
-        const resolverFn = resolversInput[resolverName];
+        const resolverFn = resolversInput[argumentNode.defaultValue.name];
         if (!resolverFn) continue;
 
         resolved[argumentNode.name] = await resolverFn(argumentsInput, accountsInput);

@@ -51,9 +51,6 @@ interface DefaultValueNode {
     name?: string;
     pda?: PdaNodeLike;
     seeds?: PdaSeedValueNodeLike[];
-    condition?: DefaultValueNode;
-    ifTrue?: DefaultValueNode;
-    ifFalse?: DefaultValueNode;
     [key: string]: unknown;
 }
 
@@ -168,7 +165,10 @@ import type { InstructionNode, RootNode } from 'codama';
 import type { ${addressImports} } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 
-export type ResolverFn<TArgumentsInput = Record<string, unknown>, TAccountsInput = Record<string, unknown>> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
+export type ResolverFn<
+    TArgumentsInput = Record<string, unknown>,
+    TAccountsInput = Record<string, unknown>
+> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
 
 /**
  * Method builder interface.
@@ -432,9 +432,9 @@ function collectResolverNames(ix: InstructionNode): Set<string> {
         if (node.kind === 'resolverValueNode' && node.name) {
             names.add(node.name);
         } else if (node.kind === 'conditionalValueNode') {
-            extractResolverNodeName(node.condition);
-            extractResolverNodeName(node.ifTrue);
-            extractResolverNodeName(node.ifFalse);
+            extractResolverNodeName(node.condition as DefaultValueNode);
+            extractResolverNodeName(node.ifTrue as DefaultValueNode | undefined);
+            extractResolverNodeName(node.ifFalse as DefaultValueNode | undefined);
         }
     }
 

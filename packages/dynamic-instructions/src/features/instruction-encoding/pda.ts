@@ -19,7 +19,6 @@ import { createInputValueTransformer } from '../../entities/visitors/input-value
 import { createPdaSeedValueVisitor } from '../../entities/visitors/pda-seed-value';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
-import { invariant } from '../../shared/util';
 
 type PdaDerivationContext = {
     accountsInput: AccountsInput | undefined;
@@ -56,6 +55,7 @@ export async function derivePDA({
                     ixNode,
                     programId,
                     resolutionPath,
+                    resolversInput,
                     root,
                     seedNode,
                 });
@@ -130,10 +130,12 @@ function resolveVariablePdaSeed({
     seedNode,
     variableSeedValueNode,
 }: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
-    invariant(
-        seedNode.name === variableSeedValueNode.name,
-        `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`,
-    );
+    if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
+        throw new AccountError(`Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`);
+    }
+    if (seedNode.name !== variableSeedValueNode.name) {
+        throw new AccountError(`Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`);
+    }
 
     const visitor = createPdaSeedValueVisitor({
         accountsInput,
@@ -155,7 +157,7 @@ type ResolveConstantPdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
-    resolversInput?: ResolversInput | undefined; // TODO: fix omitted type
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
     seedNode: RegisteredPdaSeedNode;
 };
@@ -229,7 +231,7 @@ function resolveStandaloneConstantSeed(
         } as unknown as import('codama').InstructionNode,
         programId: programAddress,
         resolutionPath: undefined,
-        resolversInput: undefined, // TODO: check if we want resolvers for pda
+        resolversInput: undefined,
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {

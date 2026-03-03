@@ -8,8 +8,9 @@ export type SignerInput = unknown;
 
 export class MethodsBuilder {
     private _accounts?: AccountsInput;
-    private _signers?: EitherSigners; // "either" signers Account names
-    // Resolver functions for [ResolverValueNode.md](https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/ResolverValueNode.md)
+    // "either" signers Account names
+    private _signers?: EitherSigners;
+    // Custom resolver functions for [ResolverValueNode.md](https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/ResolverValueNode.md)
     private _resolvers?: ResolversInput;
 
     constructor(

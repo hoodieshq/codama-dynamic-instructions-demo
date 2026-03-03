@@ -136,7 +136,7 @@ export function createAccountDefaultValueVisitor(
 
             if (resolvedInputValueNode === undefined) {
                 // No matching branch (e.g. conditional with no ifFalse and falsy condition).
-                // Return null to signal "unresolved" — caller will apply optionalAccountStrategy if applicable.
+                // Return null to signal "unresolved" to apply optionalAccountStrategy.
                 if (ixAccountNode.isOptional) {
                     return null;
                 }
@@ -206,7 +206,7 @@ export function createAccountDefaultValueVisitor(
                 );
             }
             const result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
-            if (result === undefined || result === null) {
+            if (result == null) {
                 throw new AccountError(
                     `Resolver "${node.name}" returned ${String(result)} for account "${ixAccountNode.name}"`,
                 );

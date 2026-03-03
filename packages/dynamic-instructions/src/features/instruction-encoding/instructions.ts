@@ -3,7 +3,11 @@ import type { InstructionNode, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners, ResolversInput } from '../../shared/types';
 import { resolveAccountMeta, validateAccountsInput } from './accounts';
-import { encodeInstructionArguments, resolveArgumentDefaults, validateArgumentsInput } from './arguments';
+import {
+    encodeInstructionArguments,
+    resolveArgumentDefaultsFromCustomResolvers,
+    validateArgumentsInput,
+} from './arguments';
 
 /**
  * @solana/kit
@@ -46,8 +50,8 @@ export async function resolveInstructionData(
     // Validate provided pubkey addresses
     validateAccountsInput(instructionNode, accountsInput);
 
-    // Resolve argument defaults from resolvers (enriches argumentsInput before encoding)
-    const enrichedArgumentsInput = await resolveArgumentDefaults(
+    // Resolve arguments which depends on custom resolvers
+    const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
         instructionNode,
         argumentsInput,
         accountsInput,
