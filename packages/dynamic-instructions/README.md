@@ -79,7 +79,7 @@ client.methods
     .myInstruction(args) // provide instruction arguments
     .accounts(accounts) // provide account addresses
     .signers(['accountName']) // optionally mark ambiguous accounts as signers
-    .instruction(); // → Promise<Instruction>
+    .instruction(); // Promise<Instruction>
 ```
 
 ### `AddressInput`

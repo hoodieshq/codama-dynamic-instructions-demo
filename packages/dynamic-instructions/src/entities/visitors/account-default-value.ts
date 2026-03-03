@@ -22,7 +22,7 @@ import { derivePDA } from '../../features/instruction-encoding/pda';
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
 import { createConditionNodeValueVisitor } from './condition-node-value';
 import { createValueNodeVisitor } from './value-node-value';
@@ -34,6 +34,7 @@ type AccountDefaultValueVisitorContext = {
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 
@@ -44,7 +45,7 @@ type AccountDefaultValueVisitorContext = {
 export function createAccountDefaultValueVisitor(
     ctx: AccountDefaultValueVisitorContext,
 ): Visitor<
-    Promise<Address>,
+    Promise<Address | null>,
     | 'accountBumpValueNode'
     | 'accountValueNode'
     | 'argumentValueNode'
@@ -56,7 +57,7 @@ export function createAccountDefaultValueVisitor(
     | 'publicKeyValueNode'
     | 'resolverValueNode'
 > {
-    const { root, ixNode, ixAccountNode, accountAddressInput, argumentsInput, accountsInput } = ctx;
+    const { root, ixNode, ixAccountNode, accountAddressInput, argumentsInput, accountsInput, resolversInput } = ctx;
     const resolutionPath = ctx.resolutionPath ?? [];
 
     return {
@@ -129,10 +130,16 @@ export function createAccountDefaultValueVisitor(
                 ixAccountNode,
                 ixNode,
                 resolutionPath,
+                resolversInput,
                 root,
             });
 
             if (resolvedInputValueNode === undefined) {
+                // No matching branch (e.g. conditional with no ifFalse and falsy condition).
+                // Return null to signal "unresolved" — caller will apply optionalAccountStrategy if applicable.
+                if (ixAccountNode.isOptional) {
+                    return null;
+                }
                 throw new AccountError(
                     `Conditional branch resolved to undefined in account ${ixAccountNode.name} of ${ixNode.name} instruction`,
                 );
@@ -173,6 +180,7 @@ export function createAccountDefaultValueVisitor(
                 ixNode,
                 pdaValueNode: node,
                 resolutionPath,
+                resolversInput,
                 root,
             });
             if (pda === null) {
@@ -189,11 +197,21 @@ export function createAccountDefaultValueVisitor(
             return Promise.resolve(address(node.publicKey));
         },
 
-        visitResolverValue: (_node: ResolverValueNode) => {
-            throw new AccountError(
-                `ResolverValueNode not yet supported for ${ixAccountNode.name} account. ` +
-                    `Custom resolvers are not implemented.`,
-            );
+        visitResolverValue: async (node: ResolverValueNode) => {
+            const resolverFn = resolversInput?.[node.name];
+            if (!resolverFn) {
+                throw new AccountError(
+                    `Resolver "${node.name}" not provided for account "${ixAccountNode.name}". ` +
+                        `Provide via .resolvers({ ${node.name}: async (args, accounts) => ... })`,
+                );
+            }
+            const result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
+            if (result === undefined || result === null) {
+                throw new AccountError(
+                    `Resolver "${node.name}" returned ${String(result)} for account "${ixAccountNode.name}"`,
+                );
+            }
+            return toAddress(result as AddressInput);
         },
     };
 }
@@ -205,6 +223,7 @@ type ConditionalValueNodeConditionContext = {
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 /**
@@ -219,6 +238,7 @@ export async function resolveConditionalValueNodeCondition({
     argumentsInput,
     accountsInput,
     resolutionPath,
+    resolversInput,
 }: ConditionalValueNodeConditionContext) {
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
         throw new AccountError(`Expected conditionalValueNode in account ${ixAccountNode.name}`);
@@ -235,6 +255,7 @@ export async function resolveConditionalValueNodeCondition({
         argumentsInput,
         ixNode,
         resolutionPath: resolutionPath ?? [],
+        resolversInput,
         root,
     });
     const providedValue = await visitOrElse(condition, conditionVisitor, condNode => {

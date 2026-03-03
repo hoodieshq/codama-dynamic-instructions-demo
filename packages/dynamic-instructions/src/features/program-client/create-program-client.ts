@@ -5,7 +5,7 @@ import { createFromJson } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 import { deriveStandalonePDA } from '../instruction-encoding/pda';
 import { collectPdaNodes } from './collect-pdas';
 import { MethodsBuilder } from './methods-builder';
@@ -36,6 +36,7 @@ export type ProgramClient = {
 export type ProgramMethodBuilder = {
     accounts(accounts: AccountsInput): ProgramMethodBuilder;
     instruction(): Promise<Instruction>;
+    resolvers(resolvers: ResolversInput): ProgramMethodBuilder;
     signers(signers: string[]): ProgramMethodBuilder;
 };
 

@@ -1,7 +1,7 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
-import { visitOrElse } from 'codama';
+import { isNode, visitOrElse } from 'codama';
 import type { Failure, StructError } from 'superstruct';
 import { assert } from 'superstruct';
 
@@ -9,8 +9,37 @@ import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
 import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
-import type { ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 import { createIxArgumentsValidator } from './validators';
+
+/**
+ * Resolves argument defaults from user-provided resolvers.
+ * For each argument that has a resolverValueNode and is not provided by argumentsInput,
+ * try to invoke the corresponding resolver function and add the result to the returned input.
+ */
+export async function resolveArgumentDefaults(
+    ixNode: InstructionNode,
+    argumentsInput: ArgumentsInput = {},
+    accountsInput: AccountsInput = {},
+    resolversInput: ResolversInput = {},
+): Promise<ArgumentsInput> {
+    const resolved = { ...argumentsInput };
+
+    const allArguments = [...ixNode.arguments, ...(ixNode.extraArguments ?? [])];
+    for (const argumentNode of allArguments) {
+        if (resolved[argumentNode.name] !== undefined) continue;
+        if (argumentNode.defaultValueStrategy === 'omitted') continue;
+        if (!isNode(argumentNode.defaultValue, 'resolverValueNode')) continue;
+
+        const resolverName = argumentNode.defaultValue.name;
+        const resolverFn = resolversInput[resolverName];
+        if (!resolverFn) continue;
+
+        resolved[argumentNode.name] = await resolverFn(argumentsInput, accountsInput);
+    }
+
+    return resolved;
+}
 
 export function encodeInstructionArguments(
     root: RootNode,

@@ -11,9 +11,13 @@ export type EitherSigners = AccountName[];
 // Array of node names being resolved to detect circular dependencies
 export type ResolutionPath = readonly string[];
 
+export type ResolverFn = (args: ArgumentsInput, accounts: AccountsInput) => Promise<unknown>;
+export type ResolversInput = Record<string, ResolverFn>;
+
 type TBuildIxFn<TInstruction> = (
     argumentsInput?: ArgumentsInput,
     accountsInput?: AccountsInput,
     signers?: EitherSigners,
+    resolversInput?: ResolversInput,
 ) => Promise<TInstruction>;
 export type BuildIxFn = TBuildIxFn<Instruction>;

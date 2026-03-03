@@ -4,13 +4,14 @@ import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValu
 import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 
 type ConditionNodeValueVisitorContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 
@@ -21,7 +22,7 @@ type ConditionNodeValueVisitorContext = {
 export function createConditionNodeValueVisitor(
     ctx: ConditionNodeValueVisitorContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
-    const { root, ixNode, argumentsInput, accountsInput, resolutionPath } = ctx;
+    const { root, ixNode, argumentsInput, accountsInput, resolutionPath, resolversInput } = ctx;
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
@@ -49,6 +50,7 @@ export function createConditionNodeValueVisitor(
                 ixAccountNode,
                 ixNode,
                 resolutionPath,
+                resolversInput,
                 root,
             });
             return conditionalAddress;
@@ -59,9 +61,13 @@ export function createConditionNodeValueVisitor(
             return Promise.resolve(argInput);
         },
 
-        visitResolverValue: (_node: ResolverValueNode) => {
-            // TODO: may contain complex custom resolver, to be implemented later
-            throw new AccountError('ResolverValueNode is not supported in conditionalValueNode yet');
+        visitResolverValue: async (node: ResolverValueNode) => {
+            const resolverFn = resolversInput?.[node.name];
+            if (!resolverFn) {
+                // Missing resolver returns undefined -> ifFalse branch
+                return undefined;
+            }
+            return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
         },
     };
 }

@@ -1,7 +1,7 @@
 import type { Instruction } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput, EitherSigners } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { createIxBuilder } from '../instruction-encoding/instructions';
 
 export type SignerInput = unknown;
@@ -9,6 +9,8 @@ export type SignerInput = unknown;
 export class MethodsBuilder {
     private _accounts?: AccountsInput;
     private _signers?: EitherSigners; // "either" signers Account names
+    // Resolver functions for [ResolverValueNode.md](https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/ResolverValueNode.md)
+    private _resolvers?: ResolversInput;
 
     constructor(
         private readonly root: RootNode,
@@ -28,8 +30,13 @@ export class MethodsBuilder {
         return this;
     }
 
+    resolvers(resolvers: ResolversInput) {
+        this._resolvers = resolvers;
+        return this;
+    }
+
     async instruction(): Promise<Instruction> {
         const build = createIxBuilder(this.root, this.ixNode);
-        return await build(this.args, this._accounts, this._signers);
+        return await build(this.args, this._accounts, this._signers, this._resolvers);
     }
 }

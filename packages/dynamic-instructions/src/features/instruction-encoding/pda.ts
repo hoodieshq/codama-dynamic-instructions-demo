@@ -18,7 +18,7 @@ import { isNode, visitOrElse } from 'codama';
 import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
 import { createPdaSeedValueVisitor } from '../../entities/visitors/pda-seed-value';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { invariant } from '../../shared/util';
 
 type PdaDerivationContext = {
@@ -28,6 +28,7 @@ type PdaDerivationContext = {
     ixNode: InstructionNode;
     pdaValueNode: PdaValueNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 
@@ -39,6 +40,7 @@ export async function derivePDA({
     accountsInput = {},
     pdaValueNode,
     resolutionPath,
+    resolversInput,
 }: PdaDerivationContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
@@ -73,6 +75,7 @@ export async function derivePDA({
                     ixNode,
                     programId,
                     resolutionPath,
+                    resolversInput,
                     root,
                     seedNode,
                     variableSeedValueNode,
@@ -111,6 +114,7 @@ type ResolvePdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
     seedNode: VariablePdaSeedNode;
     variableSeedValueNode: PdaSeedValueNode;
@@ -121,6 +125,7 @@ function resolveVariablePdaSeed({
     ixNode,
     programId,
     resolutionPath,
+    resolversInput,
     root,
     seedNode,
     variableSeedValueNode,
@@ -136,6 +141,7 @@ function resolveVariablePdaSeed({
         ixNode,
         programId,
         resolutionPath: resolutionPath ?? [],
+        resolversInput,
         root,
         seedTypeNode: seedNode.type,
     });
@@ -149,6 +155,7 @@ type ResolveConstantPdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput?: ResolversInput | undefined; // TODO: fix omitted type
     root: RootNode;
     seedNode: RegisteredPdaSeedNode;
 };
@@ -156,6 +163,7 @@ function resolveConstantPdaSeed({
     ixNode,
     programId,
     resolutionPath,
+    resolversInput,
     root,
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
@@ -166,6 +174,7 @@ function resolveConstantPdaSeed({
         ixNode,
         programId,
         resolutionPath,
+        resolversInput,
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
@@ -220,6 +229,7 @@ function resolveStandaloneConstantSeed(
         } as unknown as import('codama').InstructionNode,
         programId: programAddress,
         resolutionPath: undefined,
+        resolversInput: undefined, // TODO: check if we want resolvers for pda
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
