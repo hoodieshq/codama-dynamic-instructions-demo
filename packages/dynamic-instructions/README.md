@@ -115,13 +115,13 @@ You can always override auto-derived accounts by providing an explicit address.
 
 ### Optional accounts
 
-Pass `null` for optional accounts:
+Pass `null` for optional accounts to be resolved according on `optionalAccountStrategy` (either will be `omitted` or replaced on `programId`):
 
 ```typescript
 .accounts({
     authority,
     program: programAddress,
-    programData: null,  // optional — resolved automatically
+    programData: null,  // optional — resolved via optionalAccountStrategy
 })
 ```
 
@@ -132,6 +132,21 @@ When an account has `isSigner: 'either'` in the IDL, use `.signers()` to explici
 ```typescript
 .accounts({ owner: ownerAddress })
 .signers(['owner'])
+```
+
+### Custom resolvers
+
+When an account or argument is `resolverValueNode` in the IDL, provide a custom resolver function `.resolvers({ [resolverName]: async fn })` to help with account/arguments resolution:
+
+```typescript
+client.methods
+    .create({ tokenStandard: 'NonFungible' })
+    .accounts({ owner: ownerAddress })
+    .resolvers({
+        resolveIsNonFungible: async (argumentsInput, accountsInput) => {
+            return argumentsInput.tokenStandard === 'NonFungible';
+        },
+    });
 ```
 
 ## PDA Derivation

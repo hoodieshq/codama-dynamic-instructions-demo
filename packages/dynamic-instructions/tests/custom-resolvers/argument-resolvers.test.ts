@@ -10,10 +10,8 @@ import {
 } from '@solana/codecs';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { type ResolverArgsTestProgramClient } from '../generated/resolver-args-test-idl-types';
-import { createTestProgramClient, SvmTestContext } from '../test-utils';
-
-const client = createTestProgramClient<ResolverArgsTestProgramClient>('resolver-args-test-idl.json');
+import { SvmTestContext } from '../test-utils';
+import { programClient } from './custom-resolvers-test-utils';
 
 const utf8Encoder = getUtf8Encoder();
 const u32Encoder = getU32Encoder();
@@ -41,7 +39,7 @@ function expectedData({
     return new Uint8Array([...discriminator, ...nameBytes, ...descriptionBytes, ...tagsBytes]);
 }
 
-describe('Argument-level ResolverValueNode', () => {
+describe('Custom resolvers: arguments ResolverValueNode', () => {
     let authority: Address;
     let ctx: SvmTestContext;
 
@@ -51,7 +49,7 @@ describe('Argument-level ResolverValueNode', () => {
     });
 
     test('should resolve omitted argument via resolver', async () => {
-        const ix = await client.methods
+        const ix = await programClient.methods
             .createItem({ name: 'hello' })
             .accounts({ authority })
             .resolvers({ resolveDescription: () => Promise.resolve('auto-filled') })
@@ -61,7 +59,7 @@ describe('Argument-level ResolverValueNode', () => {
     });
 
     test('should bypass resolver when argument is explicitly provided', async () => {
-        const ix = await client.methods
+        const ix = await programClient.methods
             .createItem({ description: 'explicit', name: 'hello' })
             .accounts({ authority })
             .resolvers({
@@ -75,7 +73,7 @@ describe('Argument-level ResolverValueNode', () => {
     });
 
     test('should call multiple resolvers independently', async () => {
-        const ix = await client.methods
+        const ix = await programClient.methods
             .createItem({ name: 'multi' })
             .accounts({ authority })
             .resolvers({
@@ -93,7 +91,7 @@ describe('Argument-level ResolverValueNode', () => {
         const capturedArgs: Record<string, unknown> = {};
         const capturedAccounts: Record<string, unknown> = {};
 
-        await client.methods
+        await programClient.methods
             .createItem(expectedArgs)
             .accounts(expectedAccounts)
             .resolvers({
@@ -110,8 +108,53 @@ describe('Argument-level ResolverValueNode', () => {
     });
 
     test('should omit optional argument when no resolver provided', async () => {
-        const ix = await client.methods.createItem({ name: 'no-resolver' }).accounts({ authority }).instruction();
+        const ix = await programClient.methods
+            .createItem({ name: 'no-resolver' })
+            .accounts({ authority })
+            .instruction();
 
         expect(ix.data).toEqual(expectedData({ description: null, name: 'no-resolver', tags: null }));
+    });
+
+    test('should propagate error when argument resolver throws', async () => {
+        await expect(
+            programClient.methods
+                .createItem({ name: 'err' })
+                .accounts({ authority })
+                .resolvers({
+                    resolveDescription: () => {
+                        throw new Error('Error from resolver');
+                    },
+                })
+                .instruction(),
+        ).rejects.toThrow('Error from resolver');
+
+        await expect(
+            programClient.methods
+                .createItem({ name: 'err' })
+                .accounts({ authority })
+                .resolvers({
+                    resolveDescription: () => Promise.reject(new Error('Async error from resolver')),
+                })
+                .instruction(),
+        ).rejects.toThrow('Async error from resolver');
+    });
+
+    test('should encode optional argument as none when resolver returns undefined or null', async () => {
+        const ix1 = await programClient.methods
+            .createItem({ name: 'hello world 1' })
+            .accounts({ authority })
+            .resolvers({ resolveDescription: () => Promise.resolve(undefined) })
+            .instruction();
+
+        expect(ix1.data).toEqual(expectedData({ description: null, name: 'hello world 1', tags: null }));
+
+        const ix2 = await programClient.methods
+            .createItem({ name: 'hello world 2' })
+            .accounts({ authority })
+            .resolvers({ resolveDescription: () => Promise.resolve(null) })
+            .instruction();
+
+        expect(ix2.data).toEqual(expectedData({ description: null, name: 'hello world 2', tags: null }));
     });
 });

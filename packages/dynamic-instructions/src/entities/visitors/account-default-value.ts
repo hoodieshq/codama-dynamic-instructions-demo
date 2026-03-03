@@ -141,7 +141,7 @@ export function createAccountDefaultValueVisitor(
                     return null;
                 }
                 throw new AccountError(
-                    `Conditional branch resolved to undefined in account ${ixAccountNode.name} of ${ixNode.name} instruction`,
+                    `Conditional branch resolved to undefined in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
                 );
             }
             // Recursively resolve the chosen branch
