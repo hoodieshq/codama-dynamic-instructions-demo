@@ -86,26 +86,44 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     } catch (error) {
         const { failures } = error as StructError;
         const message = failures().map(failure => {
-            const key = formatFailureKey(failure);
-            return `Invalid argument "${key}", "value": ${failure.value}. Message: ${failure.message}\n`;
+            const fieldPath = formatFailurePath(failure);
+            const value = formatFailureValue(failure.value);
+            return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
         });
         throw new ValidationError(message.join(''));
     }
 }
 
-/**
- * User friendly formatting for field key. Displays parent key for array elements, e.g. "itemsArray[1]"
- * key is string for regular fields, but for array elements key is number
- * path contains field path. Number represents index in array, e.g path: [ 'input', 'innerStruct', 'itemsArray', 1 ]
- */
-function formatFailureKey(failure: Failure): string {
-    const key: unknown = failure.key;
+/** Formats a full dotted path from failure, e.g. "command", "innerStruct.pubkey", "enumsArray[1]" */
+function formatFailurePath(failure: Failure): string {
     const path = failure.path;
-    if (typeof key === 'number' && path.length > 1) {
-        const parentKey: unknown = path[path.length - 2];
-        return `${String(parentKey)}[${key}]`;
+    if (!path || path.length === 0) return String(failure.key ?? '');
+    return path
+        .map((segment, i) => {
+            if (typeof segment === 'number') {
+                return `[${segment}]`;
+            }
+            return `${i === 0 ? '' : '.'}${String(segment)}`;
+        })
+        .join('');
+}
+
+/**
+ * Formats failure values for error messages, truncating long values and stringifying objects.
+ */
+const MAX_VALUE_LENGTH = 120;
+function formatFailureValue(value: unknown): string {
+    let raw: string;
+    if (typeof value === 'object') {
+        try {
+            raw = JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
+        } catch {
+            return '[object]';
+        }
+    } else {
+        raw = String(value as unknown);
     }
-    return String(key);
+    return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}…` : raw;
 }
 
 // Required arguments that should be validated and provided or be null/undefined if optional
