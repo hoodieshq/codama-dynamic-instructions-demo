@@ -1,8 +1,6 @@
-import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import { getUtf8Encoder } from '@solana/codecs';
 import type {
     InstructionAccountNode,
     InstructionNode,
@@ -15,12 +13,11 @@ import type {
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
-import { createPdaSeedValueVisitor } from '../../entities/visitors/pda-seed-value';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
+import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
 
-type PdaDerivationContext = {
+export type ResolvePDAAddressContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
@@ -31,7 +28,7 @@ type PdaDerivationContext = {
     root: RootNode;
 };
 
-export async function derivePDA({
+export async function resolvePDAAddress({
     root,
     ixNode,
     ixAccountNode,
@@ -40,7 +37,7 @@ export async function derivePDA({
     pdaValueNode,
     resolutionPath,
     resolversInput,
-}: PdaDerivationContext): Promise<ProgramDerivedAddress | null> {
+}: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
     }
@@ -182,98 +179,4 @@ function resolveConstantPdaSeed({
     return visitOrElse(seedNode.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
     });
-}
-
-/**
- * Derives a PDA from a standalone `PdaNode` and user-supplied seed values,
- * without requiring an instruction context.
- */
-export async function deriveStandalonePDA(
-    root: RootNode,
-    pdaNode: PdaNode,
-    programAddress: Address,
-    seedInputs: Record<string, unknown> = {},
-): Promise<ProgramDerivedAddress> {
-    const seedValues = await Promise.all(
-        pdaNode.seeds.map(async (seedNode): Promise<ReadonlyUint8Array> => {
-            if (seedNode.kind === 'constantPdaSeedNode') {
-                return await resolveStandaloneConstantSeed(root, programAddress, seedNode);
-            }
-            if (seedNode.kind === 'variablePdaSeedNode') {
-                return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
-            }
-            throw new AccountError(
-                `PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as { kind?: string }).kind}`,
-            );
-        }),
-    );
-
-    return await getProgramDerivedAddress({ programAddress, seeds: seedValues });
-}
-
-function resolveStandaloneConstantSeed(
-    root: RootNode,
-    programAddress: Address,
-    seedNode: RegisteredPdaSeedNode,
-): Promise<ReadonlyUint8Array> {
-    if (!isNode(seedNode, 'constantPdaSeedNode')) {
-        throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
-    }
-    const visitor = createPdaSeedValueVisitor({
-        // Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue,
-        // none of which reference instruction arguments or accounts — so a
-        // minimal stub satisfies the context requirement.
-        ixNode: {
-            accounts: [],
-            arguments: [],
-            kind: 'instructionNode',
-            name: '__standalone__',
-        } as unknown as import('codama').InstructionNode,
-        programId: programAddress,
-        resolutionPath: undefined,
-        resolversInput: undefined,
-        root,
-    });
-    return visitOrElse(seedNode.value, visitor, node => {
-        throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
-    });
-}
-
-function resolveStandaloneVariableSeed(
-    root: RootNode,
-    seedNode: VariablePdaSeedNode,
-    seedInputs: Record<string, unknown>,
-): Promise<ReadonlyUint8Array> {
-    const input = seedInputs[seedNode.name];
-    const typeNode = seedNode.type;
-
-    // remainderOptionTypeNode seeds are optional — null means zero bytes.
-    if (input === undefined || input === null) {
-        if (isNode(typeNode, 'remainderOptionTypeNode')) {
-            return Promise.resolve(new Uint8Array(0));
-        }
-        throw new AccountError(`Missing seed value for variable PDA seed: ${seedNode.name}`);
-    }
-
-    // For simple string seeds encode directly with UTF-8 (no length prefix)
-    if (isNode(typeNode, 'stringTypeNode')) {
-        if (typeof input !== 'string') {
-            throw new AccountError(`Expected string for PDA seed "${seedNode.name}", got ${typeof input}`);
-        }
-        return Promise.resolve(getUtf8Encoder().encode(input));
-    }
-
-    // For all other types use the Codama codec infrastructure.
-    // We create a synthetic instructionArgumentNode so getNodeCodec can resolve
-    // the type.  The seed's declared type is used directly (no size-prefix wrapper).
-    const syntheticArgNode = {
-        docs: [] as string[],
-        kind: 'instructionArgumentNode' as const,
-        name: seedNode.name,
-        type: typeNode,
-    };
-    const codec = getNodeCodec([root, root.program, syntheticArgNode]);
-    const transformer = createInputValueTransformer(typeNode, root, { bytesEncoding: 'base16' });
-    const transformedInput = transformer(input);
-    return Promise.resolve(codec.encode(transformedInput));
 }

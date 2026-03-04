@@ -3,7 +3,7 @@ import { AccountRole } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { resolveAccountMeta } from '../../../src/features/instruction-encoding/accounts/resolve-account-meta';
+import { createAccountMeta } from '../../../src/features/instruction-encoding/accounts/create-account-meta';
 import { loadRoot } from '../../test-utils';
 
 const ADDR_1 = address('11111111111111111111111111111111');
@@ -11,14 +11,14 @@ const ADDR_2 = address('22222222222222222222222222222222222222222222');
 const ADDR_3 = address('33333333333333333333333333333333333333333333');
 const MULTISIG_ADDR = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 
-describe('resolveAccountMeta: remaining accounts', () => {
+describe('createAccountMeta: remaining accounts', () => {
     test('should append remaining accounts from argumentsInput', async () => {
         // initializeMultisig has remainingAccounts: [{ value: argumentValueNode("signers") }]
         // It has 2 regular accounts: multisig (user-provided) + rent (default: SysvarRent)
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'initializeMultisig');
 
-        const result = await resolveAccountMeta(
+        const result = await createAccountMeta(
             root,
             ix,
             { m: 2, signers: [ADDR_1, ADDR_2, ADDR_3] },
@@ -39,7 +39,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'transfer');
 
-        const result = await resolveAccountMeta(
+        const result = await createAccountMeta(
             root,
             ix,
             { amount: 100, multiSigners: [ADDR_1, ADDR_2] },
@@ -58,7 +58,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'transfer');
 
-        const result = await resolveAccountMeta(
+        const result = await createAccountMeta(
             root,
             ix,
             { amount: 100 },
@@ -73,7 +73,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'initializeMultisig');
 
-        const result = await resolveAccountMeta(root, ix, { m: 1, signers: [] }, { multisig: MULTISIG_ADDR });
+        const result = await createAccountMeta(root, ix, { m: 1, signers: [] }, { multisig: MULTISIG_ADDR });
 
         // 2 regular accounts (multisig + rent), no remaining
         expect(result).toHaveLength(2);
@@ -84,7 +84,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'initializeMint');
 
-        const result = await resolveAccountMeta(
+        const result = await createAccountMeta(
             root,
             ix,
             { decimals: 9, freezeAuthority: null, mintAuthority: ADDR_1 },
@@ -100,7 +100,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const ix = getInstruction(root, 'initializeMultisig');
 
         await expect(
-            resolveAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
+            createAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
         ).rejects.toThrow('Remaining account argument "signers" must be an array of addresses');
     });
 
@@ -117,7 +117,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
             remainingAccounts: [modifiedRemainingAccount],
         });
 
-        await expect(resolveAccountMeta(root, modifiedIx, { m: 2 }, { multisig: MULTISIG_ADDR })).rejects.toThrow(
+        await expect(createAccountMeta(root, modifiedIx, { m: 2 }, { multisig: MULTISIG_ADDR })).rejects.toThrow(
             'Unsupported remaining accounts value kind: "resolverValueNode"',
         );
     });
@@ -127,7 +127,7 @@ describe('resolveAccountMeta: remaining accounts', () => {
         const ix = getInstruction(root, 'initializeMultisig');
 
         await expect(
-            resolveAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
+            createAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
         ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
     });
 });

@@ -1,10 +1,10 @@
 import type { Visitor } from 'codama';
 import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValueNode, RootNode } from 'codama';
 
-import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
+import { resolveAccountAddress } from '../resolvers/resolve-account-address';
 
 type ConditionNodeValueVisitorContext = {
     accountsInput: AccountsInput | undefined;

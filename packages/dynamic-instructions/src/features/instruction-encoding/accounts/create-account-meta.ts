@@ -3,6 +3,7 @@ import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
+import { resolveAccountAddress } from '../../../entities/resolvers/resolve-account-address';
 import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type {
@@ -12,7 +13,6 @@ import type {
     ResolutionPath,
     ResolversInput,
 } from '../../../shared/types';
-import { resolveAccountAddress } from './resolve-account-address';
 
 type ResolvedAccount = {
     address: Address | null;
@@ -23,11 +23,11 @@ type ResolvedAccount = {
 type ResolvedAccountWithAddress = ResolvedAccount & { address: Address };
 
 /**
- * Resolves the AccountMeta for each account in the instruction by evaluating their default values.
+ * Resolves account addresses and creates AccountMeta for each account in the instruction by evaluating their default values.
  * Handles optional accounts based on the instruction's optionalAccountStrategy.
  * Throws errors if required accounts are missing or cannot be resolved.
  */
-export async function resolveAccountMeta(
+export async function createAccountMeta(
     root: RootNode,
     ixNode: InstructionNode,
     argumentsInput: ArgumentsInput = {},
