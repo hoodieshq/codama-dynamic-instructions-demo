@@ -35,6 +35,7 @@ interface VariantNode {
 interface FieldNode {
     name: string;
     type: TypeNode;
+    defaultValue?: DefaultValueNode;
     defaultValueStrategy?: string;
 }
 
@@ -47,6 +48,7 @@ interface AccountNode {
 
 interface DefaultValueNode {
     kind: string;
+    name?: string;
     pda?: PdaNodeLike;
     seeds?: PdaSeedValueNodeLike[];
     [key: string]: unknown;
@@ -163,12 +165,18 @@ import type { InstructionNode, RootNode } from 'codama';
 import type { ${addressImports} } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 
+export type ResolverFn<
+    TArgumentsInput = Record<string, unknown>,
+    TAccountsInput = Record<string, unknown>
+> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
+
 /**
  * Method builder interface.
  */
-export type MethodBuilder<TAccounts, TSigners extends string[]> = {
-    accounts(accounts: TAccounts): MethodBuilder<TAccounts, TSigners>;
-    signers(signers: TSigners): MethodBuilder<TAccounts, TSigners>;
+export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Record<string, never>> = {
+    accounts(accounts: TAccounts): MethodBuilder<TAccounts, TSigners, TResolvers>;
+    resolvers(resolvers: Partial<TResolvers>): MethodBuilder<TAccounts, TSigners, TResolvers>;
+    signers(signers: TSigners): MethodBuilder<TAccounts, TSigners, TResolvers>;
     instruction(): Promise<Instruction>;
 };
 
@@ -227,12 +235,27 @@ export type MethodBuilder<TAccounts, TSigners extends string[]> = {
             output += `export type ${typeName}Signers = (${eitherSignerAccounts.join(' | ')})[];\n\n`;
         }
 
+        // Collect resolver names for this instruction
+        const resolverNames = collectResolverNames(ix);
+        let resolversRef = '';
+        if (resolverNames.size > 0) {
+            const resolversTypeName = `${typeName}Resolvers`;
+            output += `export type ${resolversTypeName} = {\n`;
+            for (const name of resolverNames) {
+                output += `    ${name}: ResolverFn<${argsRef === 'void' ? 'Record<string, unknown>' : argsRef}, ${accountsInterfaceName}>;\n`;
+            }
+            output += '};\n\n';
+            resolversRef = resolversTypeName;
+        }
+
         // Generate method type
         const hasRequiredArgs = args.some(arg => arg.type.kind !== 'optionTypeNode');
         const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
         const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
         const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;
-        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}, ${eitherSignerAccounts.length > 0 ? `${typeName}Signers` : 'string[]'}>`;
+        const signersGeneric = eitherSignerAccounts.length > 0 ? `${typeName}Signers` : 'string[]';
+        const resolversGeneric = resolversRef ? `, ${resolversRef}` : '';
+        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}, ${signersGeneric}${resolversGeneric}>`;
         output += `export type ${typeName}Method = ${methodSignature};\n\n`;
     }
 
@@ -396,6 +419,33 @@ function collectPdaNodesFromIdl(idl: IdlRoot): Map<string, PdaNodeLike> {
     }
 
     return pdas;
+}
+
+/**
+ * Collects all unique resolverValueNode names from an instruction's accounts and arguments.
+ */
+function collectResolverNames(ix: InstructionNode): Set<string> {
+    const names = new Set<string>();
+
+    function extractResolverNodeName(node: DefaultValueNode | undefined): void {
+        if (!node) return;
+        if (node.kind === 'resolverValueNode' && node.name) {
+            names.add(node.name);
+        } else if (node.kind === 'conditionalValueNode') {
+            extractResolverNodeName(node.condition as DefaultValueNode);
+            extractResolverNodeName(node.ifTrue as DefaultValueNode | undefined);
+            extractResolverNodeName(node.ifFalse as DefaultValueNode | undefined);
+        }
+    }
+
+    for (const acc of ix.accounts) {
+        extractResolverNodeName(acc.defaultValue);
+    }
+    for (const arg of ix.arguments) {
+        extractResolverNodeName(arg.defaultValue);
+    }
+
+    return names;
 }
 
 function toPascalCase(str: string): string {

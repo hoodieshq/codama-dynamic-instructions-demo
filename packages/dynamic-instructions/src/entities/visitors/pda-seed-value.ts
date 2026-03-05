@@ -24,7 +24,7 @@ import { resolveAccountAddress } from '../../features/instruction-encoding/accou
 import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
 import { createInputValueTransformer } from './input-value-transformer';
 
@@ -34,6 +34,7 @@ type PdaSeedValueVisitorContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
     seedTypeNode?: TypeNode;
 };
@@ -63,7 +64,7 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode } = ctx;
+    const { root, ixNode, programId, seedTypeNode, resolversInput } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
     const resolutionPath = ctx.resolutionPath ?? [];
@@ -90,6 +91,7 @@ export function createPdaSeedValueVisitor(
                 ixAccountNode: referencedIxAccountNode,
                 ixNode,
                 resolutionPath: [...resolutionPath, node.name],
+                resolversInput,
                 root,
             });
 

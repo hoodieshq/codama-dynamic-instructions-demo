@@ -5,7 +5,13 @@ import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
 import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
-import type { AccountsInput, ArgumentsInput, EitherSigners, ResolutionPath } from '../../../shared/types';
+import type {
+    AccountsInput,
+    ArgumentsInput,
+    EitherSigners,
+    ResolutionPath,
+    ResolversInput,
+} from '../../../shared/types';
 import { resolveAccountAddress } from './resolve-account-address';
 
 type ResolvedAccount = {
@@ -27,6 +33,7 @@ export async function resolveAccountMeta(
     argumentsInput: ArgumentsInput = {},
     accountsInput: AccountsInput = {},
     signers: EitherSigners = [],
+    resolversInput: ResolversInput = {},
 ): Promise<AccountMeta[]> {
     const resolvedAccounts = await Promise.all(
         ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
@@ -48,6 +55,7 @@ export async function resolveAccountMeta(
                     ixAccountNode,
                     ixNode,
                     resolutionPath: initialResolutionPath,
+                    resolversInput,
                     root,
                 });
             }

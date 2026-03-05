@@ -79,7 +79,8 @@ client.methods
     .myInstruction(args) // provide instruction arguments
     .accounts(accounts) // provide account addresses
     .signers(['accountName']) // optionally mark ambiguous accounts as signers
-    .instruction(); // → Promise<Instruction>
+    .resolvers({ customResolver: async (argumentsInput, accountsInput) => {} }) // optionally provide custom resolver according on resolverValueNode in IDL
+    .instruction(); // Promise<Instruction>
 ```
 
 ### `AddressInput`
@@ -115,13 +116,13 @@ You can always override auto-derived accounts by providing an explicit address.
 
 ### Optional accounts
 
-Pass `null` for optional accounts:
+Pass `null` for optional accounts to be resolved according on `optionalAccountStrategy` (either will be `omitted` or replaced on `programId`):
 
 ```typescript
 .accounts({
     authority,
     program: programAddress,
-    programData: null,  // optional — resolved automatically
+    programData: null,  // optional - resolved via optionalAccountStrategy
 })
 ```
 
@@ -132,6 +133,21 @@ When an account has `isSigner: 'either'` in the IDL, use `.signers()` to explici
 ```typescript
 .accounts({ owner: ownerAddress })
 .signers(['owner'])
+```
+
+### Custom resolvers
+
+When an account or argument is `resolverValueNode` in the IDL, provide a custom resolver function `.resolvers({ [resolverName]: async fn })` to help with account/arguments resolution:
+
+```typescript
+client.methods
+    .create({ tokenStandard: 'NonFungible' })
+    .accounts({ owner: ownerAddress })
+    .resolvers({
+        resolveIsNonFungible: async (argumentsInput, accountsInput) => {
+            return argumentsInput.tokenStandard === 'NonFungible';
+        },
+    });
 ```
 
 ## PDA Derivation
@@ -185,7 +201,7 @@ const tx = toVersionedTransaction(instruction, {
 
 ## Error Handling
 
-All errors extend `CodamaError`:
+All errors extend `DynamicInstructionsError`:
 
 | Error             | When                                                                |
 | ----------------- | ------------------------------------------------------------------- |
@@ -194,7 +210,7 @@ All errors extend `CodamaError`:
 | `ArgumentError`   | Argument encoding failure                                           |
 
 ```typescript
-import { CodamaError, AccountError } from '@hoodieshq/dynamic-instructions';
+import { DynamicInstructionsError, AccountError } from '@hoodieshq/dynamic-instructions';
 
 try {
     const ix = await client.methods.transferSol({ amount: 100 }).accounts({}).instruction();

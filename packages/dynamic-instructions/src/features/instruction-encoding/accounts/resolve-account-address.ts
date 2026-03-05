@@ -5,8 +5,7 @@ import { visitOrElse } from 'codama';
 import { createAccountDefaultValueVisitor } from '../../../entities/visitors/account-default-value';
 import { type AddressInput, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
-import type { ResolutionPath } from '../../../shared/types';
-import type { AccountsInput, ArgumentsInput } from '../../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../../shared/types';
 
 type ResolveAccountAddressContext = {
     accountAddressInput?: AddressInput | null | undefined;
@@ -15,6 +14,7 @@ type ResolveAccountAddressContext = {
     ixAccountNode: InstructionAccountNode;
     ixNode: InstructionNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 
@@ -29,22 +29,12 @@ export async function resolveAccountAddress({
     argumentsInput,
     accountsInput,
     resolutionPath,
+    resolversInput,
     accountAddressInput,
 }: ResolveAccountAddressContext): Promise<Address | null> {
     // Optional accounts explicitly provided as null should be resolved based on optionalAccountStrategy
-    // With "programId" strategy, optional accounts are resolved to programId
-    // With "omitted" strategy, optional accounts must be excluded from accounts list
     if (accountAddressInput === null && ixAccountNode.isOptional) {
-        switch (ixNode.optionalAccountStrategy) {
-            case 'omitted':
-                return null;
-            case 'programId':
-                return toAddress(root.program.publicKey);
-            default:
-                throw new AccountError(
-                    `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
-                );
-        }
+        return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
     }
 
     if (ixAccountNode.defaultValue) {
@@ -55,6 +45,7 @@ export async function resolveAccountAddress({
             ixAccountNode,
             ixNode,
             resolutionPath,
+            resolversInput,
             root,
         });
 
@@ -64,10 +55,43 @@ export async function resolveAccountAddress({
             );
         });
 
+        // conditionalValueNode with ifFalse branch returns null.
+        // This should be resolved via optionalAccountStrategy for optional accounts.
+        if (addressValue === null && ixAccountNode.isOptional) {
+            return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
+        }
+
         return addressValue;
     }
 
     throw new AccountError(
         `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value or was not provided`,
     );
+}
+
+/**
+ * Optional account resolution via instruction strategy.
+ * With "programId" strategy, optional accounts are resolved to programId
+ * With "omitted" strategy, optional accounts must be excluded from accounts list
+ */
+function resolveOptionalAccountWithStrategy(
+    root: RootNode,
+    ixNode: InstructionNode,
+    ixAccountNode: InstructionAccountNode,
+) {
+    if (!ixAccountNode.isOptional) {
+        throw new AccountError(
+            `Account ${ixAccountNode.name} of ${ixNode.name} instruction is not optional, cannot apply optional account strategy`,
+        );
+    }
+    switch (ixNode.optionalAccountStrategy) {
+        case 'omitted':
+            return null;
+        case 'programId':
+            return toAddress(root.program.publicKey);
+        default:
+            throw new AccountError(
+                `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
+            );
+    }
 }

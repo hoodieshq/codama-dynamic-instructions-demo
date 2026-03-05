@@ -3,7 +3,7 @@ export type { ProgramDerivedAddress } from '@solana/addresses';
 export { isPublicKeyLike, toAddress } from './shared/address';
 export type { AddressInput, PublicKeyLike } from './shared/address';
 
-export { CodamaError, ValidationError, AccountError, ArgumentError } from './shared/errors';
+export { DynamicInstructionsError, ValidationError, AccountError, ArgumentError } from './shared/errors';
 
 export type { AccountsInput, ArgumentsInput } from './shared/types';
 

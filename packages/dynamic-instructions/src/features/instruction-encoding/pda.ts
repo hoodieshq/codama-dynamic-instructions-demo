@@ -18,8 +18,7 @@ import { isNode, visitOrElse } from 'codama';
 import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
 import { createPdaSeedValueVisitor } from '../../entities/visitors/pda-seed-value';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath } from '../../shared/types';
-import { invariant } from '../../shared/util';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 
 type PdaDerivationContext = {
     accountsInput: AccountsInput | undefined;
@@ -28,6 +27,7 @@ type PdaDerivationContext = {
     ixNode: InstructionNode;
     pdaValueNode: PdaValueNode;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
 };
 
@@ -39,6 +39,7 @@ export async function derivePDA({
     accountsInput = {},
     pdaValueNode,
     resolutionPath,
+    resolversInput,
 }: PdaDerivationContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
@@ -54,6 +55,7 @@ export async function derivePDA({
                     ixNode,
                     programId,
                     resolutionPath,
+                    resolversInput,
                     root,
                     seedNode,
                 });
@@ -73,6 +75,7 @@ export async function derivePDA({
                     ixNode,
                     programId,
                     resolutionPath,
+                    resolversInput,
                     root,
                     seedNode,
                     variableSeedValueNode,
@@ -111,6 +114,7 @@ type ResolvePdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
     seedNode: VariablePdaSeedNode;
     variableSeedValueNode: PdaSeedValueNode;
@@ -121,14 +125,17 @@ function resolveVariablePdaSeed({
     ixNode,
     programId,
     resolutionPath,
+    resolversInput,
     root,
     seedNode,
     variableSeedValueNode,
 }: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
-    invariant(
-        seedNode.name === variableSeedValueNode.name,
-        `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`,
-    );
+    if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
+        throw new AccountError(`Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`);
+    }
+    if (seedNode.name !== variableSeedValueNode.name) {
+        throw new AccountError(`Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`);
+    }
 
     const visitor = createPdaSeedValueVisitor({
         accountsInput,
@@ -136,6 +143,7 @@ function resolveVariablePdaSeed({
         ixNode,
         programId,
         resolutionPath: resolutionPath ?? [],
+        resolversInput,
         root,
         seedTypeNode: seedNode.type,
     });
@@ -149,6 +157,7 @@ type ResolveConstantPdaSeedContext = {
     ixNode: InstructionNode;
     programId: Address;
     resolutionPath: ResolutionPath | undefined;
+    resolversInput: ResolversInput | undefined;
     root: RootNode;
     seedNode: RegisteredPdaSeedNode;
 };
@@ -156,6 +165,7 @@ function resolveConstantPdaSeed({
     ixNode,
     programId,
     resolutionPath,
+    resolversInput,
     root,
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
@@ -166,6 +176,7 @@ function resolveConstantPdaSeed({
         ixNode,
         programId,
         resolutionPath,
+        resolversInput,
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
@@ -220,6 +231,7 @@ function resolveStandaloneConstantSeed(
         } as unknown as import('codama').InstructionNode,
         programId: programAddress,
         resolutionPath: undefined,
+        resolversInput: undefined,
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {

@@ -1,7 +1,6 @@
-import { getNodeCodec } from '@codama/dynamic-codecs';
-import type { ReadonlyUint8Array } from '@solana/codecs';
+import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
-import { visitOrElse } from 'codama';
+import { isNode, visitOrElse } from 'codama';
 import type { Failure, StructError } from 'superstruct';
 import { assert } from 'superstruct';
 
@@ -9,8 +8,36 @@ import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
 import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
-import type { ArgumentsInput } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 import { createIxArgumentsValidator } from './validators';
+
+/**
+ * Resolves argument defaults from user-provided resolvers.
+ * For each argument that has a resolverValueNode and is not provided by argumentsInput,
+ * try to invoke the corresponding resolver function and fill ArgumentsInput with the resolved values.
+ */
+export async function resolveArgumentDefaultsFromCustomResolvers(
+    ixNode: InstructionNode,
+    argumentsInput: ArgumentsInput = {},
+    accountsInput: AccountsInput = {},
+    resolversInput: ResolversInput = {},
+): Promise<ArgumentsInput> {
+    const resolved = { ...argumentsInput };
+
+    const allArguments = [...ixNode.arguments, ...(ixNode.extraArguments ?? [])];
+    for (const argumentNode of allArguments) {
+        if (resolved[argumentNode.name] !== undefined) continue;
+        if (isIxArgumentOmitted(argumentNode)) continue;
+        if (!isNode(argumentNode.defaultValue, 'resolverValueNode')) continue;
+
+        const resolverFn = resolversInput[argumentNode.defaultValue.name];
+        if (!resolverFn) continue;
+
+        resolved[argumentNode.name] = await resolverFn(argumentsInput, accountsInput);
+    }
+
+    return resolved;
+}
 
 export function encodeInstructionArguments(
     root: RootNode,

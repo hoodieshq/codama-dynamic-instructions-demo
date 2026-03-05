@@ -1,25 +1,25 @@
-export class CodamaError extends Error {
+export class DynamicInstructionsError extends Error {
     constructor(message: string) {
         super(message);
-        this.name = 'CodamaError';
+        this.name = 'DynamicInstructionsError';
     }
 }
 
-export class ValidationError extends CodamaError {
+export class ValidationError extends DynamicInstructionsError {
     constructor(message: string) {
         super(message);
         this.name = 'ValidationError';
     }
 }
 
-export class AccountError extends CodamaError {
+export class AccountError extends DynamicInstructionsError {
     constructor(message: string) {
         super(message);
         this.name = 'AccountError';
     }
 }
 
-export class ArgumentError extends CodamaError {
+export class ArgumentError extends DynamicInstructionsError {
     constructor(message: string) {
         super(message);
         this.name = 'ArgumentError';

@@ -1,9 +1,13 @@
 import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners } from '../../shared/types';
+import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners, ResolversInput } from '../../shared/types';
 import { resolveAccountMeta, validateAccountsInput } from './accounts';
-import { encodeInstructionArguments, validateArgumentsInput } from './arguments';
+import {
+    encodeInstructionArguments,
+    resolveArgumentDefaultsFromCustomResolvers,
+    validateArgumentsInput,
+} from './arguments';
 
 /**
  * @solana/kit
@@ -13,13 +17,14 @@ import { encodeInstructionArguments, validateArgumentsInput } from './arguments'
 export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildIxFn {
     const programAddress = address(root.program.publicKey);
 
-    return async (argumentsInput, accountsInput, signers) => {
+    return async (argumentsInput, accountsInput, signers, resolversInput) => {
         const { argumentsData, accountsData } = await resolveInstructionData(
             root,
             ixNode,
             argumentsInput,
             accountsInput,
             signers,
+            resolversInput,
         );
 
         return {
@@ -36,6 +41,7 @@ export async function resolveInstructionData(
     argumentsInput?: ArgumentsInput,
     accountsInput?: AccountsInput,
     signers?: EitherSigners,
+    resolversInput?: ResolversInput,
 ) {
     // Validate arguments according codama schema
     validateArgumentsInput(root, instructionNode, argumentsInput);
@@ -44,10 +50,25 @@ export async function resolveInstructionData(
     // Validate provided pubkey addresses
     validateAccountsInput(instructionNode, accountsInput);
 
-    // Encodes arguments into buffer
-    const argumentsData = encodeInstructionArguments(root, instructionNode, argumentsInput);
+    // Resolve arguments which depends on custom resolvers
+    const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
+        instructionNode,
+        argumentsInput,
+        accountsInput,
+        resolversInput,
+    );
 
-    const accountsData = await resolveAccountMeta(root, instructionNode, argumentsInput, accountsInput, signers);
+    // Encodes arguments into buffer
+    const argumentsData = encodeInstructionArguments(root, instructionNode, enrichedArgumentsInput);
+
+    const accountsData = await resolveAccountMeta(
+        root,
+        instructionNode,
+        enrichedArgumentsInput,
+        accountsInput,
+        signers,
+        resolversInput,
+    );
 
     return { accountsData, argumentsData };
 }
