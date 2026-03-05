@@ -20,12 +20,12 @@ import type {
 import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { resolveAccountAddress } from '../../features/instruction-encoding/accounts/resolve-account-address';
 import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
+import { resolveAccountAddress } from '../resolvers/resolve-account-address';
 import { createInputValueTransformer } from './input-value-transformer';
 
 type PdaSeedValueVisitorContext = {

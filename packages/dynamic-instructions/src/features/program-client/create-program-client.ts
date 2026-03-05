@@ -6,8 +6,8 @@ import { createFromJson } from 'codama';
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
-import { deriveStandalonePDA } from '../instruction-encoding/pda';
 import { collectPdaNodes } from './collect-pdas';
+import { deriveStandalonePDA } from './derive-standalone-pda';
 import { MethodsBuilder } from './methods-builder';
 
 export type IdlInput = object | string;

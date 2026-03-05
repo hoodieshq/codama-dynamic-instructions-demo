@@ -2,10 +2,10 @@ import type { Address } from '@solana/addresses';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { createAccountDefaultValueVisitor } from '../../../entities/visitors/account-default-value';
-import { type AddressInput, toAddress } from '../../../shared/address';
-import { AccountError } from '../../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../../shared/types';
+import { type AddressInput, toAddress } from '../../shared/address';
+import { AccountError } from '../../shared/errors';
+import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
+import { createAccountDefaultValueVisitor } from '../visitors/account-default-value';
 
 type ResolveAccountAddressContext = {
     accountAddressInput?: AddressInput | null | undefined;

@@ -18,12 +18,12 @@ import type {
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { derivePDA } from '../../features/instruction-encoding/pda';
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
+import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
 import { createConditionNodeValueVisitor } from './condition-node-value';
 import { createValueNodeVisitor } from './value-node-value';
 
@@ -173,7 +173,7 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitPdaValue: async (node: PdaValueNode) => {
-            const pda = await derivePDA({
+            const pda = await resolvePDAAddress({
                 accountsInput,
                 argumentsInput,
                 ixAccountNode,
@@ -230,7 +230,7 @@ type ConditionalValueNodeConditionContext = {
  * Helper function to resolve ConditionalValueNode.
  * Evaluates the condition and returns ifTrue or ifFalse branch.
  */
-export async function resolveConditionalValueNodeCondition({
+async function resolveConditionalValueNodeCondition({
     root,
     ixNode,
     ixAccountNode,

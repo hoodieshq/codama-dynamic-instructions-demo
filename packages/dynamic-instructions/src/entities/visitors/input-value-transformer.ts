@@ -53,7 +53,7 @@ export type InputTransformer = (input: unknown) => unknown;
  * @param options - Configuration options (encoding preference)
  * @returns Visitor that transforms type nodes to input transformers
  */
-export function getInputValueTransformerVisitor(
+export function createInputValueTransformerVisitor(
     root: RootNode,
     options: InputValueTransformerOptions = {},
 ): Visitor<InputTransformer, TransformableTypeNodeKind> {
@@ -378,7 +378,7 @@ export function createInputValueTransformer(
     root: RootNode,
     options?: InputValueTransformerOptions,
 ): InputTransformer {
-    const visitor = getInputValueTransformerVisitor(root, options);
+    const visitor = createInputValueTransformerVisitor(root, options);
     return visitOrElse(typeNode, visitor, node => {
         throw new ArgumentError(`Unsupported type node for input transformation: ${node.kind}`);
     });
