@@ -1,2 +1,2 @@
-export * from './resolve-account-address';
-export * from './resolve-pda-address';
+export { resolveAccountAddress } from './resolve-account-address';
+export { resolvePDAAddress } from './resolve-pda-address';

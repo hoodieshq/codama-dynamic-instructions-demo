@@ -6,8 +6,7 @@ import { getUtf8Encoder } from '@solana/codecs';
 import type { PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
-import { createPdaSeedValueVisitor } from '../../entities/visitors/pda-seed-value';
+import { createInputValueTransformer, createPdaSeedValueVisitor } from '../../entities/visitors';
 import { AccountError } from '../../shared/errors';
 
 /**

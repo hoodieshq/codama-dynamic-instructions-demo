@@ -4,8 +4,7 @@ import { isNode, visitOrElse } from 'codama';
 import type { Failure, StructError } from 'superstruct';
 import { assert } from 'superstruct';
 
-import { createDefaultValueEncoderVisitor } from '../../entities/visitors';
-import { createInputValueTransformer } from '../../entities/visitors/input-value-transformer';
+import { createDefaultValueEncoderVisitor, createInputValueTransformer } from '../../entities/visitors';
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';

@@ -230,7 +230,7 @@ type ConditionalValueNodeConditionContext = {
  * Helper function to resolve ConditionalValueNode.
  * Evaluates the condition and returns ifTrue or ifFalse branch.
  */
-export async function resolveConditionalValueNodeCondition({
+async function resolveConditionalValueNodeCondition({
     root,
     ixNode,
     ixAccountNode,
