@@ -20,3 +20,10 @@ export function formatValueType(value: unknown): string {
     if (typeof value === 'object') return 'object';
     return typeof value;
 }
+
+/**
+ * Stringifies a value, converting BigInts to strings to avoid JSON.stringify errors.
+ */
+export function safeStringify(value: unknown): string {
+    return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
+}

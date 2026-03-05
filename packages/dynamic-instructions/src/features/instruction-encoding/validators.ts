@@ -24,7 +24,7 @@ import {
 } from 'superstruct';
 
 import { isPublicKeyLike } from '../../shared/address';
-import { formatValueType } from '../../shared/util';
+import { formatValueType, safeStringify } from '../../shared/util';
 
 type StructUnknown = Struct<unknown, unknown>;
 
@@ -398,11 +398,17 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
     if (!Array.isArray(value)) {
         return `Expected an array with unique items, received: ${formatValueType(value)}`;
     }
-    const uniqueItems = new Set(value);
-    return (
-        uniqueItems.size === value.length ||
-        `Expected all items to be unique, found ${value.length - uniqueItems.size} duplicate(s)`
-    );
+
+    const unique = new Map<string, number>();
+    for (let i = 0; i < value.length; i++) {
+        const key = safeStringify(value[i]);
+        const index = unique.get(key);
+        if (index !== undefined) {
+            return `Expected all items to be unique, found duplicate at indices ${index} and ${i}`;
+        }
+        unique.set(key, i);
+    }
+    return true;
 }) as StructUnknown;
 
 // Validates every keys of an object according to KeyValidator

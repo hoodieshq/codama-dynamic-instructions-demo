@@ -389,6 +389,11 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             const v = codamaTypeToTS(type.value, definedTypes);
             return `Record<string, ${v}>`;
         }
+        case 'setTypeNode': {
+            const itemType = codamaTypeToTS(type.item, definedTypes);
+            const needsParens = itemType.includes(' | ') || itemType.includes(' & ');
+            return needsParens ? `(${itemType})[]` : `${itemType}[]`;
+        }
         case 'definedTypeLinkNode': {
             if (!type.name) return 'unknown';
             const def = definedTypes.find(d => d.name === type.name);
