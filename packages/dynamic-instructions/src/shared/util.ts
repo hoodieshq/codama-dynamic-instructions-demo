@@ -22,8 +22,13 @@ export function formatValueType(value: unknown): string {
 }
 
 /**
- * Stringifies a value, converting BigInts to strings to avoid JSON.stringify errors.
+ * Serializes a value for use in error messages and diagnostic output.
+ * Converts BigInt to strings, always returns a string and never throws.
  */
 export function safeStringify(value: unknown): string {
-    return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
+    try {
+        return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
+    } catch {
+        return '"non-serializable"';
+    }
 }

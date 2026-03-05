@@ -1,5 +1,4 @@
-import type { ReadonlyUint8Array } from '@codama/dynamic-codecs';
-import { getBase16Codec, getBase58Codec, getBase64Codec, getUtf8Codec } from '@solana/codecs';
+import { getBase16Codec, getBase58Codec, getBase64Codec, getUtf8Codec, type ReadonlyUint8Array } from '@solana/codecs';
 import type { BytesEncoding } from 'codama';
 
 /**

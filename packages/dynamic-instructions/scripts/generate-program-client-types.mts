@@ -380,7 +380,8 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             const items = type.items.map(i => codamaTypeToTS(i, definedTypes));
             return `[${items.join(', ')}]`;
         }
-        case 'arrayTypeNode': {
+        case 'arrayTypeNode':
+        case 'setTypeNode': {
             const itemType = codamaTypeToTS(type.item, definedTypes);
             const needsParens = itemType.includes(' | ') || itemType.includes(' & ');
             return needsParens ? `(${itemType})[]` : `${itemType}[]`;
@@ -388,11 +389,6 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
         case 'mapTypeNode': {
             const v = codamaTypeToTS(type.value, definedTypes);
             return `Record<string, ${v}>`;
-        }
-        case 'setTypeNode': {
-            const itemType = codamaTypeToTS(type.item, definedTypes);
-            const needsParens = itemType.includes(' | ') || itemType.includes(' & ');
-            return needsParens ? `(${itemType})[]` : `${itemType}[]`;
         }
         case 'definedTypeLinkNode': {
             if (!type.name) return 'unknown';

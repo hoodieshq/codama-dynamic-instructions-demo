@@ -15,7 +15,7 @@ function decodeInstructionData(instructionName: string, data: ReadonlyUint8Array
     return codec.decode(new Uint8Array(data));
 }
 
-describe('Collection types: encoding and validation', () => {
+describe('Collection types: encoding and validation (set, map, tuple)', () => {
     let ctx: SvmTestContext;
     let signer: Address;
     const programClient = createTestProgramClient<CollectionTypesProgramClient>('collection-types-idl.json');
@@ -221,6 +221,19 @@ describe('Collection types: encoding and validation', () => {
                     .accounts({ signer })
                     .instruction(),
             ).rejects.toThrow(/Invalid argument "data"/);
+        });
+
+        test('should reject non-serializable input with a helpful validation error', async () => {
+            const invalidData: Record<string, unknown> = { a: 1n, b: {} };
+            invalidData.b = invalidData;
+
+            await expect(
+                programClient.methods
+                    // @ts-expect-error - testing circular reference input
+                    .storeSet({ data: [invalidData, invalidData] })
+                    .accounts({ signer })
+                    .instruction(),
+            ).rejects.toThrow(/Invalid argument "data", value: "non-serializable"/);
         });
     });
 });

@@ -8,6 +8,7 @@ import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../../entities/visitors';
 import { AccountError } from '../../shared/errors';
+import { formatValueType } from '../../shared/util';
 
 /**
  * Derives a PDA from a standalone `PdaNode` and user-supplied seed values,
@@ -83,7 +84,7 @@ function resolveStandaloneVariableSeed(
     // For simple string seeds encode directly with UTF-8 (no length prefix)
     if (isNode(typeNode, 'stringTypeNode')) {
         if (typeof input !== 'string') {
-            throw new AccountError(`Expected string for PDA seed "${seedNode.name}", got ${typeof input}`);
+            throw new AccountError(`Expected string for PDA seed "${seedNode.name}", got ${formatValueType(input)}`);
         }
         return Promise.resolve(getUtf8Encoder().encode(input));
     }

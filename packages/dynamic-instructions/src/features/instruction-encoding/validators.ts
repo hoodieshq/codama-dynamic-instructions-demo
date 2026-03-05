@@ -401,7 +401,12 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
 
     const unique = new Map<string, number>();
     for (let i = 0; i < value.length; i++) {
-        const key = safeStringify(value[i]);
+        let key: string;
+        try {
+            key = safeStringify(value[i]);
+        } catch {
+            return `Cannot verify uniqueness: item at index ${i} is not serializable`;
+        }
         const index = unique.get(key);
         if (index !== undefined) {
             return `Expected all items to be unique, found duplicate at indices ${index} and ${i}`;

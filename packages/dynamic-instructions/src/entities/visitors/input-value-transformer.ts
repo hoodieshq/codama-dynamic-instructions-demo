@@ -3,7 +3,7 @@ import { isNode, pascalCase, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
 import { ArgumentError } from '../../shared/errors';
-import { isObjectRecord } from '../../shared/util';
+import { formatValueType, isObjectRecord, safeStringify } from '../../shared/util';
 
 /**
  * Type nodes that the input value transformer can process.
@@ -73,8 +73,8 @@ export function createInputValueTransformerVisitor(
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
                     throw new ArgumentError(
-                        `Expected an array for arrayTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
+                        `Expected an array for arrayTypeNode, but received: ${formatValueType(input)}. ` +
+                            `Received value: ${safeStringify(input)}`,
                     );
                 }
                 return input.map(itemTransform);
@@ -95,8 +95,8 @@ export function createInputValueTransformerVisitor(
                     return [bytesEncoding, uint8ArrayToEncodedString(new Uint8Array(input), bytesEncoding)];
                 }
                 throw new ArgumentError(
-                    `Expected bytes input (Uint8Array or number[]) for bytesTypeNode, but received: ${typeof input}. ` +
-                        `Received value: ${JSON.stringify(input)}`,
+                    `Expected bytes input (Uint8Array or number[]) for bytesTypeNode, but received: ${formatValueType(input)}. ` +
+                        `Received value: ${safeStringify(input)}`,
                 );
             };
         },
@@ -151,7 +151,7 @@ export function createInputValueTransformerVisitor(
                     const transformedFields = structTransform(rest);
                     if (!isObjectRecord(transformedFields)) {
                         throw new ArgumentError(
-                            `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${typeof transformedFields}`,
+                            `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${formatValueType(transformedFields)}`,
                         );
                     }
                     return { ...kindObj, ...transformedFields };
@@ -196,8 +196,8 @@ export function createInputValueTransformerVisitor(
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
                     throw new ArgumentError(
-                        `Expected a plain object for mapTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
+                        `Expected a plain object for mapTypeNode, but received: ${formatValueType(input)}. ` +
+                            `Received value: ${safeStringify(input)}`,
                     );
                 }
                 const result: Record<string, unknown> = {};
@@ -263,8 +263,8 @@ export function createInputValueTransformerVisitor(
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
                     throw new ArgumentError(
-                        `Expected an array for setTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
+                        `Expected an array for setTypeNode, but received: ${formatValueType(input)}. ` +
+                            `Received value: ${safeStringify(input)}`,
                     );
                 }
                 return input.map(itemTransform);
@@ -303,8 +303,8 @@ export function createInputValueTransformerVisitor(
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
                     throw new ArgumentError(
-                        `Expected a plain object for structTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
+                        `Expected a plain object for structTypeNode, but received: ${formatValueType(input)}. ` +
+                            `Received value: ${safeStringify(input)}`,
                     );
                 }
                 const result = { ...input } as Record<string, unknown>;
@@ -326,8 +326,8 @@ export function createInputValueTransformerVisitor(
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
                     throw new ArgumentError(
-                        `Expected an array for tupleTypeNode, but received: ${typeof input}. ` +
-                            `Received value: ${JSON.stringify(input)}`,
+                        `Expected an array for tupleTypeNode, but received: ${formatValueType(input)}. ` +
+                            `Received value: ${safeStringify(input)}`,
                     );
                 }
                 if (input.length !== itemTransforms.length) {
