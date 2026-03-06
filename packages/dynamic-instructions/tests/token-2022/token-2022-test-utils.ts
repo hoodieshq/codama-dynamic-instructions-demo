@@ -58,6 +58,81 @@ export async function createTokenAccount(
     ctx.sendInstructions([createAccountIx, initAccountIx], [payer, account]);
 }
 
+// Creates a mint with TransferFeeConfig extension.
+export async function createTransferFeeMint(
+    ctx: SvmTestContext,
+    payer: Address,
+    feeAuthority: Address,
+    withdrawAuthority: Address,
+    options: { maximumFee: bigint; transferFeeBasisPoints: number } = {
+        maximumFee: 1_000_000n,
+        transferFeeBasisPoints: 100,
+    },
+): Promise<Address> {
+    const { maximumFee, transferFeeBasisPoints } = options;
+    const mint = ctx.createAccount();
+    const size = getMintSize([
+        {
+            __kind: 'TransferFeeConfig',
+            newerTransferFee: { epoch: 0n, maximumFee, transferFeeBasisPoints },
+            olderTransferFee: { epoch: 0n, maximumFee: 0n, transferFeeBasisPoints: 0 },
+            transferFeeConfigAuthority: feeAuthority,
+            withdrawWithheldAuthority: withdrawAuthority,
+            withheldAmount: 0n,
+        },
+    ]);
+    const lamports = ctx.getMinimumBalanceForRentExemption(BigInt(size));
+
+    const createAccountIx = await systemClient.methods
+        .createAccount({ lamports, programAddress: ctx.TOKEN_2022_PROGRAM_ADDRESS, space: size })
+        .accounts({ newAccount: mint, payer })
+        .instruction();
+
+    const initFeeConfigIx = await token2022Client.methods
+        .initializeTransferFeeConfig({
+            maximumFee: maximumFee,
+            transferFeeBasisPoints: transferFeeBasisPoints,
+            transferFeeConfigAuthority: feeAuthority,
+            withdrawWithheldAuthority: withdrawAuthority,
+        })
+        .accounts({ mint })
+        .instruction();
+
+    const initMintIx = await token2022Client.methods
+        .initializeMint2({ decimals: 9, mintAuthority: payer })
+        .accounts({ mint })
+        .instruction();
+
+    ctx.sendInstructions([createAccountIx, initFeeConfigIx, initMintIx], [payer, mint]);
+    return mint;
+}
+
+// Creates a token account with given extensions.
+export async function createTokenAccountWithExtensions(
+    ctx: SvmTestContext,
+    payer: Address,
+    mint: Address,
+    owner: Address,
+    extensions: NonNullable<Parameters<typeof getTokenSize>[0]>,
+): Promise<Address> {
+    const account = ctx.createAccount();
+    const size = getTokenSize(extensions);
+    const lamports = ctx.getMinimumBalanceForRentExemption(BigInt(size));
+
+    const createAccountIx = await systemClient.methods
+        .createAccount({ lamports, programAddress: ctx.TOKEN_2022_PROGRAM_ADDRESS, space: size })
+        .accounts({ newAccount: account, payer })
+        .instruction();
+    const initAccountIx = await token2022Client.methods
+        .initializeAccount3({ owner })
+        .accounts({ account, mint })
+        .instruction();
+
+    ctx.sendInstructions([createAccountIx, initAccountIx], [payer, account]);
+
+    return account;
+}
+
 export async function mintTokens(
     ctx: SvmTestContext,
     payer: Address,
