@@ -8,6 +8,7 @@ import { createDefaultValueEncoderVisitor, createInputValueTransformer } from '.
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
+import { safeStringify } from '../../shared/util';
 import { createIxArgumentsValidator } from './validators';
 
 /**
@@ -139,16 +140,7 @@ function formatFailurePath(failure: Failure): string {
  */
 const MAX_VALUE_LENGTH = 120;
 function formatFailureValue(value: unknown): string {
-    let raw: string;
-    if (typeof value === 'object') {
-        try {
-            raw = JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
-        } catch {
-            return '[object]';
-        }
-    } else {
-        raw = String(value as unknown);
-    }
+    const raw = typeof value === 'object' ? safeStringify(value) : String(value as unknown);
     return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}…` : raw;
 }
 

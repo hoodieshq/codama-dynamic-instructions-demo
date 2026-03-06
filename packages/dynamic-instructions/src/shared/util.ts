@@ -20,3 +20,15 @@ export function formatValueType(value: unknown): string {
     if (typeof value === 'object') return 'object';
     return typeof value;
 }
+
+/**
+ * Serializes a value for use in error messages and diagnostic output.
+ * Converts BigInt to strings, always returns a string and never throws.
+ */
+export function safeStringify(value: unknown): string {
+    try {
+        return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
+    } catch {
+        return '"non-serializable"';
+    }
+}

@@ -380,7 +380,8 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             const items = type.items.map(i => codamaTypeToTS(i, definedTypes));
             return `[${items.join(', ')}]`;
         }
-        case 'arrayTypeNode': {
+        case 'arrayTypeNode':
+        case 'setTypeNode': {
             const itemType = codamaTypeToTS(type.item, definedTypes);
             const needsParens = itemType.includes(' | ') || itemType.includes(' & ');
             return needsParens ? `(${itemType})[]` : `${itemType}[]`;
