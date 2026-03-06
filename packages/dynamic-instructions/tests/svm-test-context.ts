@@ -57,6 +57,7 @@ export class SvmTestContext {
     readonly SYSVAR_RENT_ADDRESS = address(web3.SYSVAR_RENT_PUBKEY.toBase58());
     readonly SYSVAR_INSTRUCTIONS_ADDRESS = address(web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBase58());
     readonly BPF_LOADER_UPGRADEABLE = address('BPFLoaderUpgradeab1e11111111111111111111111');
+    readonly TOKEN_2022_NATIVE_MINT = address('9pan9bMn5HatX4EJdBwg9VgCa7Uz5HL8N1m5D3NdXejP');
 
     constructor(config: SvmTestContextConfig = {}) {
         let svm = new LiteSVM();
