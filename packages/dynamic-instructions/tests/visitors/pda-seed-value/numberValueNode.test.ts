@@ -9,7 +9,6 @@ import { AccountError } from '../../../src/shared/errors';
 const DEFAULT_PUBLIC_KEY = '11111111111111111111111111111111';
 
 describe('pda-seed-value: visitNumberValue', () => {
-
     const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: DEFAULT_PUBLIC_KEY }));
     const stubIxNode = {
         accounts: [],
