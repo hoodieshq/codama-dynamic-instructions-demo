@@ -401,7 +401,7 @@ function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): 
 // Validates zeroable option: null is valid, otherwise validates the inner validator
 function ZeroableOptionValidator(name: string, innerValidator: StructUnknown): StructUnknown {
     return define(name, (value: unknown) => {
-        if (value === null) return true;
+        if (value == null) return true;
         const [error] = innerValidator.validate(value);
         if (!error) return true;
         return error.failures()[0]?.message ?? 'Expected a valid value or null for zeroable option';
