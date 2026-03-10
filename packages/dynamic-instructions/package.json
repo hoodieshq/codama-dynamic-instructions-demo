@@ -11,6 +11,9 @@
     "publishConfig": {
         "registry": "https://npm.pkg.github.com"
     },
+    "bin": {
+        "dynamic-instructions": "./bin/cli.cjs"
+    },
     "exports": {
         "types": "./dist/types/index.d.ts",
         "react-native": "./dist/index.react-native.mjs",
@@ -34,7 +37,9 @@
     "type": "commonjs",
     "files": [
         "./dist/types",
-        "./dist/index.*"
+        "./dist/index.*",
+        "./dist/cli.*",
+        "./bin/*"
     ],
     "sideEffects": false,
     "keywords": [
@@ -46,6 +51,7 @@
     ],
     "scripts": {
         "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
+        "build:cli": "tsup --config tsup.config.cli.ts",
         "dev": "vitest --project node",
         "lint": "eslint . && prettier --check .",
         "lint:fix": "eslint --fix . && prettier --write .",
@@ -56,7 +62,7 @@
         "test:types": "tsc --noEmit",
         "test:unit": "vitest run --pool=threads",
         "generate-idl-from-anchor": "node --experimental-transform-types ./scripts/generate-idl-from-anchor.mts",
-        "generate-program-types": "node --experimental-transform-types ./scripts/generate-program-client-types.mts"
+        "generate-program-types": "pnpm build:cli && for f in tests/idls/*.json; do node ./bin/cli.cjs generate-program-client-types \"$f\" ./tests/generated; done"
     },
     "dependencies": {
         "@codama/dynamic-codecs": "1.1.31",
