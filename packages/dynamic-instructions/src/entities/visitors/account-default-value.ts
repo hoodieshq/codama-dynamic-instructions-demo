@@ -122,7 +122,7 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitConditionalValue: async (conditionalValueNode: ConditionalValueNode) => {
-            // ifTrue of ifFalse branch of ConditionalValueNode
+            // ifTrue or ifFalse branch of ConditionalValueNode
             const resolvedInputValueNode = await resolveConditionalValueNodeCondition({
                 accountsInput,
                 argumentsInput,

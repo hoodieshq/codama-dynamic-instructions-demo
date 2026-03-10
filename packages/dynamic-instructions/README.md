@@ -79,7 +79,7 @@ client.methods
     .myInstruction(args) // provide instruction arguments
     .accounts(accounts) // provide account addresses
     .signers(['accountName']) // optionally mark ambiguous accounts as signers
-    .resolvers({ customResolver: async (argumentsInput, accountsInput) => {} }) // optionally provide custom resolver according on resolverValueNode in IDL
+    .resolvers({ customResolver: async (argumentsInput, accountsInput) => {} }) // optionally provide custom resolver according to resolverValueNode in IDL
     .instruction(); // Promise<Instruction>
 ```
 
@@ -116,7 +116,7 @@ You can always override auto-derived accounts by providing an explicit address.
 
 ### Optional accounts
 
-Pass `null` for optional accounts to be resolved according on `optionalAccountStrategy` (either will be `omitted` or replaced on `programId`):
+Pass `null` for optional accounts to be resolved according to `optionalAccountStrategy` (either will be `omitted` or replaced on `programId`):
 
 ```typescript
 .accounts({
