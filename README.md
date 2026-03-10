@@ -138,7 +138,7 @@ const ix = await client.methods
 
 **Documentation:**
 
-- [README.md](./packages//dynamic-instructions/README.md)
+- [README.md](./packages/dynamic-instructions/README.md)
 - [tests](./packages/dynamic-instructions/tests/) - Working examples
 
 ## Project structure
