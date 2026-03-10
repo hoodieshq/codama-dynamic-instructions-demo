@@ -428,7 +428,7 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
 
 // Validates every keys of an object according to KeyValidator
 // Validates every value of an object according to ValueValidator
-// Used in MapTypeNode, where the keys and valuse are of the same type
+// Used in MapTypeNode, where the keys and values are of the same type
 // DOCS: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/MapTypeNode.md
 function KeyValueValidator(name: string, KeyValidator: StructUnknown, ValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_KeyValueValidator`, (value: unknown) => {
