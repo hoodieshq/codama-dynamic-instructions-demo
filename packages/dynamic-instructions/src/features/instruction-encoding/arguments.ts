@@ -82,10 +82,7 @@ export function encodeInstructionArguments(
 }
 
 function isOptionalArgument(ixArgumentNode: InstructionArgumentNode, input: unknown) {
-    return (
-        ['optionTypeNode', 'remainderOptionTypeNode'].includes(ixArgumentNode.type.kind) &&
-        (input === null || input === undefined)
-    );
+    return ixArgumentNode.type.kind.search(/optionTypeNode/i) !== -1 && (input === null || input === undefined);
 }
 
 export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {

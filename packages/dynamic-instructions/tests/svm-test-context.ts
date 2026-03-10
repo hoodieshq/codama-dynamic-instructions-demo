@@ -22,6 +22,8 @@ export type EncodedAccount = {
  * Configuration options for the SVM test context.
  */
 export type SvmTestContextConfig = {
+    /** Include standard builtins */
+    readonly builtins?: boolean;
     /** Include standard SPL programs (Token, Token-2022, ATA, etc.). Default: false. */
     readonly defaultPrograms?: boolean;
     /** Include standard precompiles (ed25519, secp256k1). Default: false. */
@@ -41,8 +43,6 @@ export type SvmTestContextConfig = {
  *
  * Tests work exclusively with Address types while the context handles
  * keypair management and transaction building behind the scenes.
- *
- * By default, the context includes standard builtins (system program, etc.).
  * Use the config parameter to include additional programs.
  */
 export class SvmTestContext {
@@ -69,6 +69,9 @@ export class SvmTestContext {
         }
         if (config.sysvars) {
             svm = svm.withSysvars();
+        }
+        if (config.builtins) {
+            svm = svm.withBuiltins();
         }
         this.svm = svm;
         this.accounts = new Map();
