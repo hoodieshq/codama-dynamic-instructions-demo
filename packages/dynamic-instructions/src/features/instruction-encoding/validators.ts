@@ -171,7 +171,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
                 definedTypes,
             );
             const valueValidator = createValidatorForTypeNode(
-                `${nodeName}_map_value_${node.key.kind}`,
+                `${nodeName}_map_value_${node.value.kind}`,
                 node.value,
                 definedTypes,
             );
