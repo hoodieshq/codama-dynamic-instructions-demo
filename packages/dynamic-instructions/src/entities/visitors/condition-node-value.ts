@@ -33,7 +33,7 @@ export function createConditionNodeValueVisitor(
                 );
             }
 
-            // if user explicitly provides null for conditional account, we should return it for conditionalValueNode ifFalse branch
+            // If the user explicitly provides null for a conditional account, return it for the conditionalValueNode ifFalse branch
             const accountAddressInput = accountsInput?.[ixAccountNode.name];
             if (accountAddressInput === null) {
                 return null;

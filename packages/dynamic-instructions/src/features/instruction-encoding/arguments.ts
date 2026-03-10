@@ -49,7 +49,7 @@ export function encodeInstructionArguments(
         const input = argumentsInput?.[ixArgumentNode.name];
         let encodedValue: ReadonlyUint8Array;
         if (isIxArgumentOmitted(ixArgumentNode)) {
-            // Omitted argument means it must always use the default value (e.g discriminator)
+            // Omitted argument means it must always use the default value (e.g. discriminator)
             const defaultValue = ixArgumentNode.defaultValue;
             if (defaultValue === undefined) {
                 throw new ArgumentError(`Omitted argument ${ixArgumentNode.name} has no default value`);
@@ -146,7 +146,7 @@ function getRequiredIxArguments(ixNode: InstructionNode) {
     return ixNode.arguments.filter(arg => arg?.defaultValueStrategy !== 'omitted');
 }
 
-// Arguments with "omitted" defaultValueStrategy must not be provided (e.g discriminator)
+// Arguments with "omitted" defaultValueStrategy must not be provided (e.g. discriminator)
 // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionArgumentNode.md#data
 function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     ixNode.arguments.filter(isIxArgumentOmitted).forEach(ixNode => {
