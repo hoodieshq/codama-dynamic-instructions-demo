@@ -14,3 +14,6 @@ export type {
     ProgramClient,
     ProgramMethodBuilder,
 } from './features/program-client/create-program-client';
+
+export { generateProgramClientType } from './features/cli/commands/generate-program-client-types';
+export type { IdlRoot } from './features/cli/commands/generate-program-client-types';

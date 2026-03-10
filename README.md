@@ -74,7 +74,7 @@ pnpm test
 This will:
 
 1. Run `anchor build` in `packages/dynamic-instructions/tests/anchor/`
-2. Generate `tests/idls/example-idl.json` from the Anchor IDL
+2. Generate Codama IDLs from the Anchor IDL for Anchor programs in `tests` folder
 3. Generate client type files in `tests/generated/*-types.ts` used by the tests
 4. Typecheck, build the library, run tree-shakability checks, then run unit and E2E tests (LiteSVM)
 
@@ -97,28 +97,35 @@ pnpm test:types
 
 ### Strongly-Typed Program Client
 
-Generate strongly-typed clients from Codama IDLs:
+Generate strongly-typed clients from Codama IDLs using the CLI:
 
 ```bash
-# Generate type-safe program client types (from repo root)
-pnpm --filter @hoodieshq/dynamic-instructions generate-program-types
+npx @hoodieshq/dynamic-instructions generate-program-client-types ./idl.json ./generated
 ```
+
+Or programmatically:
+
+```typescript
+import { generateProgramClientType } from '@hoodieshq/dynamic-instructions';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const idl = JSON.parse(readFileSync('./idl.json', 'utf-8'));
+writeFileSync('./generated/my-program-types.ts', generateProgramClientType(idl));
+```
+
+Then use the generated types with `createProgramClient`:
 
 ```typescript
 import { createProgramClient } from '@hoodieshq/dynamic-instructions';
-import { loadIdl } from './utils';
 import type { ExampleProgramClient } from './generated/example-idl-types';
-
-// Load IDL at runtime
-const idl = loadIdl('my-program.json');
+import idl from './my-program-idl.json';
 
 // Create strongly-typed client
 const client = createProgramClient<ExampleProgramClient>(idl);
 
-// Get full type safety!
 const ix = await client.methods
-    .yourInstruction({ arg1: 42 }) // ✓ Typed arguments
-    .accounts({ account1: address }) // ✓ Typed accounts
+    .yourInstruction({ arg1: 42 }) // typed methods and arguments
+    .accounts({ account1: address }) // typed accounts
     .instruction();
 ```
 
@@ -131,14 +138,14 @@ const ix = await client.methods
 
 **Documentation:**
 
-- [tests/anchor/tests/idl.spec.ts](./packages/dynamic-instructions/tests/anchor/tests/idl.spec.ts) - Working examples
+- [README.md](./packages//dynamic-instructions/README.md)
+- [tests](./packages/dynamic-instructions/tests/) - Working examples
 
 ## Project structure
 
 - **Root** — Monorepo: pnpm workspace, Turbo, ESLint, Prettier, Vitest base config.
-- **`packages/dynamic-instructions/`** — The library: `createProgramClient(idl)` and instruction encoding (visitors, PDA, accounts, arguments).
-- **`packages/dynamic-instructions/scripts/`** — Type generation scripts.
-- **`packages/dynamic-instructions/tests/anchor/`** — Anchor example program and IDL generation script.
+- **`packages/dynamic-instructions/`** — The library: `createProgramClient(idl)`, instruction encoding (visitors, PDA, accounts, arguments), CLI.
+- **`packages/dynamic-instructions/tests/`** — Tests folder, contains tests for multiple programs.
 
 ## License
 

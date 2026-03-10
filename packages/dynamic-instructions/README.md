@@ -200,37 +200,35 @@ try {
 }
 ```
 
-## Using with `@solana/web3.js`
+## CLI
 
-This library returns `Instruction` objects from `@solana/instructions` (part of `@solana/kit`). If your project uses legacy `@solana/web3.js`, convert them before adding to a transaction:
+The package includes a CLI for generating TypeScript types from Codama IDL files.
 
-```typescript
-import { createProgramClient } from '@hoodieshq/dynamic-instructions';
-import { AccountRole } from '@solana/instructions';
-import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-
-const client = createProgramClient(idl);
-
-const instruction = await client.methods
-    .transferSol({ amount: 1_000_000_000 })
-    .accounts({ source: senderAddress, destination: receiverAddress })
-    .instruction();
-
-// Convert to a legacy TransactionInstruction
-const legacyIx = new TransactionInstruction({
-    programId: new PublicKey(instruction.programAddress),
-    data: Buffer.from(instruction.data ?? []),
-    keys: (instruction.accounts ?? []).map(meta => ({
-        pubkey: new PublicKey(meta.address),
-        isSigner: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.READONLY_SIGNER,
-        isWritable: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.WRITABLE,
-    })),
-});
-
-const tx = new Transaction().add(legacyIx);
+```bash
+npx @hoodieshq/dynamic-instructions generate-program-client-types <codama-idl.json> <output-dir>
 ```
 
-Note that `AddressInput` already accepts legacy `PublicKey` objects, so you can pass them directly to `.accounts()` without conversion.
+Example:
+
+```bash
+npx @hoodieshq/dynamic-instructions generate-program-client-types ./idl/codama.json ./generated
+```
+
+This reads the IDL file and writes a `*-types.ts` file to the output directory containing strongly-typed interfaces for all instructions, accounts, arguments, PDAs, and the program client.
+
+### `generateProgramClientType(idl)`
+
+The same is available as a typescript function:
+
+```typescript
+import { generateProgramClientType } from '@hoodieshq/dynamic-instructions';
+import type { IdlRoot } from '@hoodieshq/dynamic-instructions';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const idl: IdlRoot = JSON.parse(readFileSync('./idl.json', 'utf-8'));
+const typesSource = generateProgramClientType(idl);
+writeFileSync('./generated/my-program-types.ts', typesSource);
+```
 
 ## Utilities
 
