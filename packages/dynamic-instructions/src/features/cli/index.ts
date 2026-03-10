@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { IdlRoot } from './commands/generate-program-client-types';
@@ -19,7 +19,7 @@ Example:
 const GENERATE_HELP_TEXT = `Usage: dynamic-instructions generate-program-client-types <codama-idl.json> <output-dir>
 
 Arguments:
-  codama-idl  Path to a Codama IDL JSON file (/idl/codama.json)
+  codama-idl  Path to a Codama IDL JSON file (e.g., ./idl/codama.json)
   output-dir  Path to the output directory for the generated .ts file
 
 Example:
@@ -31,7 +31,7 @@ Example:
 export function run(argv: string[]): void {
     const args = argv.slice(2);
 
-    if (args.length === 0 || args.includes('--help')) {
+    if (args.length === 0 || args[0] === '--help') {
         console.log(HELP_TEXT);
         return;
     }
@@ -50,31 +50,56 @@ export function run(argv: string[]): void {
 }
 
 function runGenerateProgramClientTypes(args: string[]): void {
-    if (args.includes('--help') || args.length < 2) {
+    if (args.includes('--help')) {
         console.log(GENERATE_HELP_TEXT);
-        if (args.length < 2 && !args.includes('--help')) {
-            process.exit(1);
-        }
         return;
+    }
+    if (args.length < 2) {
+        console.log(GENERATE_HELP_TEXT);
+        process.exit(1);
     }
 
     const idlPath = path.resolve(args[0]!);
     const outputDir = path.resolve(args[1]!);
 
+    if (!existsSync(idlPath)) {
+        console.error(`Error: IDL file not found: ${idlPath}`);
+        process.exit(1);
+    }
+
     console.log(`Reading IDL from: ${idlPath}`);
-    const idlJson = readFileSync(idlPath, 'utf-8');
-    const idl = JSON.parse(idlJson) as IdlRoot;
 
-    mkdirSync(outputDir, { recursive: true });
+    let idlJson: string;
+    try {
+        idlJson = readFileSync(idlPath, 'utf-8');
+    } catch (err) {
+        console.error(`Error reading IDL file: ${(err as Error).message}`);
+        process.exit(1);
+    }
 
-    const fileName = path.basename(idlPath);
-    const outputFile = fileName.replace(/\.json$/, '-types.ts');
-    const outputPath = path.join(outputDir, outputFile);
+    let idl: IdlRoot;
+    try {
+        idl = JSON.parse(idlJson) as IdlRoot;
+    } catch (err) {
+        console.error(`Error: ${idlPath} is not valid JSON: ${(err as Error).message}`);
+        process.exit(1);
+    }
 
-    console.log(`Generating types for program: ${idl.program.name}`);
-    const types = generateProgramClientType(idl);
+    try {
+        mkdirSync(outputDir, { recursive: true });
 
-    console.log(`Writing types to: ${outputPath}`);
-    writeFileSync(outputPath, types, 'utf-8');
-    console.log('Done!');
+        const fileName = path.basename(idlPath);
+        const outputFile = fileName.replace(/\.json$/, '-types.ts');
+        const outputPath = path.join(outputDir, outputFile);
+
+        console.log(`Generating types for program: ${idl.program.name}`);
+        const types = generateProgramClientType(idl);
+
+        console.log(`Writing types to: ${outputPath}`);
+        writeFileSync(outputPath, types, 'utf-8');
+        console.log('Done!');
+    } catch (err) {
+        console.error(`Error writing generated types: ${(err as Error).message}`);
+        process.exit(1);
+    }
 }

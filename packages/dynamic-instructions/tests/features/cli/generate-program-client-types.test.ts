@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -23,15 +23,6 @@ function execCli(args: string[]) {
     }
 }
 
-describe('generateProgramClientType', () => {
-    test('should generate types matching the known-good snapshot for circular-account-refs IDL', () => {
-        const idl = JSON.parse(readFileSync('tests/idls/circular-account-refs-idl.json', 'utf-8')) as IdlRoot;
-        const result = generateProgramClientType(idl);
-        const expected = readFileSync('tests/generated/circular-account-refs-idl-types.ts', 'utf-8');
-        expect(result).toBe(expected);
-    });
-});
-
 describe('CLI', () => {
     const tmpDirs: string[] = [];
 
@@ -41,28 +32,63 @@ describe('CLI', () => {
         }
     });
 
+    test('should generateProgramClientType matching the known snapshot for circular-account-refs IDL', () => {
+        const idl = JSON.parse(readFileSync('tests/idls/circular-account-refs-idl.json', 'utf-8')) as IdlRoot;
+        const result = generateProgramClientType(idl);
+        const expected = readFileSync('tests/generated/circular-account-refs-idl-types.ts', 'utf-8');
+        expect(result).toBe(expected);
+    });
+
     test('should print help when no arguments are provided', () => {
         const { stdout, exitCode } = execCli([]);
-        expect(stdout).toContain('Usage:');
+        expect(stdout).toContain('Usage: dynamic-instructions <command> [options]');
         expect(exitCode).toBe(0);
     });
 
     test('should print help when --help flag is provided', () => {
         const { stdout, exitCode } = execCli(['--help']);
-        expect(stdout).toContain('Usage:');
+        expect(stdout).toContain('Usage: dynamic-instructions <command> [options]');
         expect(exitCode).toBe(0);
     });
 
     test('should exit with code 1 for unknown commands', () => {
         const { stderr, exitCode } = execCli(['unknown-cmd']);
-        expect(stderr).toContain('Unknown command');
+        expect(stderr).toContain('Unknown command: unknown-cmd');
         expect(exitCode).toBe(1);
     });
 
     test('should print subcommand help for generate-program-client-types --help', () => {
         const { stdout, exitCode } = execCli(['generate-program-client-types', '--help']);
-        expect(stdout).toContain('Usage:');
+        expect(stdout).toContain(
+            'Usage: dynamic-instructions generate-program-client-types <codama-idl.json> <output-dir>',
+        );
         expect(exitCode).toBe(0);
+    });
+
+    test('should exit with code 1 when output dir argument is missing', () => {
+        const { exitCode, stdout } = execCli(['generate-program-client-types', 'some-file.json']);
+        expect(exitCode).toBe(1);
+        expect(stdout).toContain(
+            'Usage: dynamic-instructions generate-program-client-types <codama-idl.json> <output-dir>',
+        );
+    });
+
+    test('should exit with code 1 when IDL file does not exist', () => {
+        const tmpDir = mkdtempSync(path.join(tmpdir(), 'cli-test-'));
+        tmpDirs.push(tmpDir);
+        const { exitCode, stderr } = execCli(['generate-program-client-types', '/nonexistent/path.json', tmpDir]);
+        expect(exitCode).toBe(1);
+        expect(stderr).toContain('IDL file not found');
+    });
+
+    test('should exit with code 1 when IDL file contains invalid JSON', () => {
+        const tmpDir = mkdtempSync(path.join(tmpdir(), 'cli-test-'));
+        tmpDirs.push(tmpDir);
+        const badFile = path.join(tmpDir, 'bad.json');
+        writeFileSync(badFile, '{ not valid json');
+        const { exitCode, stderr } = execCli(['generate-program-client-types', badFile, tmpDir]);
+        expect(exitCode).toBe(1);
+        expect(stderr).toContain('not valid JSON');
     });
 
     test('should read IDL and write output file for generate-program-client-types', () => {

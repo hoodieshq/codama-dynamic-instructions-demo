@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node
+#!/usr/bin/env node
 
 const run = require('../dist/cli.cjs').run;
 
