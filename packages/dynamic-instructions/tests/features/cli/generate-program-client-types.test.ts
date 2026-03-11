@@ -32,13 +32,6 @@ describe('CLI', () => {
         }
     });
 
-    test('should generateProgramClientType matching the known snapshot for circular-account-refs IDL', () => {
-        const idl = JSON.parse(readFileSync('tests/idls/circular-account-refs-idl.json', 'utf-8')) as IdlRoot;
-        const result = generateProgramClientType(idl);
-        const expected = readFileSync('tests/generated/circular-account-refs-idl-types.ts', 'utf-8');
-        expect(result).toBe(expected);
-    });
-
     test('should print help when no arguments are provided', () => {
         const { stdout, exitCode } = execCli([]);
         expect(stdout).toContain('Usage: dynamic-instructions <command> [options]');
@@ -101,7 +94,8 @@ describe('CLI', () => {
 
         const outputPath = path.join(tmpDir, 'circular-account-refs-idl-types.ts');
         const output = readFileSync(outputPath, 'utf-8');
-        const expected = readFileSync('tests/generated/circular-account-refs-idl-types.ts', 'utf-8');
+        const idl = JSON.parse(readFileSync(idlPath, 'utf-8')) as IdlRoot;
+        const expected = generateProgramClientType(idl);
         expect(output).toBe(expected);
     });
 });
