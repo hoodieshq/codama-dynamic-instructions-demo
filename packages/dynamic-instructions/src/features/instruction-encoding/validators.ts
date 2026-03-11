@@ -200,7 +200,12 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return tuple(validators as [StructUnknown, ...StructUnknown[]]) as StructUnknown;
         }
         case 'zeroableOptionTypeNode': {
-            return createValidatorForTypeNode(`${nodeName}_zeroeable_option`, node.item, definedTypes);
+            const innerValidator = createValidatorForTypeNode(
+                `${nodeName}_zeroable_option_item`,
+                node.item,
+                definedTypes,
+            );
+            return ZeroableOptionValidator(`${nodeName}_zeroable_option`, innerValidator);
         }
         case 'optionTypeNode': {
             // TODO: Check and add handling node.fixed and node.prefix if necessary https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/OptionTypeNode.md#attributes
@@ -390,6 +395,16 @@ function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): 
         const [error] = SomeValueValidator.validate(value);
         if (!error) return true;
         return error.failures()[0]?.message ?? 'Invalid value for optional field';
+    }) as StructUnknown;
+}
+
+// Validates zeroable option: null is valid, otherwise validates the inner validator
+function ZeroableOptionValidator(name: string, innerValidator: StructUnknown): StructUnknown {
+    return define(name, (value: unknown) => {
+        if (value == null) return true;
+        const [error] = innerValidator.validate(value);
+        if (!error) return true;
+        return error.failures()[0]?.message ?? 'Expected a valid value or null for zeroable option';
     }) as StructUnknown;
 }
 

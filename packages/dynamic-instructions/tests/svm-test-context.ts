@@ -22,6 +22,8 @@ export type EncodedAccount = {
  * Configuration options for the SVM test context.
  */
 export type SvmTestContextConfig = {
+    /** Include standard builtins */
+    readonly builtins?: boolean;
     /** Include standard SPL programs (Token, Token-2022, ATA, etc.). Default: false. */
     readonly defaultPrograms?: boolean;
     /** Include standard precompiles (ed25519, secp256k1). Default: false. */
@@ -41,8 +43,6 @@ export type SvmTestContextConfig = {
  *
  * Tests work exclusively with Address types while the context handles
  * keypair management and transaction building behind the scenes.
- *
- * By default, the context includes standard builtins (system program, etc.).
  * Use the config parameter to include additional programs.
  */
 export class SvmTestContext {
@@ -57,6 +57,7 @@ export class SvmTestContext {
     readonly SYSVAR_RENT_ADDRESS = address(web3.SYSVAR_RENT_PUBKEY.toBase58());
     readonly SYSVAR_INSTRUCTIONS_ADDRESS = address(web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBase58());
     readonly BPF_LOADER_UPGRADEABLE = address('BPFLoaderUpgradeab1e11111111111111111111111');
+    readonly TOKEN_2022_NATIVE_MINT = address('9pan9bMn5HatX4EJdBwg9VgCa7Uz5HL8N1m5D3NdXejP');
 
     constructor(config: SvmTestContextConfig = {}) {
         let svm = new LiteSVM();
@@ -68,6 +69,9 @@ export class SvmTestContext {
         }
         if (config.sysvars) {
             svm = svm.withSysvars();
+        }
+        if (config.builtins) {
+            svm = svm.withBuiltins();
         }
         this.svm = svm;
         this.accounts = new Map();
