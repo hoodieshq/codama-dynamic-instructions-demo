@@ -115,7 +115,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return boolean() as StructUnknown;
         }
         case 'numberTypeNode': {
-            const format = (node as TypeNode & { format?: string }).format;
+            const format = node.format;
             if (format === 'u64' || format === 'u128' || format === 'i64' || format === 'i128') {
                 return NumberOrBigintValidator;
             }
@@ -236,6 +236,11 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         }
         case 'solAmountTypeNode': {
             return AmountTypeValidator(nodeName);
+        }
+        default: {
+            throw new Error(
+                `Validator for TypeNode "${nodeName}" kind: ${(node as { kind: string })?.kind} is not implemented!`,
+            );
         }
     }
 }
