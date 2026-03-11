@@ -1,14 +1,13 @@
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
-import type { Failure, StructError } from 'superstruct';
-import { assert } from 'superstruct';
+import { assert, type Failure } from 'superstruct';
 
 import { createDefaultValueEncoderVisitor, createInputValueTransformer } from '../../entities/visitors';
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
-import { safeStringify } from '../../shared/util';
+import { isStructError, safeStringify } from '../../shared/util';
 import { createIxArgumentsValidator } from './validators';
 
 /**
@@ -111,13 +110,15 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     try {
         assert(filteredInput, ArgumentsInputValidator);
     } catch (error) {
-        const { failures } = error as StructError;
-        const message = failures().map(failure => {
-            const fieldPath = formatFailurePath(failure);
-            const value = formatFailureValue(failure.value);
-            return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
-        });
-        throw new ValidationError(message.join(''));
+        if (isStructError(error)) {
+            const message = error.failures().map(failure => {
+                const fieldPath = formatFailurePath(failure);
+                const value = formatFailureValue(failure.value);
+                return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
+            });
+            throw new ValidationError(message.join(''));
+        }
+        throw new ValidationError(`Unexpected validation error`, { cause: error });
     }
 }
 

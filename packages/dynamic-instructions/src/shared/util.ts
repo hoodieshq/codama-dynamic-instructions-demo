@@ -1,3 +1,5 @@
+import type { StructError } from 'superstruct';
+
 import { AccountError } from './errors';
 import type { ResolutionPath } from './types';
 
@@ -31,4 +33,8 @@ export function safeStringify(value: unknown): string {
     } catch {
         return `non-serializable ${formatValueType(value)}`;
     }
+}
+
+export function isStructError(error: unknown): error is StructError {
+    return error instanceof Error && 'failures' in error && typeof (error as StructError).failures === 'function';
 }
