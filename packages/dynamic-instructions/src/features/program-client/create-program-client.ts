@@ -5,6 +5,7 @@ import { createFromJson } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
+import { DynamicInstructionsError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 import { collectPdaNodes } from './collect-pdas';
 import { deriveStandalonePDA } from './derive-standalone-pda';
@@ -67,14 +68,20 @@ export function createProgramClient<TClient = ProgramClient>(
         {},
         {
             get(_target, prop) {
-                // Avoid thenable behavior when people `await program.methods`.
-                if (prop === 'then') return undefined;
-                if (typeof prop !== 'string') return undefined;
+                if (typeof prop !== 'string' || PASSTHROUGH_PROPS.has(prop)) return undefined;
 
                 const ixNode = instructions.get(prop);
-                if (!ixNode) return undefined;
+                if (!ixNode) {
+                    const available = [...instructions.keys()].join(', ');
+                    throw new DynamicInstructionsError(
+                        `Instruction "${prop}" not found in IDL. Available instructions: ${available}`,
+                    );
+                }
 
                 return (args?: ArgumentsInput) => new MethodsBuilder(root, ixNode, args) as ProgramMethodBuilder;
+            },
+            has(_target, prop) {
+                return typeof prop === 'string' && instructions.has(prop);
             },
         },
     ) as ProgramClient['methods'];
@@ -85,13 +92,18 @@ export function createProgramClient<TClient = ProgramClient>(
         {},
         {
             get(_target, prop) {
-                if (prop === 'then') return undefined;
-                if (typeof prop !== 'string') return undefined;
+                if (typeof prop !== 'string' || PASSTHROUGH_PROPS.has(prop)) return undefined;
 
                 const pdaNode = pdaNodes.get(prop);
-                if (!pdaNode) return undefined;
+                if (!pdaNode) {
+                    const available = [...pdaNodes.keys()].join(', ');
+                    throw new DynamicInstructionsError(`PDA "${prop}" not found in IDL. Available PDAs: ${available}`);
+                }
 
                 return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, programAddress, seeds);
+            },
+            has(_target, prop) {
+                return typeof prop === 'string' && pdaNodes.has(prop);
             },
         },
     ) as ProgramClient['pdas'];
@@ -104,3 +116,5 @@ export function createProgramClient<TClient = ProgramClient>(
         root,
     } as unknown as TClient;
 }
+
+const PASSTHROUGH_PROPS = new Set<string>(['then', 'toJSON', 'valueOf', 'toString']);
