@@ -7,7 +7,6 @@ Runtime Solana instruction builder from [Codama](https://github.com/codama-idl/c
 Build type-safe `Instruction` objects (from `@solana/instructions`) at runtime from any Codama IDL. Designed for Explorer UIs where users interact with arbitrary Solana programs without pre-generated client code.
 
 - Works with `@solana/kit` natively
-- Legacy `@solana/web3.js` support via compat layer
 - Auto-derives PDA accounts, resolves defaults, encodes discriminators
 - Optional type generation for full TypeScript type safety
 
@@ -179,26 +178,6 @@ Nested/dependent PDAs (where one PDA seed references another PDA) are resolved r
 
 Arguments with `defaultValueStrategy: 'omitted'` (e.g., discriminators) are auto-encoded and should not be provided.
 
-## Compat Layer (Legacy `@solana/web3.js` v1)
-
-```typescript
-import {
-    toLegacyTransactionInstruction,
-    toLegacyAccountMeta,
-    toVersionedTransaction,
-} from '@hoodieshq/dynamic-instructions';
-
-// Convert a single instruction
-const legacyIx = toLegacyTransactionInstruction(instruction);
-
-// Build an unsigned v0 VersionedTransaction
-const tx = toVersionedTransaction(instruction, {
-    payerKey: new PublicKey(payerAddress),
-    recentBlockhash,
-});
-// tx.sign([payerKeypair]);
-```
-
 ## Error Handling
 
 All errors extend `DynamicInstructionsError`:
@@ -220,6 +199,38 @@ try {
     }
 }
 ```
+
+## Using with `@solana/web3.js`
+
+This library returns `Instruction` objects from `@solana/instructions` (part of `@solana/kit`). If your project uses legacy `@solana/web3.js`, convert them before adding to a transaction:
+
+```typescript
+import { createProgramClient } from '@hoodieshq/dynamic-instructions';
+import { AccountRole } from '@solana/instructions';
+import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+
+const client = createProgramClient(idl);
+
+const instruction = await client.methods
+    .transferSol({ amount: 1_000_000_000 })
+    .accounts({ source: senderAddress, destination: receiverAddress })
+    .instruction();
+
+// Convert to a legacy TransactionInstruction
+const legacyIx = new TransactionInstruction({
+    programId: new PublicKey(instruction.programAddress),
+    data: Buffer.from(instruction.data ?? []),
+    keys: (instruction.accounts ?? []).map(meta => ({
+        pubkey: new PublicKey(meta.address),
+        isSigner: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.READONLY_SIGNER,
+        isWritable: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.WRITABLE,
+    })),
+});
+
+const tx = new Transaction().add(legacyIx);
+```
+
+Note that `AddressInput` already accepts legacy `PublicKey` objects, so you can pass them directly to `.accounts()` without conversion.
 
 ## Utilities
 

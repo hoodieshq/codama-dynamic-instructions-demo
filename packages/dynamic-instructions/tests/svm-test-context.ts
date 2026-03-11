@@ -1,11 +1,9 @@
 import { type Address, address } from '@solana/addresses';
-import type { Instruction } from '@solana/instructions';
+import { AccountRole, type Instruction } from '@solana/instructions';
 import * as web3 from '@solana/web3.js';
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from '@solana-program/token-2022';
 import { FailedTransactionMetadata, LiteSVM, type TransactionMetadata } from 'litesvm';
-
-import { toLegacyTransactionInstruction } from '../src';
 
 /**
  * Encoded account data returned from SVM.
@@ -256,4 +254,16 @@ export class SvmTestContext {
         }
         return result;
     }
+}
+
+function toLegacyTransactionInstruction(instruction: Instruction): web3.TransactionInstruction {
+    return new web3.TransactionInstruction({
+        data: Buffer.from(instruction.data ?? []),
+        keys: (instruction.accounts ?? []).map(meta => ({
+            isSigner: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.READONLY_SIGNER,
+            isWritable: meta.role === AccountRole.WRITABLE_SIGNER || meta.role === AccountRole.WRITABLE,
+            pubkey: new web3.PublicKey(meta.address),
+        })),
+        programId: new web3.PublicKey(instruction.programAddress),
+    });
 }
