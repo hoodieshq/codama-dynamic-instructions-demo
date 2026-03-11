@@ -1,0 +1,65 @@
+import { describe, expect, expectTypeOf, test } from 'vitest';
+
+import { AccountError, ArgumentError, DynamicInstructionsError, ValidationError } from '../../src/shared/errors';
+
+describe('DynamicInstructionsError', () => {
+    test('sets name and message', () => {
+        const error = new DynamicInstructionsError('test message');
+        expect(error.name).toBe('DynamicInstructionsError');
+        expect(error.message).toBe('test message');
+    });
+
+    test('is an instance of Error', () => {
+        const error = new DynamicInstructionsError('test');
+        expect(error).toBeInstanceOf(Error);
+        expectTypeOf(error).toExtend<Error>();
+    });
+});
+
+describe('ValidationError', () => {
+    test('sets name and message', () => {
+        const error = new ValidationError('validation failed');
+        expect(error.name).toBe('ValidationError');
+        expect(error.message).toBe('validation failed');
+    });
+
+    test('is an instance of DynamicInstructionsError', () => {
+        expect(new ValidationError('test')).toBeInstanceOf(DynamicInstructionsError);
+    });
+
+    test('is an instance of Error', () => {
+        expect(new ValidationError('test')).toBeInstanceOf(Error);
+    });
+});
+
+describe('AccountError', () => {
+    test('sets name and message', () => {
+        const error = new AccountError('account issue');
+        expect(error.name).toBe('AccountError');
+        expect(error.message).toBe('account issue');
+    });
+
+    test('is an instance of DynamicInstructionsError', () => {
+        expect(new AccountError('test')).toBeInstanceOf(DynamicInstructionsError);
+    });
+});
+
+describe('ArgumentError', () => {
+    test('sets name and message', () => {
+        const error = new ArgumentError('arg issue');
+        expect(error.name).toBe('ArgumentError');
+        expect(error.message).toBe('arg issue');
+    });
+
+    test('is an instance of DynamicInstructionsError', () => {
+        expect(new ArgumentError('test')).toBeInstanceOf(DynamicInstructionsError);
+    });
+});
+
+describe('error hierarchy types', () => {
+    test('all errors extend DynamicInstructionsError', () => {
+        expectTypeOf<ValidationError>().toExtend<DynamicInstructionsError>();
+        expectTypeOf<AccountError>().toExtend<DynamicInstructionsError>();
+        expectTypeOf<ArgumentError>().toExtend<DynamicInstructionsError>();
+    });
+});
