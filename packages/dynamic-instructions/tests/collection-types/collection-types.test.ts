@@ -233,7 +233,7 @@ describe('Collection types: encoding and validation (set, map, tuple)', () => {
                     .storeSet({ data: [invalidData, invalidData] })
                     .accounts({ signer })
                     .instruction(),
-            ).rejects.toThrow(/Invalid argument "data", value: "non-serializable"/);
+            ).rejects.toThrow(/Invalid argument "data", value: non-serializable array \(length 2\)/);
         });
     });
 });

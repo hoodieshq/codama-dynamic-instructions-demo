@@ -29,6 +29,6 @@ export function safeStringify(value: unknown): string {
     try {
         return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? String(v) : v));
     } catch {
-        return '"non-serializable"';
+        return `non-serializable ${formatValueType(value)}`;
     }
 }
