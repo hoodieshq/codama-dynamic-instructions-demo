@@ -1,3 +1,4 @@
+import { isAddress } from '@solana/addresses';
 import type {
     ArrayTypeNode,
     CountNode,
@@ -7,8 +8,7 @@ import type {
     InstructionArgumentNode,
     SetTypeNode,
     TypeNode,
-} from '@codama/nodes';
-import { isAddress } from '@solana/addresses';
+} from 'codama';
 import {
     array,
     boolean,
