@@ -462,15 +462,11 @@ function MapCountValidator(node: CountNode): StructUnknown | null {
 // Can be used in MapTypeNode with "fixed" CountNode type
 function KeysLengthValidator(count: number): StructUnknown {
     return define(`KeysLengthValidator_len_${count}`, (value: unknown) => {
-        try {
-            if (typeof value !== 'object' || value === null) {
-                return `Expected a map with exactly ${count} entries, received: ${formatValueType(value)}`;
-            }
-            const actual = Object.keys(value).length;
-            return actual === count || `Expected exactly ${count} map entries, received ${actual}`;
-        } catch {
-            return `Expected a map with exactly ${count} entries`;
+        if (typeof value !== 'object' || value === null) {
+            return `Expected a map with exactly ${count} entries, received: ${formatValueType(value)}`;
         }
+        const actual = Object.keys(value).length;
+        return Object.keys(value).length === count || `Expected exactly ${count} map entries, received ${actual}`;
     }) as StructUnknown;
 }
 
