@@ -141,7 +141,15 @@ export function createPdaSeedValueVisitor(
 
         visitNoneValue: (_node: NoneValueNode) => Promise.resolve(new Uint8Array(0)),
 
-        visitNumberValue: (node: NumberValueNode) => Promise.resolve(new Uint8Array([node.number])),
+        visitNumberValue: (node: NumberValueNode) => {
+            if (!Number.isInteger(node.number) || node.number < 0 || node.number > 0xff) {
+                throw new AccountError(
+                    `NumberValueNode seed value ${node.number} cannot be encoded as a single byte. ` +
+                        `Expected an integer in range [0, 255].`,
+                );
+            }
+            return Promise.resolve(new Uint8Array([node.number]));
+        },
 
         // Constant / standalone value nodes.
         visitProgramIdValue: () => Promise.resolve(getAddressEncoder().encode(programId)),

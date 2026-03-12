@@ -4,8 +4,6 @@ import type { InstructionNode, RootNode } from 'codama';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { createIxBuilder } from '../instruction-encoding/instructions';
 
-export type SignerInput = unknown;
-
 export class MethodsBuilder {
     private _accounts?: AccountsInput;
     // "either" signers Account names
