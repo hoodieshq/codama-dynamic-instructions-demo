@@ -24,6 +24,6 @@ describe('pda-seed-value: visitSomeValue', () => {
 
     test('should throw for unsupported nested inner node kind', () => {
         const node = someValueNode(constantValueNode(publicKeyTypeNode(), publicKeyValueNode('invalid-key')));
-        expect(() => makeVisitor().visitSomeValue(node)).toThrow(/Expected base58-encoded address/);
+        expect(() => makeVisitor().visitSomeValue(node)).toThrow(/Expected base58-encoded Address/);
     });
 });

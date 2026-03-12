@@ -1,6 +1,6 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address } from '@solana/addresses';
-import { address, getAddressEncoder } from '@solana/addresses';
+import { address, getAddressEncoder, isAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import { getBooleanCodec, getUtf8Codec } from '@solana/codecs';
 import type {
@@ -151,17 +151,17 @@ export function createPdaSeedValueVisitor(
         },
 
         visitProgramIdValue: () => {
-            if (typeof programId !== 'string') {
+            if (typeof programId !== 'string' || !isAddress(programId)) {
                 throw new AccountError(
-                    `Expected base58-encoded address for programId, got: ${programId as unknown as string}`,
+                    `Expected base58-encoded Address for programId, got: ${programId as unknown as string}`,
                 );
             }
-            return Promise.resolve(getAddressEncoder().encode(address(programId)));
+            return Promise.resolve(getAddressEncoder().encode(programId));
         },
 
         visitPublicKeyValue: (node: PublicKeyValueNode) => {
-            if (typeof node.publicKey !== 'string') {
-                throw new AccountError(`Expected base58-encoded address, got: ${node.publicKey as unknown as string}`);
+            if (typeof node.publicKey !== 'string' || !isAddress(node.publicKey)) {
+                throw new AccountError(`Expected base58-encoded Address, got: ${node.publicKey as unknown as string}`);
             }
             return Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
         },

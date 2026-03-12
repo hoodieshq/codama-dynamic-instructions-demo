@@ -2,7 +2,7 @@ import { address, getAddressEncoder } from '@solana/addresses';
 import { publicKeyValueNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { SvmTestContext } from '../../test-utils';
+import { SvmTestContext } from '../../svm-test-context';
 import { makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitPublicKeyValue', () => {
@@ -20,7 +20,7 @@ describe('pda-seed-value: visitPublicKeyValue', () => {
         for (const invalidPublicKey of invalidPublicKeys) {
             expect(() =>
                 visitor.visitPublicKeyValue(publicKeyValueNode(invalidPublicKey as unknown as string)),
-            ).toThrow(/Expected base58-encoded address/);
+            ).toThrow(/Expected base58-encoded Address/);
         }
     });
 });
