@@ -31,6 +31,9 @@ export async function resolveArgumentDefaultsFromCustomResolvers(
         if (!isNode(argumentNode.defaultValue, 'resolverValueNode')) continue;
 
         const resolverFn = resolversInput[argumentNode.defaultValue.name];
+        // If no resolver provided — skip and let the encoding step handle it:
+        // Optional arguments will be encoded as none
+        // Required arguments will emit error
         if (!resolverFn) continue;
 
         resolved[argumentNode.name] = await resolverFn(argumentsInput, accountsInput);
