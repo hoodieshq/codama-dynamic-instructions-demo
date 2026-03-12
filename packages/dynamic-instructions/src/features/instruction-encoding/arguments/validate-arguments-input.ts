@@ -83,7 +83,7 @@ function getRemainingAccountArgNames(ixNode: InstructionNode): string[] {
 
 /**
  * Filters out remaining account argument names from the arguments input.
- * Superstruct's object() validator rejects extra keys, so we need to strip
+ * So superstruct's object() doesn't reject them as extra keys.
  */
 function filterRemainingAccountArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput): ArgumentsInput {
     const remainingAccountArgNames = getRemainingAccountArgNames(ixNode);

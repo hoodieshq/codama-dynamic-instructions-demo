@@ -65,7 +65,7 @@ describe('pda-seed-value: visitAccountValue', () => {
     test('should throw for unknown account reference', async () => {
         const visitor = makeVisitor({ ixNode: ixNodeWithAccount });
         await expect(visitor.visitAccountValue(accountValueNode('nonexistent'))).rejects.toThrow(
-            /PDA seed references unknown account/,
+            /Referenced account "nonexistent" not found in instruction "testInstruction"/,
         );
     });
 

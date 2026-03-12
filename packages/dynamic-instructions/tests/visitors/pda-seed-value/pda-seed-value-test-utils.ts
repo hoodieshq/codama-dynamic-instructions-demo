@@ -18,9 +18,11 @@ export const ixNodeStub: InstructionNode = {
 
 export function makeVisitor(overrides?: Partial<Parameters<typeof createPdaSeedValueVisitor>[0]>) {
     return createPdaSeedValueVisitor({
+        accountsInput: undefined,
+        argumentsInput: undefined,
         ixNode: ixNodeStub,
         programId: address(DEFAULT_PUBLIC_KEY),
-        resolutionPath: undefined,
+        resolutionPath: [],
         resolversInput: undefined,
         root: rootNodeMock,
         ...overrides,
