@@ -1,0 +1,81 @@
+import { address, getAddressEncoder } from '@solana/addresses';
+import type { InstructionNode } from 'codama';
+import { accountValueNode, instructionAccountNode } from 'codama';
+import { describe, expect, test } from 'vitest';
+
+import { SvmTestContext } from '../../svm-test-context';
+import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
+
+describe('pda-seed-value: visitAccountValue', () => {
+    const ixNodeWithAccount: InstructionNode = {
+        ...ixNodeStub,
+        accounts: [
+            instructionAccountNode({
+                isSigner: false,
+                isWritable: false,
+                name: 'authority',
+            }),
+        ],
+    };
+
+    test('should encode provided account address', async () => {
+        const randomAddress = new SvmTestContext().createAccount();
+        const visitor = makeVisitor({
+            accountsInput: { authority: randomAddress },
+            ixNode: ixNodeWithAccount,
+        });
+        const result = await visitor.visitAccountValue(accountValueNode('authority'));
+        expect(result).toEqual(getAddressEncoder().encode(address(randomAddress)));
+    });
+
+    test('should fall through to resolution when provided address is null', async () => {
+        const visitor = makeVisitor({
+            accountsInput: { authority: null },
+            ixNode: ixNodeWithAccount,
+        });
+        // null is not treated as a provided address — it falls through to resolveAccountAddress,
+        // which throws because the account has no default value
+        await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
+            /Account doesn't have default value or was not provided/,
+        );
+    });
+
+    test('should throw when resolved address is null', async () => {
+        const ixNodeWithOptionalAccount: InstructionNode = {
+            ...ixNodeStub,
+            accounts: [
+                instructionAccountNode({
+                    isOptional: true,
+                    isSigner: false,
+                    isWritable: false,
+                    name: 'authority',
+                }),
+            ],
+            optionalAccountStrategy: 'omitted',
+        };
+        const visitor = makeVisitor({
+            accountsInput: { authority: null },
+            ixNode: ixNodeWithOptionalAccount,
+        });
+        await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
+            /Cannot resolve dependent account for PDA seed/,
+        );
+    });
+
+    test('should throw for unknown account reference', async () => {
+        const visitor = makeVisitor({ ixNode: ixNodeWithAccount });
+        await expect(visitor.visitAccountValue(accountValueNode('nonexistent'))).rejects.toThrow(
+            /PDA seed references unknown account/,
+        );
+    });
+
+    test('should throw on circular dependency', async () => {
+        const visitor = makeVisitor({
+            ixNode: ixNodeWithAccount,
+            resolutionPath: ['authority'],
+        });
+        await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
+            /Circular dependency detected/,
+        );
+    });
+});
