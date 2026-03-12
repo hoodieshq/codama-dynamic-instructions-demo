@@ -15,8 +15,8 @@ describe('pda-seed-value: visitStringValue', () => {
         expect(result).toEqual(getUtf8Codec().encode(''));
     });
 
-    test('should throw for invalid string value', async () => {
-        const invalidStringValues = [123, true, null, undefined, {}] as string[];
+    test('should encode non-string values as UTF-8 bytes', async () => {
+        const invalidStringValues = [123, true, null, undefined, {}] as string[]; // testing non-string values
         const visitor = makeVisitor();
 
         for (const invalidStringValue of invalidStringValues) {

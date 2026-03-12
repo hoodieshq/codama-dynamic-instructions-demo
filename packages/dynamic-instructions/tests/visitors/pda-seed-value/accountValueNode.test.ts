@@ -3,9 +3,8 @@ import type { InstructionNode } from 'codama';
 import { accountValueNode, instructionAccountNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
+import { SvmTestContext } from '../../svm-test-context';
 import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
-
-const SOME_ADDRESS = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 
 describe('pda-seed-value: visitAccountValue', () => {
     const ixNodeWithAccount: InstructionNode = {
@@ -20,12 +19,13 @@ describe('pda-seed-value: visitAccountValue', () => {
     };
 
     test('should encode provided account address', async () => {
+        const randomAddress = new SvmTestContext().createAccount();
         const visitor = makeVisitor({
-            accountsInput: { authority: SOME_ADDRESS },
+            accountsInput: { authority: randomAddress },
             ixNode: ixNodeWithAccount,
         });
         const result = await visitor.visitAccountValue(accountValueNode('authority'));
-        expect(result).toEqual(getAddressEncoder().encode(address(SOME_ADDRESS)));
+        expect(result).toEqual(getAddressEncoder().encode(address(randomAddress)));
     });
 
     test('should throw for unknown account reference', async () => {

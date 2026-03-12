@@ -16,25 +16,10 @@ describe('pda-seed-value: visitProgramIdValue', () => {
     });
 
     test('should throw an error for invalid programId', () => {
-        const invalidVisitors = [
-            makeVisitor({
-                // @ts-expect-error testing invalid programId value
-                programId: 42,
-            }),
-            makeVisitor({
-                // @ts-expect-error testing invalid programId value
-                programId: 'invalid-address',
-            }),
-            makeVisitor({
-                // @ts-expect-error testing invalid programId value
-                programId: [1, 2, 3],
-            }),
-            makeVisitor({
-                // @ts-expect-error testing invalid programId value
-                programId: null,
-            }),
-        ];
-        invalidVisitors.forEach(visitor => {
+        const invalidValues = [42, 'invalid-address', [1, 2, 3], null];
+        invalidValues.forEach(value => {
+            // @ts-expect-error testing invalid programId value
+            const visitor = makeVisitor({ programId: value });
             expect(() => visitor.visitProgramIdValue(programIdValueNode())).toThrow(/Expected base58-encoded address/);
         });
     });

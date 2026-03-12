@@ -156,7 +156,7 @@ export function createPdaSeedValueVisitor(
                     `Expected base58-encoded address for programId, got: ${programId as unknown as string}`,
                 );
             }
-            return Promise.resolve(getAddressEncoder().encode(programId));
+            return Promise.resolve(getAddressEncoder().encode(address(programId)));
         },
 
         visitPublicKeyValue: (node: PublicKeyValueNode) => {
