@@ -13,17 +13,16 @@ export function encodeInstructionArguments(
     ix: InstructionNode,
     argumentsInput: ArgumentsInput = {},
 ): ReadonlyUint8Array {
-    const chunks = ix.arguments.reduce<ReadonlyUint8Array[]>((chunks, ixArgumentNode) => {
+    const chunks = ix.arguments.map(ixArgumentNode => {
         const input = argumentsInput?.[ixArgumentNode.name];
         if (isOmittedArgument(ixArgumentNode)) {
-            chunks.push(encodeOmittedArgument(root, ix, ixArgumentNode));
+            return encodeOmittedArgument(root, ix, ixArgumentNode);
         } else if (isOptionalArgument(ixArgumentNode, input)) {
-            chunks.push(encodeOptionalArgument(root, ix, ixArgumentNode));
+            return encodeOptionalArgument(root, ix, ixArgumentNode);
         } else {
-            chunks.push(encodeRequiredArgument(root, ix, ixArgumentNode, input));
+            return encodeRequiredArgument(root, ix, ixArgumentNode, input);
         }
-        return chunks;
-    }, []);
+    });
 
     return concatBytes(chunks);
 }
