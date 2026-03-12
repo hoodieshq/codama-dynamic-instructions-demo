@@ -33,6 +33,13 @@ describe('createProgramClient', () => {
             expect('nonExistentMethod' in programClient.methods).toBe(false);
         });
 
+        test('should preserve standard object semantics for prototype properties with "in" operator', () => {
+            expect('toString' in programClient.methods).toBe(true);
+            expect('valueOf' in programClient.methods).toBe(true);
+            expect('constructor' in programClient.methods).toBe(true);
+            expect('hasOwnProperty' in programClient.methods).toBe(true);
+        });
+
         test('does not throw when awaited directly', async () => {
             // eslint-disable-next-line @typescript-eslint/await-thenable
             const result = await programClient.methods;
@@ -59,6 +66,13 @@ describe('createProgramClient', () => {
         test('supports "in" operator for existing PDAs', () => {
             expect('metadata' in pdaClient.pdas).toBe(true);
             expect('nonExistentPda' in pdaClient.pdas).toBe(false);
+        });
+
+        test('should preserve standard object semantics for prototype properties with "in" operator', () => {
+            expect('toString' in pdaClient.pdas).toBe(true);
+            expect('valueOf' in pdaClient.pdas).toBe(true);
+            expect('constructor' in pdaClient.pdas).toBe(true);
+            expect('hasOwnProperty' in pdaClient.pdas).toBe(true);
         });
 
         test('does not throw when awaited directly', async () => {

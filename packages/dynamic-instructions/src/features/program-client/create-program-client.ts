@@ -80,8 +80,8 @@ export function createProgramClient<TClient = ProgramClient>(
 
                 return (args?: ArgumentsInput) => new MethodsBuilder(root, ixNode, args) as ProgramMethodBuilder;
             },
-            has(_target, prop) {
-                return typeof prop === 'string' && instructions.has(prop);
+            has(target, prop) {
+                return Reflect.has(target, prop) || (typeof prop === 'string' && instructions.has(prop));
             },
         },
     ) as ProgramClient['methods'];
@@ -102,8 +102,8 @@ export function createProgramClient<TClient = ProgramClient>(
 
                 return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, programAddress, seeds);
             },
-            has(_target, prop) {
-                return typeof prop === 'string' && pdaNodes.has(prop);
+            has(target, prop) {
+                return Reflect.has(target, prop) || (typeof prop === 'string' && pdaNodes.has(prop));
             },
         },
     ) as ProgramClient['pdas'];
