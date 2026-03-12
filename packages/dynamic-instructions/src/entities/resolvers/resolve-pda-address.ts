@@ -41,6 +41,8 @@ export async function resolvePDAAddress({
         pdaNode.seeds.map(async seedNode => {
             if (seedNode.kind === 'constantPdaSeedNode') {
                 return await resolveConstantPdaSeed({
+                    accountsInput,
+                    argumentsInput,
                     ixNode,
                     programId,
                     resolutionPath,
@@ -136,11 +138,13 @@ function resolveVariablePdaSeed({
     });
 }
 
-type ResolveConstantPdaSeedContext = Omit<BaseResolutionContext, 'accountsInput' | 'argumentsInput'> & {
+type ResolveConstantPdaSeedContext = BaseResolutionContext & {
     programId: Address;
     seedNode: RegisteredPdaSeedNode;
 };
 function resolveConstantPdaSeed({
+    accountsInput,
+    argumentsInput,
     ixNode,
     programId,
     resolutionPath,
@@ -152,8 +156,8 @@ function resolveConstantPdaSeed({
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
     const visitor = createPdaSeedValueVisitor({
-        accountsInput: undefined,
-        argumentsInput: undefined,
+        accountsInput,
+        argumentsInput,
         ixNode,
         programId,
         resolutionPath,
