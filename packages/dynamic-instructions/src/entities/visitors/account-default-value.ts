@@ -48,8 +48,16 @@ export function createAccountDefaultValueVisitor(
     | 'publicKeyValueNode'
     | 'resolverValueNode'
 > {
-    const { root, ixNode, ixAccountNode, accountAddressInput, argumentsInput, accountsInput, resolversInput } = ctx;
-    const resolutionPath = ctx.resolutionPath ?? [];
+    const {
+        root,
+        ixNode,
+        ixAccountNode,
+        accountAddressInput,
+        argumentsInput,
+        accountsInput,
+        resolversInput,
+        resolutionPath,
+    } = ctx;
 
     return {
         visitAccountBumpValue: (_node: AccountBumpValueNode) => {

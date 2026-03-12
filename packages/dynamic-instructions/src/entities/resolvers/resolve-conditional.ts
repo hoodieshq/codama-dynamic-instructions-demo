@@ -40,7 +40,7 @@ export async function resolveConditionalValueNodeCondition({
         accountsInput,
         argumentsInput,
         ixNode,
-        resolutionPath: resolutionPath ?? [],
+        resolutionPath,
         resolversInput,
         root,
     });

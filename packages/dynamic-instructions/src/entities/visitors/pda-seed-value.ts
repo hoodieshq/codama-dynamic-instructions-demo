@@ -55,10 +55,9 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode, resolversInput } = ctx;
+    const { root, ixNode, programId, seedTypeNode, resolversInput, resolutionPath } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
-    const resolutionPath = ctx.resolutionPath ?? [];
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {

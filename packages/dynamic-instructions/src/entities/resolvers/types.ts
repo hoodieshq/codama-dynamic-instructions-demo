@@ -13,7 +13,7 @@ export type BaseResolutionContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
+    resolutionPath: ResolutionPath;
     resolversInput: ResolversInput | undefined;
     root: RootNode;
 };

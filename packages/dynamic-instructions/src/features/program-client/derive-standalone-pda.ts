@@ -58,7 +58,7 @@ function resolveStandaloneConstantSeed(
             name: '__standalone__',
         } as unknown as import('codama').InstructionNode,
         programId: programAddress,
-        resolutionPath: undefined,
+        resolutionPath: [],
         resolversInput: undefined,
         root,
     });

@@ -19,7 +19,7 @@ export async function resolveAccountValueNodeAddress(
     node: AccountValueNode,
     ctx: BaseResolutionContext,
 ): Promise<Address | null> {
-    const { accountsInput, ixNode, resolutionPath = [] } = ctx;
+    const { accountsInput, ixNode, resolutionPath } = ctx;
 
     // Check if user provided the account address
     const providedAddress = accountsInput?.[node.name];

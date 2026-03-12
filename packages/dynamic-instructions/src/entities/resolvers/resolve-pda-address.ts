@@ -127,7 +127,7 @@ function resolveVariablePdaSeed({
         argumentsInput,
         ixNode,
         programId,
-        resolutionPath: resolutionPath ?? [],
+        resolutionPath,
         resolversInput,
         root,
         seedTypeNode: seedNode.type,
