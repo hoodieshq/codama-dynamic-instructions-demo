@@ -16,8 +16,34 @@ describe('createProgramClient', () => {
         });
 
         test('error message lists available instructions', () => {
-            expect(() => programClient.methods.nonExistentMethod).toThrow(/Available instructions:/);
-            expect(() => programClient.methods.nonExistentMethod).toThrow(/transferSol/);
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                programClient.methods.nonExistentMethod;
+                expect.unreachable('should have thrown');
+            } catch (error) {
+                const message = (error as Error).message;
+                expect(message).toContain('Available instructions:');
+
+                const allInstructions = [
+                    'createAccount',
+                    'assign',
+                    'transferSol',
+                    'createAccountWithSeed',
+                    'advanceNonceAccount',
+                    'withdrawNonceAccount',
+                    'initializeNonceAccount',
+                    'authorizeNonceAccount',
+                    'allocate',
+                    'allocateWithSeed',
+                    'assignWithSeed',
+                    'transferSolWithSeed',
+                    'upgradeNonceAccount',
+                ];
+
+                for (const ix of allInstructions) {
+                    expect(message).toContain(ix);
+                }
+            }
         });
 
         test('returns a builder for a valid instruction', () => {
