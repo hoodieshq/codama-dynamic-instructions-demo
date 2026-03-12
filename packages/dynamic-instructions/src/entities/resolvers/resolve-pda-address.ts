@@ -3,29 +3,21 @@ import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type {
     InstructionAccountNode,
-    InstructionNode,
     PdaNode,
     PdaSeedValueNode,
     PdaValueNode,
     RegisteredPdaSeedNode,
-    RootNode,
     VariablePdaSeedNode,
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
+import type { BaseResolutionContext } from './types';
 
-export type ResolvePDAAddressContext = {
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
+export type ResolvePDAAddressContext = BaseResolutionContext & {
     ixAccountNode: InstructionAccountNode;
-    ixNode: InstructionNode;
     pdaValueNode: PdaValueNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
 };
 
 export async function resolvePDAAddress({
@@ -105,14 +97,8 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
     throw new AccountError(`Unsupported PDA node kind: ${(pdaDefaultValue.pda as { kind: string }).kind}`);
 }
 
-type ResolvePdaSeedContext = {
-    accountsInput?: AccountsInput;
-    argumentsInput?: ArgumentsInput;
-    ixNode: InstructionNode;
+type ResolvePdaSeedContext = BaseResolutionContext & {
     programId: Address;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
     seedNode: VariablePdaSeedNode;
     variableSeedValueNode: PdaSeedValueNode;
 };
@@ -150,12 +136,8 @@ function resolveVariablePdaSeed({
     });
 }
 
-type ResolveConstantPdaSeedContext = {
-    ixNode: InstructionNode;
+type ResolveConstantPdaSeedContext = Omit<BaseResolutionContext, 'accountsInput' | 'argumentsInput'> & {
     programId: Address;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
     seedNode: RegisteredPdaSeedNode;
 };
 function resolveConstantPdaSeed({
@@ -170,6 +152,8 @@ function resolveConstantPdaSeed({
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
     const visitor = createPdaSeedValueVisitor({
+        accountsInput: undefined,
+        argumentsInput: undefined,
         ixNode,
         programId,
         resolutionPath,

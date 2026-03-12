@@ -8,34 +8,26 @@ import type {
     ConditionalValueNode,
     IdentityValueNode,
     InstructionAccountNode,
-    InstructionNode,
     PayerValueNode,
     PdaValueNode,
     ProgramIdValueNode,
     PublicKeyValueNode,
     ResolverValueNode,
-    RootNode,
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
 import { createConditionNodeValueVisitor } from './condition-node-value';
 import { createValueNodeVisitor } from './value-node-value';
+import type { BaseResolutionContext } from '../resolvers/types';
 
-type AccountDefaultValueVisitorContext = {
+type AccountDefaultValueVisitorContext = BaseResolutionContext & {
     accountAddressInput: AddressInput | null | undefined;
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
 };
 
 /**

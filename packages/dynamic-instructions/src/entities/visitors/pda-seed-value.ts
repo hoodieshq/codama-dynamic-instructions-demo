@@ -17,25 +17,18 @@ import type {
     TypeNode,
     Visitor,
 } from 'codama';
-import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
 import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { detectCircularDependency } from '../../shared/util';
 import { resolveAccountAddress } from '../resolvers/resolve-account-address';
 import { createInputValueTransformer } from './input-value-transformer';
+import type { BaseResolutionContext } from '../resolvers/types';
 
-type PdaSeedValueVisitorContext = {
-    accountsInput?: AccountsInput;
-    argumentsInput?: ArgumentsInput;
-    ixNode: InstructionNode;
+type PdaSeedValueVisitorContext = BaseResolutionContext & {
     programId: Address;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
     seedTypeNode?: TypeNode;
 };
 

@@ -4,18 +4,12 @@ import { visitOrElse } from 'codama';
 
 import { type AddressInput, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { createAccountDefaultValueVisitor } from '../visitors/account-default-value';
+import type { BaseResolutionContext } from './types';
 
-type ResolveAccountAddressContext = {
+type ResolveAccountAddressContext = BaseResolutionContext & {
     accountAddressInput?: AddressInput | null | undefined;
-    accountsInput?: AccountsInput | undefined;
-    argumentsInput?: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
 };
 
 /**

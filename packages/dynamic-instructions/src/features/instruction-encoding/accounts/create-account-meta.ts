@@ -6,13 +6,7 @@ import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { resolveAccountAddress } from '../../../entities/resolvers/resolve-account-address';
 import { isPublicKeyLike, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
-import type {
-    AccountsInput,
-    ArgumentsInput,
-    EitherSigners,
-    ResolutionPath,
-    ResolversInput,
-} from '../../../shared/types';
+import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../../shared/types';
 
 type ResolvedAccount = {
     address: Address | null;
@@ -45,7 +39,6 @@ export async function createAccountMeta(
                 throw new AccountError(`Account not provided: ${ixAccountNode.name}`);
             }
 
-            const initialResolutionPath: ResolutionPath = [];
             let resolvedAccountAddress: Address | null = null;
             if (!isAccountProvided) {
                 resolvedAccountAddress = await resolveAccountAddress({
@@ -54,7 +47,7 @@ export async function createAccountMeta(
                     argumentsInput,
                     ixAccountNode,
                     ixNode,
-                    resolutionPath: initialResolutionPath,
+                    resolutionPath: [],
                     resolversInput,
                     root,
                 });

@@ -1,26 +1,19 @@
 import type { Visitor } from 'codama';
-import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValueNode, RootNode } from 'codama';
 
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
 import { resolveAccountAddress } from '../resolvers/resolve-account-address';
+import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'codama';
 
-type ConditionNodeValueVisitorContext = {
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
-};
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
+import type { BaseResolutionContext } from '../resolvers/types';
 
 /**
  * Visitor for resolving condition nodes in ConditionalValueNode.
  * Returns the runtime value of the condition (from accounts or arguments).
  */
 export function createConditionNodeValueVisitor(
-    ctx: ConditionNodeValueVisitorContext,
+    ctx: BaseResolutionContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
     const { root, ixNode, argumentsInput, accountsInput, resolutionPath, resolversInput } = ctx;
 
