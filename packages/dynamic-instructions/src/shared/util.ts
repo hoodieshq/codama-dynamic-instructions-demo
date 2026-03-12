@@ -1,11 +1,3 @@
-import { AccountError } from './errors';
-import type { ResolutionPath } from './types';
-
-export function detectCircularDependency(nodeName: string, resolutionPath: ResolutionPath) {
-    if (resolutionPath.includes(nodeName)) {
-        throw new AccountError(`Circular dependency detected: ${[...resolutionPath, nodeName].join(' -> ')}`);
-    }
-}
 /**
  * Checks if a value is a plain object record (struct-like).
  */
