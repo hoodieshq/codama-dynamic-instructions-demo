@@ -16,11 +16,7 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
 
     if (!requiredArguments.length) return;
 
-    // Strip remaining account argument names so superstruct's object() doesn't reject them as extra keys
-    const remainingAccountArgNames = getRemainingAccountArgNames(ixNode);
-    const filteredInput = remainingAccountArgNames.length
-        ? Object.fromEntries(Object.entries(argumentsInput).filter(([key]) => !remainingAccountArgNames.includes(key)))
-        : argumentsInput;
+    const filteredInput = filterRemainingAccountArguments(ixNode, argumentsInput);
 
     const ArgumentsInputValidator = createIxArgumentsValidator(
         ixNode.name,
@@ -72,9 +68,9 @@ function getRequiredIxArguments(ixNode: InstructionNode) {
 // Arguments with "omitted" defaultValueStrategy must not be provided (e.g. discriminator)
 // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionArgumentNode.md#data
 function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
-    ixNode.arguments.filter(isOmittedArgument).forEach(ixNode => {
-        if (Object.hasOwn(argumentsInput, ixNode.name)) {
-            throw new ValidationError(`Argument ${ixNode.name} cannot be provided`);
+    ixNode.arguments.filter(isOmittedArgument).forEach(ixArgumentNode => {
+        if (Object.hasOwn(argumentsInput, ixArgumentNode.name)) {
+            throw new ValidationError(`Argument ${ixArgumentNode.name} cannot be provided`);
         }
     });
 }
@@ -83,4 +79,18 @@ function getRemainingAccountArgNames(ixNode: InstructionNode): string[] {
     return (ixNode.remainingAccounts ?? [])
         .filter(node => node.value.kind === 'argumentValueNode')
         .map(node => node.value.name);
+}
+
+/**
+ * Filters out remaining account argument names from the arguments input.
+ * Superstruct's object() validator rejects extra keys, so we need to strip
+ */
+function filterRemainingAccountArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput): ArgumentsInput {
+    const remainingAccountArgNames = getRemainingAccountArgNames(ixNode);
+    if (!remainingAccountArgNames.length) {
+        return argumentsInput;
+    }
+
+    const remainingAccountArgNamesSet = new Set(remainingAccountArgNames);
+    return Object.fromEntries(Object.entries(argumentsInput).filter(([key]) => !remainingAccountArgNamesSet.has(key)));
 }
