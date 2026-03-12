@@ -23,7 +23,7 @@ import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
-import { createInputValueTransformer } from '.';
+import { createInputValueTransformer } from './input-value-transformer';
 
 type PdaSeedValueVisitorContext = BaseResolutionContext & {
     programId: Address;
