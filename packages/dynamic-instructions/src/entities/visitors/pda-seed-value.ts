@@ -19,13 +19,11 @@ import type {
 } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
-import { detectCircularDependency } from '../../shared/util';
-import { resolveAccountAddress } from '../resolvers/resolve-account-address';
-import { createInputValueTransformer } from './input-value-transformer';
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
+import { createInputValueTransformer } from '.';
 
 type PdaSeedValueVisitorContext = BaseResolutionContext & {
     programId: Address;
@@ -64,25 +62,11 @@ export function createPdaSeedValueVisitor(
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
-            const providedAddress = accountsInput[node.name];
-            if (providedAddress !== undefined && providedAddress !== null) {
-                return getAddressEncoder().encode(toAddress(providedAddress));
-            }
-
-            detectCircularDependency(node.name, resolutionPath);
-
-            const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
-            if (!referencedIxAccountNode) {
-                throw new AccountError(`PDA seed references unknown account: ${node.name}`);
-            }
-
-            const resolvedAddress: Address | null = await resolveAccountAddress({
-                accountAddressInput: providedAddress,
+            const resolvedAddress = await resolveAccountValueNodeAddress(node, {
                 accountsInput,
                 argumentsInput,
-                ixAccountNode: referencedIxAccountNode,
                 ixNode,
-                resolutionPath: [...resolutionPath, node.name],
+                resolutionPath,
                 resolversInput,
                 root,
             });

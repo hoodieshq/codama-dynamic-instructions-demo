@@ -14,15 +14,14 @@ import type {
     PublicKeyValueNode,
     ResolverValueNode,
 } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import { detectCircularDependency } from '../../shared/util';
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
-import { createValueNodeVisitor } from './value-node-value';
 import type { BaseResolutionContext } from '../resolvers/types';
 
 type AccountDefaultValueVisitorContext = BaseResolutionContext & {
@@ -61,38 +60,14 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitAccountValue: async (node: AccountValueNode) => {
-            // AccountValueNode references another account in instruction
-            // First try to resolve it from accountsInput
-            const referencedAccountInput = accountsInput?.[node.name];
-            if (referencedAccountInput !== undefined && referencedAccountInput !== null) {
-                return toAddress(referencedAccountInput);
-            }
-
-            // Try to resolve it as a PDA from the instruction
-            const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
-            if (!referencedIxAccountNode) {
-                throw new AccountError(
-                    `Referenced account not found in instruction: ${node.name} (referenced by ${ixAccountNode.name})`,
-                );
-            }
-
-            if (referencedIxAccountNode.defaultValue) {
-                detectCircularDependency(node.name, resolutionPath);
-
-                const visitor = createAccountDefaultValueVisitor({
-                    ...ctx,
-                    accountAddressInput: referencedAccountInput,
-                    ixAccountNode: referencedIxAccountNode,
-                    resolutionPath: [...resolutionPath, node.name],
-                });
-                return await visitOrElse(referencedIxAccountNode.defaultValue, visitor, innerNode => {
-                    throw new AccountError(`Cannot resolve referenced account ${node.name}: ${innerNode.kind}`);
-                });
-            }
-
-            throw new AccountError(
-                `Cannot resolve accountValueNode: ${node.name}. Account not provided and has no default value.`,
-            );
+            return await resolveAccountValueNodeAddress(node, {
+                accountsInput,
+                argumentsInput,
+                ixNode,
+                resolutionPath,
+                resolversInput,
+                root,
+            });
         },
 
         visitArgumentValue: (node: ArgumentValueNode) => {
