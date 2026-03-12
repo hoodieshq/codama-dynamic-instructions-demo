@@ -70,7 +70,6 @@ export function createPdaSeedValueVisitor(
     const resolutionPath = ctx.resolutionPath ?? [];
 
     return {
-        // Contextual seed values
         visitAccountValue: async (node: AccountValueNode) => {
             const providedAddress = accountsInput[node.name];
             if (providedAddress !== undefined && providedAddress !== null) {
@@ -151,11 +150,21 @@ export function createPdaSeedValueVisitor(
             return Promise.resolve(new Uint8Array([node.number]));
         },
 
-        // Constant / standalone value nodes.
-        visitProgramIdValue: () => Promise.resolve(getAddressEncoder().encode(programId)),
+        visitProgramIdValue: () => {
+            if (typeof programId !== 'string') {
+                throw new AccountError(
+                    `Expected base58-encoded address for programId, got: ${programId as unknown as string}`,
+                );
+            }
+            return Promise.resolve(getAddressEncoder().encode(programId));
+        },
 
-        visitPublicKeyValue: (node: PublicKeyValueNode) =>
-            Promise.resolve(getAddressEncoder().encode(address(node.publicKey))),
+        visitPublicKeyValue: (node: PublicKeyValueNode) => {
+            if (typeof node.publicKey !== 'string') {
+                throw new AccountError(`Expected base58-encoded address, got: ${node.publicKey as unknown as string}`);
+            }
+            return Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
+        },
 
         visitSomeValue: (node: SomeValueNode) => {
             const innerVisitor = createPdaSeedValueVisitor(ctx);

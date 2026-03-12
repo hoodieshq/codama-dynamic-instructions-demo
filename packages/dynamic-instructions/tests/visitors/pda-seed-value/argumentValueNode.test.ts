@@ -1,0 +1,69 @@
+import { getUtf8Codec } from '@solana/codecs';
+import type { InstructionNode } from 'codama';
+import { argumentValueNode, instructionArgumentNode, numberTypeNode, sizePrefixTypeNode, stringTypeNode } from 'codama';
+import { describe, expect, test } from 'vitest';
+
+import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
+
+describe('pda-seed-value: visitArgumentValue', () => {
+    const ixNodeWithArg: InstructionNode = {
+        ...ixNodeStub,
+        arguments: [instructionArgumentNode({ name: 'title', type: stringTypeNode('utf8') })],
+    };
+
+    test('should encode argument value using its codec', async () => {
+        const visitor = makeVisitor({
+            argumentsInput: { title: 'hello' },
+            ixNode: ixNodeWithArg,
+        });
+        const result = await visitor.visitArgumentValue(argumentValueNode('title'));
+        expect(result).toEqual(getUtf8Codec().encode('hello'));
+    });
+
+    test('should use seedTypeNode override instead of argument type', async () => {
+        // Argument type is sizePrefixTypeNode (u32 length prefix + utf8 string),
+        // but seedTypeNode overrides it to plain stringTypeNode (raw utf8 bytes only).
+        // This mirrors how on-chain PDA derivation uses raw string bytes as seeds,
+        // even when the instruction argument is serialized with a length prefix.
+        const sizePrefixedArgType = sizePrefixTypeNode(stringTypeNode('utf8'), numberTypeNode('u32'));
+        const ixNodeWithSizePrefixedArg: InstructionNode = {
+            ...ixNodeStub,
+            arguments: [instructionArgumentNode({ name: 'name', type: sizePrefixedArgType })],
+        };
+
+        const visitor = makeVisitor({
+            argumentsInput: { name: 'hello' },
+            ixNode: ixNodeWithSizePrefixedArg,
+            seedTypeNode: stringTypeNode('utf8'),
+        });
+        const result = await visitor.visitArgumentValue(argumentValueNode('name'));
+
+        // Should produce raw utf8 bytes (5 bytes), NOT size-prefixed bytes (4 + 5 = 9 bytes)
+        const rawUtf8Bytes = getUtf8Codec().encode('hello');
+        expect(result).toEqual(rawUtf8Bytes);
+        expect(result.length).toBe(5);
+    });
+
+    test('should throw for unknown argument name', () => {
+        const visitor = makeVisitor({ ixNode: ixNodeWithArg });
+        expect(() => visitor.visitArgumentValue(argumentValueNode('unknown'))).toThrow(
+            /Missing instruction argument node/,
+        );
+    });
+
+    test('should throw when argument value is undefined', () => {
+        const visitor = makeVisitor({
+            argumentsInput: {},
+            ixNode: ixNodeWithArg,
+        });
+        expect(() => visitor.visitArgumentValue(argumentValueNode('title'))).toThrow(/Missing argument for PDA seed/);
+    });
+
+    test('should throw when argument value is null', () => {
+        const visitor = makeVisitor({
+            argumentsInput: { title: null },
+            ixNode: ixNodeWithArg,
+        });
+        expect(() => visitor.visitArgumentValue(argumentValueNode('title'))).toThrow(/Missing argument for PDA seed/);
+    });
+});

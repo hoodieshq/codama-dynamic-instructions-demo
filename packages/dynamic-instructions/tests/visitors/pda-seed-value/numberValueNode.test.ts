@@ -1,33 +1,10 @@
-import { address } from '@solana/addresses';
-import type { InstructionNode } from 'codama';
-import { numberValueNode, programNode, rootNode } from 'codama';
+import { numberValueNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { createPdaSeedValueVisitor } from '../../../src/entities/visitors/pda-seed-value';
 import { AccountError } from '../../../src/shared/errors';
-
-const DEFAULT_PUBLIC_KEY = '11111111111111111111111111111111';
+import { makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitNumberValue', () => {
-    const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: DEFAULT_PUBLIC_KEY }));
-    const stubIxNode = {
-        accounts: [],
-        arguments: [],
-        docs: [],
-        kind: 'instructionNode',
-        name: '__test__',
-    } as unknown as InstructionNode;
-
-    function makeVisitor() {
-        return createPdaSeedValueVisitor({
-            ixNode: stubIxNode,
-            programId: address(DEFAULT_PUBLIC_KEY),
-            resolutionPath: undefined,
-            resolversInput: undefined,
-            root: rootNodeMock,
-        });
-    }
-
     test('should encode 0 as single byte', async () => {
         const result = await makeVisitor().visitNumberValue(numberValueNode(0));
         expect(result).toEqual(new Uint8Array([0]));
