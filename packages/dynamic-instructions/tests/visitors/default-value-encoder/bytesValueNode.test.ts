@@ -13,7 +13,7 @@ describe('default-value-encoder: visitBytesValue', () => {
     });
 
     test('should encode base58 bytes', () => {
-        const bs58 = new SvmTestContext().createAccount();
+        const bs58 = SvmTestContext.generateAddress();
         const visitor = makeVisitor(fixedSizeTypeNode(bytesTypeNode(), 32));
         const result = visitor.visitBytesValue(bytesValueNode('base58', bs58));
         expect(result).toEqual(getBase58Codec().encode(bs58));

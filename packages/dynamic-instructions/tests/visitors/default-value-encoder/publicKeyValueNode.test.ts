@@ -7,7 +7,7 @@ import { makeVisitor } from './default-value-encoder-test-utils';
 
 describe('default-value-encoder: visitPublicKeyValue', () => {
     test('should encode public key as 32 bytes', () => {
-        const pubkey = new SvmTestContext().createAccount();
+        const pubkey = SvmTestContext.generateAddress();
         const visitor = makeVisitor(publicKeyTypeNode());
         const result = visitor.visitPublicKeyValue(publicKeyValueNode(pubkey));
         expect(result).toEqual(getAddressCodec().encode(pubkey));
