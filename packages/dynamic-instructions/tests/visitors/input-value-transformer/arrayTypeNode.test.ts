@@ -12,7 +12,10 @@ describe('arrayTypeNode', () => {
             { bytesEncoding: 'base16' },
         );
         const input = [new Uint8Array([0x01]), new Uint8Array([0x02])];
-        expect(transformer(input)).toEqual([['base16', '01'], ['base16', '02']]);
+        expect(transformer(input)).toEqual([
+            ['base16', '01'],
+            ['base16', '02'],
+        ]);
     });
 
     test('should pass through array of primitives', () => {

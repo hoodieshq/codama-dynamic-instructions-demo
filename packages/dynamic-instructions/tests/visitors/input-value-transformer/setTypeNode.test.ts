@@ -12,7 +12,10 @@ describe('setTypeNode', () => {
             { bytesEncoding: 'base16' },
         );
         const input = [new Uint8Array([0xaa]), new Uint8Array([0xbb])];
-        expect(transformer(input)).toEqual([['base16', 'aa'], ['base16', 'bb']]);
+        expect(transformer(input)).toEqual([
+            ['base16', 'aa'],
+            ['base16', 'bb'],
+        ]);
     });
 
     test('should throw for non-array input', () => {

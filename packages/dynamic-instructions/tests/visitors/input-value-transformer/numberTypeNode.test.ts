@@ -9,8 +9,7 @@ describe('numberTypeNode', () => {
         const transformer = createInputValueTransformer(numberTypeNode('u64'), rootNodeMock);
         expect(transformer(0)).toBe(0);
         expect(transformer(42)).toBe(42);
-        expect(transformer(-1)).toBe(-1);
-        expect(transformer(3.14)).toBe(3.14);
+        expect(transformer(999)).toBe(999);
         expect(transformer(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
     });
 });

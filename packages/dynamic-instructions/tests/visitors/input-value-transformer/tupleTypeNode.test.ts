@@ -16,10 +16,7 @@ describe('tupleTypeNode', () => {
     });
 
     test('should throw for non-array input', () => {
-        const transformer = createInputValueTransformer(
-            tupleTypeNode([numberTypeNode('u8')]),
-            rootNodeMock,
-        );
+        const transformer = createInputValueTransformer(tupleTypeNode([numberTypeNode('u8')]), rootNodeMock);
         expect(() => transformer('not an array')).toThrow('Expected an array for tupleTypeNode');
     });
 

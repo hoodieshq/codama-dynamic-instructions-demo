@@ -5,7 +5,7 @@ import { createInputValueTransformer } from '../../../src/entities/visitors/inpu
 import { rootNodeMock } from './input-value-transformer-test-utils';
 
 describe('postOffsetTypeNode', () => {
-    test('should delegate to inner type', () => {
+    test('should delegate to inner type [bytesTypeNode]', () => {
         const transformer = createInputValueTransformer(postOffsetTypeNode(bytesTypeNode(), 0), rootNodeMock, {
             bytesEncoding: 'base16',
         });
@@ -13,7 +13,7 @@ describe('postOffsetTypeNode', () => {
         expect(transformer(input)).toEqual(['base16', 'abcd']);
     });
 
-    test('should delegate to inner type', () => {
+    test('should delegate to inner type [numberTypeNode]', () => {
         const transformer = createInputValueTransformer(postOffsetTypeNode(numberTypeNode('u32'), 0), rootNodeMock);
         expect(transformer(42)).toEqual(42);
     });
