@@ -114,9 +114,10 @@ export function createAccountDefaultValueVisitor(
 
             try {
                 return Promise.resolve(toAddress(argValue as AddressInput));
-            } catch {
+            } catch (error) {
                 throw new AccountError(
                     `Argument ${node.name} cannot be converted to Address for account ${ixAccountNode.name}`,
+                    { cause: error },
                 );
             }
         },
