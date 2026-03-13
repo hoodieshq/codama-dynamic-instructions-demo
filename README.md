@@ -100,7 +100,7 @@ pnpm test:types
 Generate strongly-typed clients from Codama IDLs using the CLI:
 
 ```bash
-npx @hoodieshq/dynamic-instructions generate-client-types ./idl.json ./generated
+npx @hoodieshq/dynamic-instructions generate-client-types ./my-program-idl.json ./generated
 ```
 
 Or programmatically:
@@ -109,19 +109,19 @@ Or programmatically:
 import { generateClientTypes } from '@hoodieshq/dynamic-instructions';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const idl = JSON.parse(readFileSync('./idl.json', 'utf-8'));
-writeFileSync('./generated/my-program-types.ts', generateClientTypes(idl));
+const idl = JSON.parse(readFileSync('./my-program-idl.json', 'utf-8'));
+writeFileSync('./generated/my-program-idl-types.ts', generateClientTypes(idl));
 ```
 
 Then use the generated types with `createProgramClient`:
 
 ```typescript
 import { createProgramClient } from '@hoodieshq/dynamic-instructions';
-import type { ExampleProgramClient } from './generated/example-idl-types';
+import type { MyProgramClient } from './generated/my-program-idl-types';
 import idl from './my-program-idl.json';
 
 // Create strongly-typed client
-const client = createProgramClient<ExampleProgramClient>(idl);
+const client = createProgramClient<MyProgramClient>(idl);
 
 const ix = await client.methods
     .yourInstruction({ arg1: 42 }) // typed methods and arguments

@@ -30,15 +30,20 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
         process.exit(1);
     }
 
+    let types: string = '';
+    try {
+        console.log(`Generating types for program: ${idl.program.name}`);
+        types = generateClientTypes(idl);
+    } catch (err) {
+        console.error(`Error generating client types: ${(err as Error).message}`);
+        process.exit(1);
+    }
+
     try {
         mkdirSync(outputDir, { recursive: true });
-
         const fileName = path.basename(idlPath);
         const outputFile = fileName.replace(/\.json$/, '-types.ts');
         const outputPath = path.join(outputDir, outputFile);
-
-        console.log(`Generating types for program: ${idl.program.name}`);
-        const types = generateClientTypes(idl);
 
         console.log(`Writing types to: ${outputPath}`);
         writeFileSync(outputPath, types, 'utf-8');

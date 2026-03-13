@@ -218,16 +218,16 @@ This reads the IDL file and writes a `*-types.ts` file to the output directory c
 
 ### `generateClientTypes(idl)`
 
-The same is available as a typescript function:
+The same is available as a TypeScript function:
 
 ```typescript
 import { generateClientTypes } from '@hoodieshq/dynamic-instructions';
 import type { IdlRoot } from '@hoodieshq/dynamic-instructions';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const idl: IdlRoot = JSON.parse(readFileSync('./idl.json', 'utf-8'));
+const idl: IdlRoot = JSON.parse(readFileSync('./my-program-idl.json', 'utf-8'));
 const typesSource = generateClientTypes(idl);
-writeFileSync('./generated/my-program-types.ts', typesSource);
+writeFileSync('./generated/my-program-idl-types.ts', typesSource);
 ```
 
 ## Utilities
