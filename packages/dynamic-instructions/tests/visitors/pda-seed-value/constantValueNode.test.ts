@@ -20,8 +20,8 @@ describe('pda-seed-value: visitConstantValue', () => {
         expect(result).toEqual(getUtf8Codec().encode('Nested hello world'));
     });
 
-    test('should throw for unsupported inner node kind', () => {
+    test('should throw for unsupported inner node kind', async () => {
         const node = constantValueNode(numberTypeNode('u8'), mapValueNode([]));
-        expect(() => makeVisitor().visitConstantValue(node)).toThrow(/Unsupported constant PDA seed value/);
+        await expect(makeVisitor().visitConstantValue(node)).rejects.toThrow(/Unsupported constant PDA seed value/);
     });
 });

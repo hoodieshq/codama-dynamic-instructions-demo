@@ -13,14 +13,15 @@ describe('pda-seed-value: visitPublicKeyValue', () => {
         expect(result).toEqual(getAddressEncoder().encode(address(randomAddress)));
     });
 
-    test('should throw for invalid public key', () => {
+    test('should throw for invalid public key', async () => {
         const invalidPublicKeys = [123, 'not-a-key', [1, 2, 3], null];
         const visitor = makeVisitor();
 
         for (const invalidPublicKey of invalidPublicKeys) {
-            expect(() =>
-                visitor.visitPublicKeyValue(publicKeyValueNode(invalidPublicKey as unknown as string)),
-            ).toThrow(/Expected base58-encoded Address/);
+            // @ts-expect-error testing invalid inputs
+            await expect(visitor.visitPublicKeyValue(publicKeyValueNode(invalidPublicKey))).rejects.toThrow(
+                /Expected base58-encoded Address/,
+            );
         }
     });
 });

@@ -15,21 +15,25 @@ describe('pda-seed-value: visitProgramIdValue', () => {
         expect(result).toEqual(getAddressEncoder().encode(randomAddress));
     });
 
-    test('should throw an error for non-string programId', () => {
+    test('should throw an error for non-string programId', async () => {
         const invalidValues = [42, [1, 2, 3], null];
-        invalidValues.forEach(value => {
+        for (const value of invalidValues) {
             // @ts-expect-error testing invalid programId value
             const visitor = makeVisitor({ programId: value });
-            expect(() => visitor.visitProgramIdValue(programIdValueNode())).toThrow(/Expected base58-encoded Address/);
-        });
+            await expect(visitor.visitProgramIdValue(programIdValueNode())).rejects.toThrow(
+                /Expected base58-encoded Address/,
+            );
+        }
     });
 
-    test('should throw an error for invalid string programId', () => {
+    test('should throw an error for invalid string programId', async () => {
         const invalidValues = ['not-a-key', '123', '', '      '];
-        invalidValues.forEach(value => {
+        for (const value of invalidValues) {
             // @ts-expect-error testing invalid programId value
             const visitor = makeVisitor({ programId: value });
-            expect(() => visitor.visitProgramIdValue(programIdValueNode())).toThrow(/Expected base58-encoded Address/);
-        });
+            await expect(visitor.visitProgramIdValue(programIdValueNode())).rejects.toThrow(
+                /Expected base58-encoded Address/,
+            );
+        }
     });
 });

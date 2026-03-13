@@ -17,13 +17,13 @@ describe('pda-seed-value: visitSomeValue', () => {
         expect(result).toEqual(new Uint8Array([42]));
     });
 
-    test('should throw for unsupported inner node kind', () => {
+    test('should throw for unsupported inner node kind', async () => {
         const node = someValueNode(mapValueNode([]));
-        expect(() => makeVisitor().visitSomeValue(node)).toThrow(/Unsupported some PDA seed value/);
+        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(/Unsupported some PDA seed value/);
     });
 
-    test('should throw for unsupported nested inner node kind', () => {
+    test('should throw for unsupported nested inner node kind', async () => {
         const node = someValueNode(constantValueNode(publicKeyTypeNode(), publicKeyValueNode('invalid-key')));
-        expect(() => makeVisitor().visitSomeValue(node)).toThrow(/Expected base58-encoded Address/);
+        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(/Expected base58-encoded Address/);
     });
 });

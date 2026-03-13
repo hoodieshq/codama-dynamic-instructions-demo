@@ -60,10 +60,12 @@ export function createAccountDefaultValueVisitor(
     } = ctx;
 
     return {
-        visitAccountBumpValue: (_node: AccountBumpValueNode) => {
-            throw new AccountError(
-                `AccountBumpValueNode not yet supported for ${ixAccountNode.name} account. ` +
-                    `Bump seeds should be derived from PDA derivation.`,
+        visitAccountBumpValue: async (_node: AccountBumpValueNode) => {
+            return await Promise.reject(
+                new AccountError(
+                    `AccountBumpValueNode not yet supported for ${ixAccountNode.name} account. ` +
+                        `Bump seeds should be derived from PDA derivation.`,
+                ),
             );
         },
 
@@ -78,7 +80,7 @@ export function createAccountDefaultValueVisitor(
             });
         },
 
-        visitArgumentValue: (node: ArgumentValueNode) => {
+        visitArgumentValue: async (node: ArgumentValueNode) => {
             // Reference to an instruction argument - should be an address
             const argValue = argumentsInput?.[node.name];
             if (argValue === undefined || argValue === null) {
@@ -88,7 +90,7 @@ export function createAccountDefaultValueVisitor(
             }
 
             try {
-                return Promise.resolve(toAddress(argValue as AddressInput));
+                return await Promise.resolve(toAddress(argValue as AddressInput));
             } catch (error) {
                 throw new AccountError(
                     `Argument ${node.name} cannot be converted to Address for account ${ixAccountNode.name}`,
@@ -165,12 +167,12 @@ export function createAccountDefaultValueVisitor(
             return pda[0];
         },
 
-        visitProgramIdValue: (_node: ProgramIdValueNode) => {
-            return Promise.resolve(address(root.program.publicKey));
+        visitProgramIdValue: async (_node: ProgramIdValueNode) => {
+            return await Promise.resolve(address(root.program.publicKey));
         },
 
-        visitPublicKeyValue: (node: PublicKeyValueNode) => {
-            return Promise.resolve(address(node.publicKey));
+        visitPublicKeyValue: async (node: PublicKeyValueNode) => {
+            return await Promise.resolve(address(node.publicKey));
         },
 
         visitResolverValue: async (node: ResolverValueNode) => {

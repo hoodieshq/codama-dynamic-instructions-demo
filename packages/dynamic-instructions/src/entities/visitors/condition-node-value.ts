@@ -32,9 +32,9 @@ export function createConditionNodeValueVisitor(
             });
         },
 
-        visitArgumentValue: (node: ArgumentValueNode) => {
+        visitArgumentValue: async (node: ArgumentValueNode) => {
             const argInput = argumentsInput?.[node.name];
-            return Promise.resolve(argInput);
+            return await Promise.resolve(argInput);
         },
 
         visitResolverValue: async (node: ResolverValueNode) => {
