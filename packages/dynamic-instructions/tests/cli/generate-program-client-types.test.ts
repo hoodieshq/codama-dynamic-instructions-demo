@@ -5,8 +5,8 @@ import path from 'node:path';
 
 import { afterAll, describe, expect, test } from 'vitest';
 
-import type { IdlRoot } from '../../../src/features/cli/commands/generate-client-types/generate-client-types';
-import { generateClientTypes } from '../../../src/features/cli/commands/generate-client-types/generate-client-types';
+import type { IdlRoot } from '../../src/cli/commands/generate-client-types/generate-client-types';
+import { generateClientTypes } from '../../src/cli/commands/generate-client-types/generate-client-types';
 
 const CLI_PATH = path.resolve('bin/cli.cjs');
 
