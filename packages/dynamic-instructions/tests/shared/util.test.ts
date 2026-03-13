@@ -120,10 +120,10 @@ describe('safeStringify', () => {
         expect(safeStringify({ amount: 1000n })).toBe('{"amount":"1000"}');
     });
 
-    test('should return "non-serializable" for circular references', () => {
+    test('should return non-serializable object for circular references', () => {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
-        expect(safeStringify(circular)).toBe('"non-serializable"');
+        expect(safeStringify(circular)).toBe('non-serializable object');
     });
 
     test('should always return a string', () => {
