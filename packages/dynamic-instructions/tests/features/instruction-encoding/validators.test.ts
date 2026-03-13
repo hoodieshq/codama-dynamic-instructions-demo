@@ -1,4 +1,4 @@
-import type { InstructionArgumentNode } from '@codama/nodes';
+import type { InstructionArgumentNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { createIxArgumentsValidator } from '../../../src/features/instruction-encoding/validators';

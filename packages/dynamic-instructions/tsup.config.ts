@@ -1,5 +1,5 @@
 import { defineConfig } from 'tsup';
 
-import { getPackageBuildConfigs } from '../../tsup.config.base';
+import { getCliBuildConfig, getPackageBuildConfigs } from '../../tsup.config.base';
 
-export default defineConfig(getPackageBuildConfigs());
+export default defineConfig([...getPackageBuildConfigs(), getCliBuildConfig()]);
