@@ -1,33 +1,6 @@
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { AccountError } from '../../src/shared/errors';
-import { detectCircularDependency, formatValueType, isObjectRecord, safeStringify } from '../../src/shared/util';
-
-describe('detectCircularDependency', () => {
-    test('should not throw when no circular dependency exists', () => {
-        expect(() => detectCircularDependency('c', ['a', 'b'])).not.toThrow();
-    });
-
-    test('should throw AccountError when circular dependency detected', () => {
-        expect(() => detectCircularDependency('a', ['a', 'b'])).toThrow(AccountError);
-    });
-
-    test('should include full resolution path in error message', () => {
-        expect(() => detectCircularDependency('a', ['a', 'b', 'c'])).toThrow(
-            'Circular dependency detected: a -> b -> c -> a',
-        );
-    });
-
-    test('should detect dependency later in the path', () => {
-        expect(() => detectCircularDependency('b', ['a', 'b', 'c'])).toThrow(
-            'Circular dependency detected: a -> b -> c -> b',
-        );
-    });
-
-    test('should not throw for empty path', () => {
-        expect(() => detectCircularDependency('a', [])).not.toThrow();
-    });
-});
+import { formatValueType, isObjectRecord, safeStringify } from '../../src/shared/util';
 
 describe('isObjectRecord', () => {
     test('should return true for plain objects', () => {

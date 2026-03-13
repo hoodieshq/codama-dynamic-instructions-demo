@@ -8,9 +8,6 @@ export type ArgumentsInput = Partial<Record<string, unknown>>;
 type AccountName = string;
 export type EitherSigners = AccountName[];
 
-// Array of node names being resolved to detect circular dependencies
-export type ResolutionPath = readonly string[];
-
 export type ResolverFn = (argumentsInput: ArgumentsInput, accountsInput: AccountsInput) => Promise<unknown>;
 export type ResolversInput = Record<string, ResolverFn>;
 

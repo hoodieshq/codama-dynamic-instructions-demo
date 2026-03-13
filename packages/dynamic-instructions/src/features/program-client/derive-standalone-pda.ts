@@ -46,6 +46,8 @@ function resolveStandaloneConstantSeed(
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
     const visitor = createPdaSeedValueVisitor({
+        accountsInput: undefined,
+        argumentsInput: undefined,
         // Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue,
         // none of which reference instruction arguments or accounts — so a
         // minimal stub satisfies the context requirement.
@@ -56,7 +58,7 @@ function resolveStandaloneConstantSeed(
             name: '__standalone__',
         } as unknown as import('codama').InstructionNode,
         programId: programAddress,
-        resolutionPath: undefined,
+        resolutionPath: [],
         resolversInput: undefined,
         root,
     });

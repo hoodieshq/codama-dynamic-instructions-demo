@@ -44,26 +44,30 @@ describe('pda-seed-value: visitArgumentValue', () => {
         expect(result.length).toBe(5);
     });
 
-    test('should throw for unknown argument name', () => {
+    test('should throw for unknown argument name', async () => {
         const visitor = makeVisitor({ ixNode: ixNodeWithArg });
-        expect(() => visitor.visitArgumentValue(argumentValueNode('unknown'))).toThrow(
+        await expect(visitor.visitArgumentValue(argumentValueNode('unknown'))).rejects.toThrow(
             /Missing instruction argument node/,
         );
     });
 
-    test('should throw when argument value is undefined', () => {
+    test('should throw when argument value is undefined', async () => {
         const visitor = makeVisitor({
             argumentsInput: {},
             ixNode: ixNodeWithArg,
         });
-        expect(() => visitor.visitArgumentValue(argumentValueNode('title'))).toThrow(/Missing argument for PDA seed/);
+        await expect(visitor.visitArgumentValue(argumentValueNode('title'))).rejects.toThrow(
+            /Missing argument for PDA seed/,
+        );
     });
 
-    test('should throw when argument value is null', () => {
+    test('should throw when argument value is null', async () => {
         const visitor = makeVisitor({
             argumentsInput: { title: null },
             ixNode: ixNodeWithArg,
         });
-        expect(() => visitor.visitArgumentValue(argumentValueNode('title'))).toThrow(/Missing argument for PDA seed/);
+        await expect(visitor.visitArgumentValue(argumentValueNode('title'))).rejects.toThrow(
+            /Missing argument for PDA seed/,
+        );
     });
 });

@@ -1,64 +1,40 @@
 import type { Visitor } from 'codama';
-import type { AccountValueNode, ArgumentValueNode, InstructionNode, ResolverValueNode, RootNode } from 'codama';
+import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'codama';
 
-import { toAddress } from '../../shared/address';
-import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
-import { resolveAccountAddress } from '../resolvers/resolve-account-address';
-
-type ConditionNodeValueVisitorContext = {
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
-};
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
+import type { BaseResolutionContext } from '../resolvers/types';
 
 /**
  * Visitor for resolving condition nodes in ConditionalValueNode.
  * Returns the runtime value of the condition (from accounts or arguments).
  */
 export function createConditionNodeValueVisitor(
-    ctx: ConditionNodeValueVisitorContext,
+    ctx: BaseResolutionContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
     const { root, ixNode, argumentsInput, accountsInput, resolutionPath, resolversInput } = ctx;
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
-            const ixAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
-            if (!ixAccountNode) {
-                throw new AccountError(
-                    `Missing instruction account node for conditionalValueNode condition: ${node.name}`,
-                );
-            }
-
-            // If the user explicitly provides null for a conditional account, return it for the conditionalValueNode ifFalse branch
-            const accountAddressInput = accountsInput?.[ixAccountNode.name];
+            // If the user explicitly provides null for a conditional account,
+            // return it for the conditionalValueNode ifFalse branch
+            const accountAddressInput = accountsInput?.[node.name];
             if (accountAddressInput === null) {
                 return null;
             }
-            if (accountAddressInput !== undefined) {
-                return toAddress(accountAddressInput);
-            }
 
-            // Fallback to resolving from default value
-            const conditionalAddress = await resolveAccountAddress({
-                accountAddressInput,
+            return await resolveAccountValueNodeAddress(node, {
                 accountsInput,
                 argumentsInput,
-                ixAccountNode,
                 ixNode,
                 resolutionPath,
                 resolversInput,
                 root,
             });
-            return conditionalAddress;
         },
 
-        visitArgumentValue: (node: ArgumentValueNode) => {
+        visitArgumentValue: async (node: ArgumentValueNode) => {
             const argInput = argumentsInput?.[node.name];
-            return Promise.resolve(argInput);
+            return await Promise.resolve(argInput);
         },
 
         visitResolverValue: async (node: ResolverValueNode) => {

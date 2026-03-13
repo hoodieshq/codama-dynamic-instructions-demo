@@ -8,34 +8,25 @@ import type {
     ConditionalValueNode,
     IdentityValueNode,
     InstructionAccountNode,
-    InstructionNode,
     PayerValueNode,
     PdaValueNode,
     ProgramIdValueNode,
     PublicKeyValueNode,
     ResolverValueNode,
-    RootNode,
 } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
-import { detectCircularDependency } from '../../shared/util';
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
+import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
-import { createConditionNodeValueVisitor } from './condition-node-value';
-import { createValueNodeVisitor } from './value-node-value';
+import type { BaseResolutionContext } from '../resolvers/types';
 
-type AccountDefaultValueVisitorContext = {
+type AccountDefaultValueVisitorContext = BaseResolutionContext & {
     accountAddressInput: AddressInput | null | undefined;
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
     ixAccountNode: InstructionAccountNode;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
 };
 
 /**
@@ -57,53 +48,39 @@ export function createAccountDefaultValueVisitor(
     | 'publicKeyValueNode'
     | 'resolverValueNode'
 > {
-    const { root, ixNode, ixAccountNode, accountAddressInput, argumentsInput, accountsInput, resolversInput } = ctx;
-    const resolutionPath = ctx.resolutionPath ?? [];
+    const {
+        root,
+        ixNode,
+        ixAccountNode,
+        accountAddressInput,
+        argumentsInput,
+        accountsInput,
+        resolversInput,
+        resolutionPath,
+    } = ctx;
 
     return {
-        visitAccountBumpValue: (_node: AccountBumpValueNode) => {
-            throw new AccountError(
-                `AccountBumpValueNode not yet supported for ${ixAccountNode.name} account. ` +
-                    `Bump seeds should be derived from PDA derivation.`,
+        visitAccountBumpValue: async (_node: AccountBumpValueNode) => {
+            return await Promise.reject(
+                new AccountError(
+                    `AccountBumpValueNode not yet supported for ${ixAccountNode.name} account. ` +
+                        `Bump seeds should be derived from PDA derivation.`,
+                ),
             );
         },
 
         visitAccountValue: async (node: AccountValueNode) => {
-            // AccountValueNode references another account in instruction
-            // First try to resolve it from accountsInput
-            const referencedAccountInput = accountsInput?.[node.name];
-            if (referencedAccountInput !== undefined && referencedAccountInput !== null) {
-                return toAddress(referencedAccountInput);
-            }
-
-            // Try to resolve it as a PDA from the instruction
-            const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
-            if (!referencedIxAccountNode) {
-                throw new AccountError(
-                    `Referenced account not found in instruction: ${node.name} (referenced by ${ixAccountNode.name})`,
-                );
-            }
-
-            if (referencedIxAccountNode.defaultValue) {
-                detectCircularDependency(node.name, resolutionPath);
-
-                const visitor = createAccountDefaultValueVisitor({
-                    ...ctx,
-                    accountAddressInput: referencedAccountInput,
-                    ixAccountNode: referencedIxAccountNode,
-                    resolutionPath: [...resolutionPath, node.name],
-                });
-                return await visitOrElse(referencedIxAccountNode.defaultValue, visitor, innerNode => {
-                    throw new AccountError(`Cannot resolve referenced account ${node.name}: ${innerNode.kind}`);
-                });
-            }
-
-            throw new AccountError(
-                `Cannot resolve accountValueNode: ${node.name}. Account not provided and has no default value.`,
-            );
+            return await resolveAccountValueNodeAddress(node, {
+                accountsInput,
+                argumentsInput,
+                ixNode,
+                resolutionPath,
+                resolversInput,
+                root,
+            });
         },
 
-        visitArgumentValue: (node: ArgumentValueNode) => {
+        visitArgumentValue: async (node: ArgumentValueNode) => {
             // Reference to an instruction argument - should be an address
             const argValue = argumentsInput?.[node.name];
             if (argValue === undefined || argValue === null) {
@@ -113,7 +90,7 @@ export function createAccountDefaultValueVisitor(
             }
 
             try {
-                return Promise.resolve(toAddress(argValue as AddressInput));
+                return await Promise.resolve(toAddress(argValue as AddressInput));
             } catch (error) {
                 throw new AccountError(
                     `Argument ${node.name} cannot be converted to Address for account ${ixAccountNode.name}`,
@@ -190,12 +167,12 @@ export function createAccountDefaultValueVisitor(
             return pda[0];
         },
 
-        visitProgramIdValue: (_node: ProgramIdValueNode) => {
-            return Promise.resolve(address(root.program.publicKey));
+        visitProgramIdValue: async (_node: ProgramIdValueNode) => {
+            return await Promise.resolve(address(root.program.publicKey));
         },
 
-        visitPublicKeyValue: (node: PublicKeyValueNode) => {
-            return Promise.resolve(address(node.publicKey));
+        visitPublicKeyValue: async (node: PublicKeyValueNode) => {
+            return await Promise.resolve(address(node.publicKey));
         },
 
         visitResolverValue: async (node: ResolverValueNode) => {
@@ -215,67 +192,4 @@ export function createAccountDefaultValueVisitor(
             return toAddress(result as AddressInput);
         },
     };
-}
-
-type ConditionalValueNodeConditionContext = {
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
-    conditionalValueNode: ConditionalValueNode;
-    ixAccountNode: InstructionAccountNode;
-    ixNode: InstructionNode;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
-};
-/**
- * Helper function to resolve ConditionalValueNode.
- * Evaluates the condition and returns ifTrue or ifFalse branch.
- */
-async function resolveConditionalValueNodeCondition({
-    root,
-    ixNode,
-    ixAccountNode,
-    conditionalValueNode,
-    argumentsInput,
-    accountsInput,
-    resolutionPath,
-    resolversInput,
-}: ConditionalValueNodeConditionContext) {
-    if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
-        throw new AccountError(`Expected conditionalValueNode in account ${ixAccountNode.name}`);
-    }
-    const { condition, value: requiredValueNode, ifTrue, ifFalse } = conditionalValueNode;
-
-    if (!requiredValueNode && !ifTrue && !ifFalse) {
-        throw new AccountError('Invalid conditionalValueNode: missing value and branches');
-    }
-
-    // Resolve the condition value of ConditionalValueNode
-    const conditionVisitor = createConditionNodeValueVisitor({
-        accountsInput,
-        argumentsInput,
-        ixNode,
-        resolutionPath: resolutionPath ?? [],
-        resolversInput,
-        root,
-    });
-    const providedValue = await visitOrElse(condition, conditionVisitor, condNode => {
-        throw new AccountError(
-            `Cannot resolve condition node: ${condNode.kind} in account ${ixAccountNode.name} of ${ixNode.name} instruction`,
-        );
-    });
-
-    if (requiredValueNode) {
-        // If provided, the condition must be equal to required value
-        const valueVisitor = createValueNodeVisitor({ accountsInput, argumentsInput });
-        const requiredValue = visitOrElse(requiredValueNode, valueVisitor, valueNode => {
-            throw new AccountError(
-                `Cannot resolve required value node: ${valueNode.kind} in account ${ixAccountNode.name}`,
-            );
-        });
-        // FIXME: Deep equality check for complex types, like maps, structs, arrays, etc.
-        return requiredValue.value === providedValue ? ifTrue : ifFalse;
-    } else {
-        return providedValue ? ifTrue : ifFalse;
-    }
 }

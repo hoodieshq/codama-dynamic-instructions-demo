@@ -17,25 +17,16 @@ import type {
     TypeNode,
     Visitor,
 } from 'codama';
-import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput, ResolutionPath, ResolversInput } from '../../shared/types';
-import { detectCircularDependency } from '../../shared/util';
-import { resolveAccountAddress } from '../resolvers/resolve-account-address';
+import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
+import type { BaseResolutionContext } from '../resolvers/types';
 import { createInputValueTransformer } from './input-value-transformer';
 
-type PdaSeedValueVisitorContext = {
-    accountsInput?: AccountsInput;
-    argumentsInput?: ArgumentsInput;
-    ixNode: InstructionNode;
+type PdaSeedValueVisitorContext = BaseResolutionContext & {
     programId: Address;
-    resolutionPath: ResolutionPath | undefined;
-    resolversInput: ResolversInput | undefined;
-    root: RootNode;
     seedTypeNode?: TypeNode;
 };
 
@@ -64,32 +55,17 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode, resolversInput } = ctx;
+    const { root, ixNode, programId, seedTypeNode, resolversInput, resolutionPath } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
-    const resolutionPath = ctx.resolutionPath ?? [];
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
-            const providedAddress = accountsInput[node.name];
-            if (providedAddress !== undefined && providedAddress !== null) {
-                return getAddressEncoder().encode(toAddress(providedAddress));
-            }
-
-            detectCircularDependency(node.name, resolutionPath);
-
-            const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
-            if (!referencedIxAccountNode) {
-                throw new AccountError(`PDA seed references unknown account: ${node.name}`);
-            }
-
-            const resolvedAddress: Address | null = await resolveAccountAddress({
-                accountAddressInput: providedAddress,
+            const resolvedAddress = await resolveAccountValueNodeAddress(node, {
                 accountsInput,
                 argumentsInput,
-                ixAccountNode: referencedIxAccountNode,
                 ixNode,
-                resolutionPath: [...resolutionPath, node.name],
+                resolutionPath,
                 resolversInput,
                 root,
             });
@@ -102,7 +78,7 @@ export function createPdaSeedValueVisitor(
 
             return getAddressEncoder().encode(resolvedAddress);
         },
-        visitArgumentValue: (node: ArgumentValueNode) => {
+        visitArgumentValue: async (node: ArgumentValueNode) => {
             const ixArgumentNode = ixNode.arguments.find(arg => arg.name === node.name);
             if (!ixArgumentNode) {
                 throw new AccountError(`Missing instruction argument node for PDA seed: ${node.name}`);
@@ -121,58 +97,59 @@ export function createPdaSeedValueVisitor(
                 bytesEncoding: 'base16',
             });
             const transformedInput = transformer(argInput);
-            return Promise.resolve(codec.encode(transformedInput));
+            return await Promise.resolve(codec.encode(transformedInput));
         },
 
-        visitBooleanValue: (node: BooleanValueNode) => Promise.resolve(getBooleanCodec().encode(node.boolean)),
+        visitBooleanValue: async (node: BooleanValueNode) =>
+            await Promise.resolve(getBooleanCodec().encode(node.boolean)),
 
-        visitBytesValue: (node: BytesValueNode) => {
+        visitBytesValue: async (node: BytesValueNode) => {
             const encodedValue = getCodecFromBytesEncoding(node.encoding).encode(node.data);
-            return Promise.resolve(encodedValue);
+            return await Promise.resolve(encodedValue);
         },
 
-        visitConstantValue: (node: ConstantValueNode) => {
+        visitConstantValue: async (node: ConstantValueNode) => {
             const innerVisitor = createPdaSeedValueVisitor(ctx);
-            return visitOrElse(node.value, innerVisitor, innerNode => {
+            return await visitOrElse(node.value, innerVisitor, innerNode => {
                 throw new AccountError(`Unsupported constant PDA seed value: ${innerNode.kind}`);
             });
         },
 
-        visitNoneValue: (_node: NoneValueNode) => Promise.resolve(new Uint8Array(0)),
+        visitNoneValue: async (_node: NoneValueNode) => await Promise.resolve(new Uint8Array(0)),
 
-        visitNumberValue: (node: NumberValueNode) => {
+        visitNumberValue: async (node: NumberValueNode) => {
             if (!Number.isInteger(node.number) || node.number < 0 || node.number > 0xff) {
                 throw new AccountError(
                     `NumberValueNode seed value ${node.number} cannot be encoded as a single byte. ` +
                         `Expected an integer in range [0, 255].`,
                 );
             }
-            return Promise.resolve(new Uint8Array([node.number]));
+            return await Promise.resolve(new Uint8Array([node.number]));
         },
 
-        visitProgramIdValue: () => {
+        visitProgramIdValue: async () => {
             if (typeof programId !== 'string' || !isAddress(programId)) {
                 throw new AccountError(
                     `Expected base58-encoded Address for programId, got: ${programId as unknown as string}`,
                 );
             }
-            return Promise.resolve(getAddressEncoder().encode(programId));
+            return await Promise.resolve(getAddressEncoder().encode(programId));
         },
 
-        visitPublicKeyValue: (node: PublicKeyValueNode) => {
+        visitPublicKeyValue: async (node: PublicKeyValueNode) => {
             if (typeof node.publicKey !== 'string' || !isAddress(node.publicKey)) {
                 throw new AccountError(`Expected base58-encoded Address, got: ${node.publicKey as unknown as string}`);
             }
-            return Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
+            return await Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
         },
 
-        visitSomeValue: (node: SomeValueNode) => {
+        visitSomeValue: async (node: SomeValueNode) => {
             const innerVisitor = createPdaSeedValueVisitor(ctx);
-            return visitOrElse(node.value, innerVisitor, innerNode => {
+            return await visitOrElse(node.value, innerVisitor, innerNode => {
                 throw new AccountError(`Unsupported some PDA seed value: ${innerNode.kind}`);
             });
         },
 
-        visitStringValue: (node: StringValueNode) => Promise.resolve(getUtf8Codec().encode(node.string)),
+        visitStringValue: async (node: StringValueNode) => await Promise.resolve(getUtf8Codec().encode(node.string)),
     };
 }
