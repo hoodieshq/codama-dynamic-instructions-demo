@@ -8,7 +8,6 @@ import type {
     ArgumentsInput,
     BuildIxFn,
     EitherSigners,
-    ResolutionPath,
     ResolverFn,
     ResolversInput,
 } from '../../src/shared/types';
@@ -45,12 +44,6 @@ describe('ArgumentsInput', () => {
 describe('EitherSigners', () => {
     test('should be an array of strings', () => {
         expectTypeOf<EitherSigners>().toEqualTypeOf<string[]>();
-    });
-});
-
-describe('ResolutionPath', () => {
-    test('should be a readonly array of strings', () => {
-        expectTypeOf<ResolutionPath>().toEqualTypeOf<readonly string[]>();
     });
 });
 

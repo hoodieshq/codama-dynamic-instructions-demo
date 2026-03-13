@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { detectCircularDependency } from '../../src/entities/resolvers/resolve-account-value-node-address';
-import { AccountError } from '../../src/shared/errors';
+import { detectCircularDependency } from '../../../src/entities/resolvers/resolve-account-value-node-address';
+import { AccountError } from '../../../src/shared/errors';
 
 describe('detectCircularDependency', () => {
     test('should not throw when no circular dependency exists', () => {
