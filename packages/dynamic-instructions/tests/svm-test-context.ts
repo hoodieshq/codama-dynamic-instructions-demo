@@ -85,7 +85,7 @@ export class SvmTestContext {
 
     /** Generates a new Address */
     static generateAddress(): Address {
-        return address(this.generateKeypair().publicKey.toBase58());
+        return address(SvmTestContext.generateKeypair().publicKey.toBase58());
     }
 
     /** Creates a new keypair, stores it in the context, and returns its address. */
