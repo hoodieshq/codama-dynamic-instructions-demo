@@ -205,28 +205,28 @@ try {
 The package includes a CLI for generating TypeScript types from Codama IDL files.
 
 ```bash
-npx @hoodieshq/dynamic-instructions generate-program-client-types <codama-idl.json> <output-dir>
+npx @hoodieshq/dynamic-instructions generate-client-types <codama-idl.json> <output-dir>
 ```
 
 Example:
 
 ```bash
-npx @hoodieshq/dynamic-instructions generate-program-client-types ./idl/codama.json ./generated
+npx @hoodieshq/dynamic-instructions generate-client-types ./idl/codama.json ./generated
 ```
 
 This reads the IDL file and writes a `*-types.ts` file to the output directory containing strongly-typed interfaces for all instructions, accounts, arguments, PDAs, and the program client.
 
-### `generateProgramClientType(idl)`
+### `generateClientTypes(idl)`
 
 The same is available as a typescript function:
 
 ```typescript
-import { generateProgramClientType } from '@hoodieshq/dynamic-instructions';
+import { generateClientTypes } from '@hoodieshq/dynamic-instructions';
 import type { IdlRoot } from '@hoodieshq/dynamic-instructions';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const idl: IdlRoot = JSON.parse(readFileSync('./idl.json', 'utf-8'));
-const typesSource = generateProgramClientType(idl);
+const typesSource = generateClientTypes(idl);
 writeFileSync('./generated/my-program-types.ts', typesSource);
 ```
 
