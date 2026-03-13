@@ -76,9 +76,19 @@ export class SvmTestContext {
         this.currentSlot = BigInt(0);
     }
 
+    /** Creates a new keypair */
+    static generateKeypair(): web3.Keypair {
+        return web3.Keypair.generate();
+    }
+
+    /** Generates a new Address */
+    static generateAddress(): Address {
+        return address(SvmTestContext.generateKeypair().publicKey.toBase58());
+    }
+
     /** Creates a new keypair, stores it in the context, and returns its address. */
     createAccount(): Address {
-        const keypair = web3.Keypair.generate();
+        const keypair = SvmTestContext.generateKeypair();
         const addr = address(keypair.publicKey.toBase58());
         this.accounts.set(addr, keypair);
         return addr;
