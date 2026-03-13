@@ -71,7 +71,7 @@ export function getPackageBuildConfigs(): TsupConfig[] {
 export function getCliBuildConfig(): TsupConfig {
     return {
         ...getBuildConfig({ format: 'cjs', platform: 'node' }),
-        entry: { cli: './src/features/cli/index.ts' },
+        entry: { cli: './src/cli/index.ts' },
         outExtension() {
             return { js: `.cjs` };
         },
