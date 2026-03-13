@@ -1,9 +1,8 @@
 import type { InstructionNode } from 'codama';
-import { assert } from 'superstruct';
+import { assert, StructError } from 'superstruct';
 
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput } from '../../../shared/types';
-import { isStructError } from '../../../shared/util';
 import { createIxAccountsValidator } from '../validators';
 /**
  * Validates the accountsInput against the instruction's account definitions.
@@ -16,7 +15,7 @@ export function validateAccountsInput(ixNode: InstructionNode, accountsInput: Ac
     try {
         assert(accountsInput, AccountsInputValidator);
     } catch (error) {
-        if (isStructError(error)) {
+        if (error instanceof StructError) {
             const key = error.key as string;
             const value = error.value as unknown;
             if (value == null) {

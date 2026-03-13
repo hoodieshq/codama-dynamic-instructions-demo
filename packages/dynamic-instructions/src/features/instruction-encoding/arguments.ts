@@ -1,13 +1,13 @@
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import type { InstructionArgumentNode, InstructionNode, RootNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
-import { assert, type Failure } from 'superstruct';
+import { assert, type Failure, StructError } from 'superstruct';
 
 import { createDefaultValueEncoderVisitor, createInputValueTransformer } from '../../entities/visitors';
 import { concatBytes } from '../../shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
-import { isStructError, safeStringify } from '../../shared/util';
+import { safeStringify } from '../../shared/util';
 import { createIxArgumentsValidator } from './validators';
 
 /**
@@ -110,7 +110,7 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     try {
         assert(filteredInput, ArgumentsInputValidator);
     } catch (error) {
-        if (isStructError(error)) {
+        if (error instanceof StructError) {
             const message = error.failures().map(failure => {
                 const fieldPath = formatFailurePath(failure);
                 const value = formatFailureValue(failure.value);
