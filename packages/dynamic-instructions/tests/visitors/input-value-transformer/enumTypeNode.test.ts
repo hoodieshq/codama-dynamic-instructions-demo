@@ -19,7 +19,7 @@ import {
 import { describe, expect, test } from 'vitest';
 
 import { createInputValueTransformer } from '../../../src/entities/visitors/input-value-transformer';
-import { rootNodeMock } from './test-helpers';
+import { rootNodeMock } from './input-value-transformer-test-utils';
 
 describe('enumTypeNode', () => {
     // Based on pmp-idl.json, mpl-token-metadata-idl.json, token-2022-idl.json

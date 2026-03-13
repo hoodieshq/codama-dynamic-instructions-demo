@@ -11,7 +11,7 @@ import {
 import { describe, expect, test } from 'vitest';
 
 import { createInputValueTransformer } from '../../../src/entities/visitors/input-value-transformer';
-import { rootNodeMock } from './test-helpers';
+import { rootNodeMock } from './input-value-transformer-test-utils';
 
 describe('structTypeNode', () => {
     test('should transform struct with bytes field', () => {
