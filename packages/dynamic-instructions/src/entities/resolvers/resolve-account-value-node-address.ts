@@ -48,7 +48,7 @@ export async function resolveAccountValueNodeAddress(
     });
 }
 
-function detectCircularDependency(nodeName: string, resolutionPath: ResolutionPath) {
+export function detectCircularDependency(nodeName: string, resolutionPath: ResolutionPath) {
     if (resolutionPath.includes(nodeName)) {
         throw new AccountError(`Circular dependency detected: ${[...resolutionPath, nodeName].join(' -> ')}`);
     }
