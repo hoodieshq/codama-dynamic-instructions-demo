@@ -120,8 +120,7 @@ export function createInputValueTransformerVisitor(
         visitEnumType(node) {
             // Scalar enums pass through (just numbers/strings)
             // Data enums need variant transformation with PascalCase __kind
-            // because @codama/dynamic-codecs applies pascalCase() to variant names
-            // when building discriminated union codecs:
+            // Because @codama/dynamic-codecs applies pascalCase() to variant names when building discriminated union codecs:
             // https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L199
             return (input: unknown) => {
                 if (typeof input === 'number' || typeof input === 'string') {
@@ -132,11 +131,20 @@ export function createInputValueTransformerVisitor(
                     return input;
                 }
 
+                if (!('__kind' in input)) {
+                    return input;
+                }
+
                 const { __kind, ...rest } = input;
                 const kindObj = { __kind: pascalCase(String(__kind)) };
                 const variantNode = node.variants.find(v => v.name === __kind);
 
-                if (!variantNode) return input;
+                if (!variantNode) {
+                    const availableVariants = node.variants.map(v => v.name).join(', ');
+                    throw new ArgumentError(
+                        `Unknown enum variant "${safeStringify(__kind)}" for enumTypeNode. Available variants: [${availableVariants}]`,
+                    );
+                }
 
                 if (isNode(variantNode, 'enumEmptyVariantTypeNode')) {
                     return { ...input, ...kindObj };
@@ -161,9 +169,14 @@ export function createInputValueTransformerVisitor(
                     const tupleTransform = visitOrElse(variantNode.tuple, visitor, innerNode => {
                         throw new ArgumentError(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
                     });
-                    if ('fields' in rest && Array.isArray(rest.fields)) {
-                        return { ...kindObj, fields: tupleTransform(rest.fields) };
+                    if (!('fields' in rest) || !Array.isArray(rest.fields)) {
+                        throw new ArgumentError(
+                            `Expected "fields" array for enum tuple variant "${safeStringify(__kind)}", ` +
+                                `but received: ${formatValueType(rest.fields ?? rest)}. ` +
+                                `Received value: ${safeStringify(input)}`,
+                        );
                     }
+                    return { ...kindObj, fields: tupleTransform(rest.fields) };
                 }
 
                 return input;
