@@ -1,5 +1,7 @@
-import { getBase16Codec, getBase58Codec, getBase64Codec, getUtf8Codec, type ReadonlyUint8Array } from '@solana/codecs';
+import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { BytesEncoding } from 'codama';
+
+import { getMemoizedBase16Codec, getMemoizedBase58Codec, getMemoizedBase64Codec, getMemoizedUtf8Codec } from './codecs';
 
 /**
  * Converts Uint8Array to encoded string based on encoding type.
@@ -29,13 +31,13 @@ export function uint8ArrayToEncodedString(bytes: Uint8Array, encoding: BytesEnco
 export function getCodecFromBytesEncoding(encoding: BytesEncoding) {
     switch (encoding) {
         case 'base16':
-            return getBase16Codec();
+            return getMemoizedBase16Codec();
         case 'base58':
-            return getBase58Codec();
+            return getMemoizedBase58Codec();
         case 'base64':
-            return getBase64Codec();
+            return getMemoizedBase64Codec();
         case 'utf8':
-            return getUtf8Codec();
+            return getMemoizedUtf8Codec();
         default:
             throw new Error(`Unsupported bytes encoding: ${String(encoding as unknown)}`);
     }

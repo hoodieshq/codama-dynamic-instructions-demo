@@ -1,8 +1,7 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address } from '@solana/addresses';
-import { address, getAddressEncoder } from '@solana/addresses';
+import { address } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import { getBooleanCodec, getUtf8Codec } from '@solana/codecs';
 import type {
     AccountValueNode,
     ArgumentValueNode,
@@ -21,6 +20,7 @@ import { visitOrElse } from 'codama';
 
 import { isConvertableAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
+import { getMemoizedAddressEncoder, getMemoizedBooleanEncoder, getMemoizedUtf8Codec } from '../../shared/codecs';
 import { AccountError } from '../../shared/errors';
 import { safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
@@ -78,7 +78,7 @@ export function createPdaSeedValueVisitor(
                 );
             }
 
-            return getAddressEncoder().encode(resolvedAddress);
+            return getMemoizedAddressEncoder().encode(resolvedAddress);
         },
         visitArgumentValue: async (node: ArgumentValueNode) => {
             const ixArgumentNode = ixNode.arguments.find(arg => arg.name === node.name);
@@ -103,7 +103,7 @@ export function createPdaSeedValueVisitor(
         },
 
         visitBooleanValue: async (node: BooleanValueNode) =>
-            await Promise.resolve(getBooleanCodec().encode(node.boolean)),
+            await Promise.resolve(getMemoizedBooleanEncoder().encode(node.boolean)),
 
         visitBytesValue: async (node: BytesValueNode) => {
             const encodedValue = getCodecFromBytesEncoding(node.encoding).encode(node.data);
@@ -135,14 +135,14 @@ export function createPdaSeedValueVisitor(
                     `Expected base58-encoded Address for programId, got: ${safeStringify(programId)}`,
                 );
             }
-            return await Promise.resolve(getAddressEncoder().encode(address(programId)));
+            return await Promise.resolve(getMemoizedAddressEncoder().encode(address(programId)));
         },
 
         visitPublicKeyValue: async (node: PublicKeyValueNode) => {
             if (!isConvertableAddress(node.publicKey)) {
                 throw new AccountError(`Expected base58-encoded Address, got: ${safeStringify(node.publicKey)}`);
             }
-            return await Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
+            return await Promise.resolve(getMemoizedAddressEncoder().encode(address(node.publicKey)));
         },
 
         visitSomeValue: async (node: SomeValueNode) => {
@@ -152,6 +152,7 @@ export function createPdaSeedValueVisitor(
             });
         },
 
-        visitStringValue: async (node: StringValueNode) => await Promise.resolve(getUtf8Codec().encode(node.string)),
+        visitStringValue: async (node: StringValueNode) =>
+            await Promise.resolve(getMemoizedUtf8Codec().encode(node.string)),
     };
 }

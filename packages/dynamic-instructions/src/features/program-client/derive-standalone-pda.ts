@@ -2,11 +2,11 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import { getUtf8Encoder } from '@solana/codecs';
 import type { PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../../entities/visitors';
+import { getMemoizedUtf8Encoder } from '../../shared/codecs';
 import { AccountError } from '../../shared/errors';
 import { formatValueType } from '../../shared/util';
 
@@ -88,7 +88,7 @@ function resolveStandaloneVariableSeed(
         if (typeof input !== 'string') {
             throw new AccountError(`Expected string for PDA seed "${seedNode.name}", got ${formatValueType(input)}`);
         }
-        return Promise.resolve(getUtf8Encoder().encode(input));
+        return Promise.resolve(getMemoizedUtf8Encoder().encode(input));
     }
 
     // For all other types use the Codama codec infrastructure.
