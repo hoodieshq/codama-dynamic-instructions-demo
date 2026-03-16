@@ -52,7 +52,7 @@ export async function resolveConditionalValueNodeCondition({
 
     if (requiredValueNode) {
         // If provided, the condition must be equal to required value
-        const valueVisitor = createValueNodeVisitor({ accountsInput, argumentsInput });
+        const valueVisitor = createValueNodeVisitor();
         const requiredValue = visitOrElse(requiredValueNode, valueVisitor, valueNode => {
             throw new AccountError(
                 `Cannot resolve required value node: ${valueNode.kind} in account ${ixAccountNode.name}`,
