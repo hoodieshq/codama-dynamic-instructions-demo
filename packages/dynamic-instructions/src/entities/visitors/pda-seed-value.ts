@@ -1,6 +1,6 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address } from '@solana/addresses';
-import { address, getAddressEncoder, isAddress } from '@solana/addresses';
+import { address, getAddressEncoder } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import { getBooleanCodec, getUtf8Codec } from '@solana/codecs';
 import type {

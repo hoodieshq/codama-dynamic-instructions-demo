@@ -50,7 +50,7 @@ export type ProgramMethodBuilder = {
  * const client = createProgramClient<MyProgramClient>(idl);
  * ```
  */
-export function createProgramClient<TClient extends ProgramClient = ProgramClient>(
+export function createProgramClient<TClient = ProgramClient>(
     idl: IdlInput,
     options: CreateProgramClientOptions = {},
 ): TClient {
