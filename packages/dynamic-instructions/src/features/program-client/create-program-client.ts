@@ -27,7 +27,7 @@ export type ProgramClient = {
     /** Anchor-like facade namespace for building instructions. */
     methods: Record<string, (args?: ArgumentsInput) => ProgramMethodBuilder>;
     /** Anchor-like facade namespace for standalone PDA derivation. */
-    pdas: Record<string, (seeds?: Record<string, unknown>) => Promise<ProgramDerivedAddress>>;
+    pdas: Record<string, (seeds?: Record<string, unknown>) => Promise<ProgramDerivedAddress>> | undefined;
     /** Program id as an `Address`. */
     programAddress: Address;
     /** Parsed Codama root node for advanced use-cases. */
