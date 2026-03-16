@@ -19,8 +19,10 @@ import type {
 } from 'codama';
 import { visitOrElse } from 'codama';
 
+import { isConvertableAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { AccountError } from '../../shared/errors';
+import { safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
 import { createInputValueTransformer } from './input-value-transformer';
@@ -128,17 +130,17 @@ export function createPdaSeedValueVisitor(
         },
 
         visitProgramIdValue: async () => {
-            if (typeof programId !== 'string' || !isAddress(programId)) {
+            if (!isConvertableAddress(programId)) {
                 throw new AccountError(
-                    `Expected base58-encoded Address for programId, got: ${programId as unknown as string}`,
+                    `Expected base58-encoded Address for programId, got: ${safeStringify(programId)}`,
                 );
             }
-            return await Promise.resolve(getAddressEncoder().encode(programId));
+            return await Promise.resolve(getAddressEncoder().encode(address(programId)));
         },
 
         visitPublicKeyValue: async (node: PublicKeyValueNode) => {
-            if (typeof node.publicKey !== 'string' || !isAddress(node.publicKey)) {
-                throw new AccountError(`Expected base58-encoded Address, got: ${node.publicKey as unknown as string}`);
+            if (!isConvertableAddress(node.publicKey)) {
+                throw new AccountError(`Expected base58-encoded Address, got: ${safeStringify(node.publicKey)}`);
             }
             return await Promise.resolve(getAddressEncoder().encode(address(node.publicKey)));
         },
