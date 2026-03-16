@@ -18,7 +18,7 @@ import type {
 } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { isConvertableAddress } from '../../shared/address';
+import { isConvertibleAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { getMemoizedAddressEncoder, getMemoizedBooleanEncoder, getMemoizedUtf8Codec } from '../../shared/codecs';
 import { AccountError } from '../../shared/errors';
@@ -130,7 +130,7 @@ export function createPdaSeedValueVisitor(
         },
 
         visitProgramIdValue: async () => {
-            if (!isConvertableAddress(programId)) {
+            if (!isConvertibleAddress(programId)) {
                 throw new AccountError(
                     `Expected base58-encoded Address for programId, got: ${safeStringify(programId)}`,
                 );
@@ -139,7 +139,7 @@ export function createPdaSeedValueVisitor(
         },
 
         visitPublicKeyValue: async (node: PublicKeyValueNode) => {
-            if (!isConvertableAddress(node.publicKey)) {
+            if (!isConvertibleAddress(node.publicKey)) {
                 throw new AccountError(`Expected base58-encoded Address, got: ${safeStringify(node.publicKey)}`);
             }
             return await Promise.resolve(getMemoizedAddressEncoder().encode(address(node.publicKey)));

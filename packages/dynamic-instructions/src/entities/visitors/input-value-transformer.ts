@@ -142,7 +142,7 @@ export function createInputValueTransformerVisitor(
                 if (!variantNode) {
                     const availableVariants = node.variants.map(v => v.name).join(', ');
                     throw new ArgumentError(
-                        `Unknown enum variant "${safeStringify(__kind)}" for enumTypeNode. Available variants: [${availableVariants}]`,
+                        `Unknown enum variant ${safeStringify(__kind)} for enumTypeNode. Available variants: [${availableVariants}]`,
                     );
                 }
 
@@ -171,7 +171,7 @@ export function createInputValueTransformerVisitor(
                     });
                     if (!('fields' in rest) || !Array.isArray(rest.fields)) {
                         throw new ArgumentError(
-                            `Expected "fields" array for enum tuple variant "${safeStringify(__kind)}", ` +
+                            `Expected "fields" array for enum tuple variant ${safeStringify(__kind)}, ` +
                                 `but received: ${formatValueType(rest.fields ?? rest)}. ` +
                                 `Received value: ${safeStringify(input)}`,
                         );

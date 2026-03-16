@@ -17,7 +17,7 @@ import type {
 import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
-import { isConvertableAddress, toAddress } from '../../shared/address';
+import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
@@ -90,7 +90,7 @@ export function createAccountDefaultValueVisitor(
                 );
             }
 
-            if (!isConvertableAddress(argValue)) {
+            if (!isConvertibleAddress(argValue)) {
                 throw new AccountError(
                     `Argument ${node.name} is not a valid Address. Expected a string or PublicKey, got ${formatValueType(argValue)} for account ${ixAccountNode.name}`,
                 );
@@ -191,7 +191,7 @@ export function createAccountDefaultValueVisitor(
                 );
             }
             const result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
-            if (!isConvertableAddress(result)) {
+            if (!isConvertibleAddress(result)) {
                 throw new AccountError(
                     `Resolver "${node.name}" returned invalid address ${safeStringify(result)} for account "${ixAccountNode.name}"`,
                 );

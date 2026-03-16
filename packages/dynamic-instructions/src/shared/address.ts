@@ -23,7 +23,7 @@ export function toAddress(input: AddressInput): Address {
     throw new Error(`Cannot convert value to Address: ${safeStringify(input)}.`);
 }
 
-export function isConvertableAddress(value: unknown): value is AddressInput {
+export function isConvertibleAddress(value: unknown): value is AddressInput {
     if (value == null) return false;
     return isPublicKeyLike(value) || (typeof value === 'string' && isAddress(value));
 }

@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import {
     type AddressInput,
-    isConvertableAddress,
+    isConvertibleAddress,
     isPublicKeyLike,
     type PublicKeyLike,
     toAddress,
@@ -78,38 +78,38 @@ describe('toAddress', () => {
     });
 });
 
-describe('isConvertableAddress', () => {
+describe('isConvertibleAddress', () => {
     test('should return true for Address', () => {
         const address = SvmTestContext.generateAddress();
-        expect(isConvertableAddress(address)).toBe(true);
+        expect(isConvertibleAddress(address)).toBe(true);
     });
 
     test('should return true for PublicKeyLike', () => {
         const publicKey = { toBase58: () => SvmTestContext.generateAddress() };
         const result = toAddress(publicKey);
-        expect(isConvertableAddress(result)).toBe(true);
+        expect(isConvertibleAddress(result)).toBe(true);
     });
 
     test('should return true for valid base58 string', () => {
         const addr = '11111111111111111111111111111111';
         const result = toAddress(addr);
-        expect(isConvertableAddress(result)).toBe(true);
+        expect(isConvertibleAddress(result)).toBe(true);
     });
 
     test('should return false for invalid string', () => {
         const addr = 'invalid_address';
-        expect(isConvertableAddress(addr)).toBe(false);
+        expect(isConvertibleAddress(addr)).toBe(false);
     });
 
     test('should return false for null and undefined', () => {
         [null, undefined].forEach(invalidAddr => {
-            expect(isConvertableAddress(invalidAddr)).toBe(false);
+            expect(isConvertibleAddress(invalidAddr)).toBe(false);
         });
     });
 
     test('should return false for invalid objects', () => {
         [{}, { a: 42 }].forEach(invalidAddr => {
-            expect(isConvertableAddress(invalidAddr)).toBe(false);
+            expect(isConvertibleAddress(invalidAddr)).toBe(false);
         });
     });
 });

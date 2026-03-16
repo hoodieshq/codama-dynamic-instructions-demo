@@ -9,7 +9,7 @@ import {
     getUtf8Encoder,
 } from '@solana/codecs';
 
-// Memoized codecs and codecs to avoid unnecessary re-instantiation.
+// Memoized encoders and codecs to avoid unnecessary re-instantiation.
 
 let addressEncoder: ReturnType<typeof getAddressEncoder> | undefined;
 export function getMemoizedAddressEncoder() {
