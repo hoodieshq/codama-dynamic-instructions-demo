@@ -1,6 +1,8 @@
 import type { Address } from '@solana/addresses';
 import { address } from '@solana/addresses';
 
+import { safeStringify } from './util';
+
 /**
  * Accept both modern Address strings and legacy PublicKey-like objects.
  * We intentionally use duck-typing to avoid hard dependency on @solana/web3.js types.
@@ -15,8 +17,8 @@ export function isPublicKeyLike(value: unknown): value is PublicKeyLike {
 }
 
 export function toAddress(input: AddressInput): Address {
-    if (typeof input === 'string') return address(input);
     if (isPublicKeyLike(input)) return address(input.toBase58());
-    // If it is already a branded Address (string), address(...) above also handles it.
-    return input as Address;
+    if (typeof input === 'string') return address(input);
+
+    throw new Error(`Cannot convert value to Address: ${safeStringify(input)}.`);
 }
