@@ -79,7 +79,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
         const nonResolvableValueNodes = ['payerValueNode', 'identityValueNode'];
         function isAccAutoResolvable(acc: InstructionAccountNode): boolean {
             if (acc.defaultValue == null) return false;
-            return !nonResolvableValueNodes.includes((acc.defaultValue as { kind?: string })?.kind ?? '');
+            return !nonResolvableValueNodes.includes(acc.defaultValue.kind);
         }
         const accountsInterfaceName = `${typeName}Accounts`;
         if (ix.accounts.length > 0) {

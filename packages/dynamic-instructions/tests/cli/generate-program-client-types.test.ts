@@ -81,7 +81,7 @@ describe('CLI', () => {
         writeFileSync(badFile, '{ not valid json');
         const { exitCode, stderr } = execCli(['generate-client-types', badFile, tmpDir]);
         expect(exitCode).toBe(1);
-        expect(stderr).toContain('not valid JSON');
+        expect(stderr).toContain('not valid Codama JSON');
     });
 
     test('should read IDL and write output file for generate-client-types', () => {
