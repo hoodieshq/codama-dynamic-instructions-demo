@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { generateClientTypes, type IdlRoot } from './generate-client-types';
+import type { RootNode } from 'codama';
+
+import { generateClientTypes } from './generate-client-types';
 
 export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath: string) {
     const idlPath = path.resolve(codamaIdlPath);
@@ -22,9 +24,9 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
         process.exit(1);
     }
 
-    let idl: IdlRoot;
+    let idl: RootNode;
     try {
-        idl = JSON.parse(idlJson) as IdlRoot;
+        idl = JSON.parse(idlJson) as RootNode;
     } catch (err) {
         console.error(`Error: ${idlPath} is not valid JSON: ${(err as Error).message}`);
         process.exit(1);

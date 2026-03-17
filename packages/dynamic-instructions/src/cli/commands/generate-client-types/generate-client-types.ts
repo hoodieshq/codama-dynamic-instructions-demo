@@ -1,108 +1,17 @@
-interface TypeNode {
-    count?: unknown;
-    decimals?: number;
-    encoding?: string;
-    fields?: FieldNode[];
-    format?: string;
-    item?: TypeNode;
-    items?: TypeNode[];
-    key?: TypeNode;
-    kind: string;
-    name?: string;
-    number?: TypeNode;
-    offset?: number;
-    prefix?: TypeNode | TypeNode[];
-    size?: TypeNode;
-    strategy?: string;
-    struct?: TypeNode;
-    tuple?: TypeNode;
-    type?: TypeNode;
-    unit?: string;
-    value?: TypeNode;
-    variants?: VariantNode[];
-}
-
-interface VariantNode {
-    kind: string;
-    name: string;
-    struct?: TypeNode;
-    tuple?: TypeNode;
-}
-
-interface FieldNode {
-    defaultValue?: DefaultValueNode;
-    defaultValueStrategy?: string;
-    name: string;
-    type: TypeNode;
-}
-
-interface AccountNode {
-    defaultValue?: DefaultValueNode;
-    isOptional?: boolean;
-    isSigner?: boolean | 'either';
-    name: string;
-}
-
-interface DefaultValueNode {
-    [key: string]: unknown;
-    kind: string;
-    name?: string;
-    pda?: PdaNodeLike;
-    seeds?: PdaSeedValueNodeLike[];
-}
-
-interface PdaNodeLike {
-    kind: string;
-    name: string;
-    seeds?: PdaSeedNodeLike[];
-}
-
-interface PdaSeedNodeLike {
-    kind: string;
-    name: string;
-    type?: TypeNode;
-}
-
-interface PdaSeedValueNodeLike {
-    kind: string;
-    name: string;
-    value: { kind: string; name: string };
-}
-
-interface DefinedTypeNode {
-    kind: string;
-    name: string;
-    type: TypeNode;
-}
-
-interface RemainingAccountsNode {
-    isOptional?: boolean;
-    isSigner?: boolean | 'either';
-    isWritable?: boolean;
-    kind: string;
-    value: { kind: string; name: string };
-}
-
-interface InstructionNode {
-    accounts: AccountNode[];
-    arguments: FieldNode[];
-    name: string;
-    remainingAccounts?: RemainingAccountsNode[];
-}
-
-export interface IdlRoot {
-    program: {
-        definedTypes?: DefinedTypeNode[];
-        instructions: InstructionNode[];
-        name: string;
-        pdas?: PdaNodeLike[];
-    };
-}
+import type {
+    DefinedTypeNode,
+    InstructionAccountNode,
+    InstructionInputValueNode,
+    InstructionNode,
+    PdaNode,
+    RootNode,
+    TypeNode,
+} from 'codama';
 
 /**
  * Generate TypeScript type for program client.
  */
-export function generateClientTypes(idl: IdlRoot): string {
+export function generateClientTypes(idl: RootNode): string {
     const programName = toPascalCase(idl.program.name);
     const definedTypes = idl.program.definedTypes ?? [];
 
@@ -165,10 +74,10 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
             argsRef = argsInterfaceName;
         }
 
+        // Build accounts interface
         // these ValueNodes don't have default value and must be provided if required.
         const nonResolvableValueNodes = ['payerValueNode', 'identityValueNode'];
-        // Build accounts interface
-        function isAccAutoResolvable(acc: AccountNode): boolean {
+        function isAccAutoResolvable(acc: InstructionAccountNode): boolean {
             if (acc.defaultValue == null) return false;
             return !nonResolvableValueNodes.includes((acc.defaultValue as { kind?: string })?.kind ?? '');
         }
@@ -359,8 +268,8 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
     }
 }
 
-function collectPdaNodesFromIdl(idl: IdlRoot): Map<string, PdaNodeLike> {
-    const pdas = new Map<string, PdaNodeLike>();
+function collectPdaNodesFromIdl(idl: RootNode): Map<string, PdaNode> {
+    const pdas = new Map<string, PdaNode>();
 
     for (const pda of idl.program.pdas ?? []) {
         pdas.set(pda.name, pda);
@@ -386,14 +295,14 @@ function collectPdaNodesFromIdl(idl: IdlRoot): Map<string, PdaNodeLike> {
 function collectResolverNames(ix: InstructionNode): Set<string> {
     const names = new Set<string>();
 
-    function extractResolverNodeName(node: DefaultValueNode | undefined): void {
+    function extractResolverNodeName(node: InstructionInputValueNode | undefined): void {
         if (!node) return;
         if (node.kind === 'resolverValueNode' && node.name) {
             names.add(node.name);
         } else if (node.kind === 'conditionalValueNode') {
-            extractResolverNodeName(node.condition as DefaultValueNode);
-            extractResolverNodeName(node.ifTrue as DefaultValueNode | undefined);
-            extractResolverNodeName(node.ifFalse as DefaultValueNode | undefined);
+            extractResolverNodeName(node.condition);
+            extractResolverNodeName(node.ifTrue);
+            extractResolverNodeName(node.ifFalse);
         }
     }
 
