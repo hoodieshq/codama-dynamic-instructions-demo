@@ -3,7 +3,7 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     {
-        ignores: ['**/dist/**', '**/generated/**', '**/target/**', '**/tsup.config.ts'],
+        ignores: ['**/dist/**', '**/generated/**', '**/target/**', '**/tsup.config.ts', '**/tsup.cli.config.ts'],
     },
     {
         files: ['**/*.ts', '**/*.(c|m)?js'],
