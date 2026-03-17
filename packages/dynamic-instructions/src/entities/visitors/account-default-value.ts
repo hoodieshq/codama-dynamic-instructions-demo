@@ -17,8 +17,9 @@ import type {
 import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
-import { toAddress } from '../../shared/address';
+import { isPublicKeyLike, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
+import { formatValueType } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
@@ -89,8 +90,14 @@ export function createAccountDefaultValueVisitor(
                 );
             }
 
+            if (!isPublicKeyLike(argValue) && typeof argValue !== 'string') {
+                throw new AccountError(
+                    `Argument ${node.name} is not a valid Address. Expected a string or PublicKey, got ${formatValueType(argValue)} for account ${ixAccountNode.name}`,
+                );
+            }
+
             try {
-                return await Promise.resolve(toAddress(argValue as AddressInput));
+                return await Promise.resolve(toAddress(argValue));
             } catch (error) {
                 throw new AccountError(
                     `Argument ${node.name} cannot be converted to Address for account ${ixAccountNode.name}`,

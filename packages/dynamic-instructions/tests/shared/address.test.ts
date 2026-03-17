@@ -61,6 +61,14 @@ describe('toAddress', () => {
         const result = toAddress(addr);
         expect(result).toBe(VALID_ADDRESS);
     });
+
+    test('should throw for invalid non-string or pubkey Addresses', () => {
+        const invalidAddresses = [42n, 42, { a: 42 }, null, undefined];
+        for (const input of invalidAddresses) {
+            // @ts-expect-error testing invalid inputs
+            expect(() => toAddress(input)).toThrow(/Cannot convert value to Address/);
+        }
+    });
 });
 
 describe('AddressInput type', () => {
