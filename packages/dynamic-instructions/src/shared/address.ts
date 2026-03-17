@@ -1,5 +1,5 @@
 import type { Address } from '@solana/addresses';
-import { address } from '@solana/addresses';
+import { address, isAddress } from '@solana/addresses';
 
 import { safeStringify } from './util';
 
@@ -21,4 +21,9 @@ export function toAddress(input: AddressInput): Address {
     if (typeof input === 'string') return address(input);
 
     throw new Error(`Cannot convert value to Address: ${safeStringify(input)}.`);
+}
+
+export function isConvertibleAddress(value: unknown): value is AddressInput {
+    if (value == null) return false;
+    return isPublicKeyLike(value) || (typeof value === 'string' && isAddress(value));
 }

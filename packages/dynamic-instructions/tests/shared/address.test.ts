@@ -1,7 +1,14 @@
 import { type Address, address } from '@solana/addresses';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { type AddressInput, isPublicKeyLike, type PublicKeyLike, toAddress } from '../../src/shared/address';
+import {
+    type AddressInput,
+    isConvertibleAddress,
+    isPublicKeyLike,
+    type PublicKeyLike,
+    toAddress,
+} from '../../src/shared/address';
+import { SvmTestContext } from '../svm-test-context';
 
 describe('isPublicKeyLike', () => {
     test('should return true for objects with toBase58 method', () => {
@@ -68,6 +75,42 @@ describe('toAddress', () => {
             // @ts-expect-error testing invalid inputs
             expect(() => toAddress(input)).toThrow(/Cannot convert value to Address/);
         }
+    });
+});
+
+describe('isConvertibleAddress', () => {
+    test('should return true for Address', () => {
+        const address = SvmTestContext.generateAddress();
+        expect(isConvertibleAddress(address)).toBe(true);
+    });
+
+    test('should return true for PublicKeyLike', () => {
+        const publicKey = { toBase58: () => SvmTestContext.generateAddress() };
+        const result = toAddress(publicKey);
+        expect(isConvertibleAddress(result)).toBe(true);
+    });
+
+    test('should return true for valid base58 string', () => {
+        const addr = '11111111111111111111111111111111';
+        const result = toAddress(addr);
+        expect(isConvertibleAddress(result)).toBe(true);
+    });
+
+    test('should return false for invalid string', () => {
+        const addr = 'invalid_address';
+        expect(isConvertibleAddress(addr)).toBe(false);
+    });
+
+    test('should return false for null and undefined', () => {
+        [null, undefined].forEach(invalidAddr => {
+            expect(isConvertibleAddress(invalidAddr)).toBe(false);
+        });
+    });
+
+    test('should return false for invalid objects', () => {
+        [{}, { a: 42 }].forEach(invalidAddr => {
+            expect(isConvertibleAddress(invalidAddr)).toBe(false);
+        });
     });
 });
 

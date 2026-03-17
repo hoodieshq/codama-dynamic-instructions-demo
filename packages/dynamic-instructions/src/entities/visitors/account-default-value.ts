@@ -17,9 +17,9 @@ import type {
 import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
-import { isPublicKeyLike, toAddress } from '../../shared/address';
+import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
-import { formatValueType } from '../../shared/util';
+import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
@@ -90,7 +90,7 @@ export function createAccountDefaultValueVisitor(
                 );
             }
 
-            if (!isPublicKeyLike(argValue) && typeof argValue !== 'string') {
+            if (!isConvertibleAddress(argValue)) {
                 throw new AccountError(
                     `Argument ${node.name} is not a valid Address. Expected a string or PublicKey, got ${formatValueType(argValue)} for account ${ixAccountNode.name}`,
                 );
@@ -191,12 +191,13 @@ export function createAccountDefaultValueVisitor(
                 );
             }
             const result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
-            if (result == null) {
+            if (!isConvertibleAddress(result)) {
                 throw new AccountError(
-                    `Resolver "${node.name}" returned ${String(result)} for account "${ixAccountNode.name}"`,
+                    `Resolver "${node.name}" returned invalid address ${safeStringify(result)} for account "${ixAccountNode.name}"`,
                 );
             }
-            return toAddress(result as AddressInput);
+
+            return toAddress(result);
         },
     };
 }

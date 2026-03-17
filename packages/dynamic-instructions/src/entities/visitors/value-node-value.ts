@@ -19,7 +19,6 @@ import type {
 import { visitOrElse } from 'codama';
 
 import { AccountError } from '../../shared/errors';
-import type { AccountsInput, ArgumentsInput } from '../../shared/types';
 
 type ResolvedValue = {
     encoding?: string;
@@ -27,17 +26,10 @@ type ResolvedValue = {
     value: unknown;
 };
 
-type ValueNodeVisitorContext = {
-    accountsInput: AccountsInput | undefined;
-    argumentsInput: ArgumentsInput | undefined;
-};
-
 /**
  * Visitor for resolving regular ValueNode types to their typed values.
  */
-export function createValueNodeVisitor(
-    ctx: ValueNodeVisitorContext,
-): Visitor<
+export function createValueNodeVisitor(): Visitor<
     ResolvedValue,
     | 'arrayValueNode'
     | 'booleanValueNode'
@@ -54,11 +46,27 @@ export function createValueNodeVisitor(
     | 'structValueNode'
     | 'tupleValueNode'
 > {
-    return {
+    const visitor: Visitor<
+        ResolvedValue,
+        | 'arrayValueNode'
+        | 'booleanValueNode'
+        | 'bytesValueNode'
+        | 'constantValueNode'
+        | 'enumValueNode'
+        | 'mapValueNode'
+        | 'noneValueNode'
+        | 'numberValueNode'
+        | 'publicKeyValueNode'
+        | 'setValueNode'
+        | 'someValueNode'
+        | 'stringValueNode'
+        | 'structValueNode'
+        | 'tupleValueNode'
+    > = {
         visitArrayValue: (node: ArrayValueNode) => ({
             kind: node.kind,
             value: node.items.map(item =>
-                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                visitOrElse(item, visitor, n => {
                     throw new AccountError(`Cannot resolve array item: ${n.kind}`);
                 }),
             ),
@@ -76,7 +84,6 @@ export function createValueNodeVisitor(
         }),
 
         visitConstantValue: (node: ConstantValueNode) => {
-            const visitor = createValueNodeVisitor(ctx);
             return visitOrElse(node.value, visitor, innerNode => {
                 throw new AccountError(`Cannot resolve constantValueNode wrapping: ${innerNode.kind}`);
             });
@@ -90,10 +97,10 @@ export function createValueNodeVisitor(
         visitMapValue: (node: MapValueNode) => ({
             kind: node.kind,
             value: node.entries.map(entry => ({
-                key: visitOrElse(entry.key, createValueNodeVisitor(ctx), n => {
+                key: visitOrElse(entry.key, visitor, n => {
                     throw new AccountError(`Cannot resolve map key: ${n.kind}`);
                 }),
-                value: visitOrElse(entry.value, createValueNodeVisitor(ctx), n => {
+                value: visitOrElse(entry.value, visitor, n => {
                     throw new AccountError(`Cannot resolve map value: ${n.kind}`);
                 }),
             })),
@@ -117,14 +124,13 @@ export function createValueNodeVisitor(
         visitSetValue: (node: SetValueNode) => ({
             kind: node.kind,
             value: node.items.map(item =>
-                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                visitOrElse(item, visitor, n => {
                     throw new AccountError(`Cannot resolve set item: ${n.kind}`);
                 }),
             ),
         }),
 
         visitSomeValue: (node: SomeValueNode) => {
-            const visitor = createValueNodeVisitor(ctx);
             return visitOrElse(node.value, visitor, innerNode => {
                 throw new AccountError(`Cannot resolve someValueNode wrapping: ${innerNode.kind}`);
             });
@@ -140,7 +146,7 @@ export function createValueNodeVisitor(
             value: Object.fromEntries(
                 node.fields.map(field => [
                     field.name,
-                    visitOrElse(field.value, createValueNodeVisitor(ctx), n => {
+                    visitOrElse(field.value, visitor, n => {
                         throw new AccountError(`Cannot resolve struct field ${field.name}: ${n.kind}`);
                     }),
                 ]),
@@ -150,10 +156,12 @@ export function createValueNodeVisitor(
         visitTupleValue: (node: TupleValueNode) => ({
             kind: node.kind,
             value: node.items.map(item =>
-                visitOrElse(item, createValueNodeVisitor(ctx), n => {
+                visitOrElse(item, visitor, n => {
                     throw new AccountError(`Cannot resolve tuple item: ${n.kind}`);
                 }),
             ),
         }),
     };
+
+    return visitor;
 }
