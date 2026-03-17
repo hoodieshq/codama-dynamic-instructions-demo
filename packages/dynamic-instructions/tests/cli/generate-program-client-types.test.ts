@@ -3,9 +3,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import type { RootNode } from 'codama';
 import { afterAll, describe, expect, test } from 'vitest';
 
-import type { IdlRoot } from '../../src/cli/commands/generate-client-types/generate-client-types';
 import { generateClientTypes } from '../../src/cli/commands/generate-client-types/generate-client-types';
 
 const CLI_PATH = path.resolve('bin/cli.cjs');
@@ -81,7 +81,7 @@ describe('CLI', () => {
         writeFileSync(badFile, '{ not valid json');
         const { exitCode, stderr } = execCli(['generate-client-types', badFile, tmpDir]);
         expect(exitCode).toBe(1);
-        expect(stderr).toContain('not valid JSON');
+        expect(stderr).toContain('not valid Codama JSON');
     });
 
     test('should read IDL and write output file for generate-client-types', () => {
@@ -94,7 +94,7 @@ describe('CLI', () => {
 
         const outputPath = path.join(tmpDir, 'circular-account-refs-idl-types.ts');
         const output = readFileSync(outputPath, 'utf-8');
-        const idl = JSON.parse(readFileSync(idlPath, 'utf-8')) as IdlRoot;
+        const idl = JSON.parse(readFileSync(idlPath, 'utf-8')) as RootNode;
         const expected = generateClientTypes(idl);
         expect(output).toBe(expected);
     });

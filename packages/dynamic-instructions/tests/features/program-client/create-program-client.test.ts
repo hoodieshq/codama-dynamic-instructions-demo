@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { DynamicInstructionsError } from '../../../src/shared/errors';
+import type { MplTokenMetadataProgramClient } from '../../generated/mpl-token-metadata-idl-types';
 import type { SystemProgramClient } from '../../generated/system-program-idl-types';
 import { createTestProgramClient } from '../../test-utils';
 
@@ -78,14 +79,20 @@ describe('createProgramClient', () => {
     });
 
     describe('pdas', () => {
-        const pdaClient = createTestProgramClient('mpl-token-metadata-idl.json');
+        const pdaClient = createTestProgramClient<MplTokenMetadataProgramClient>('mpl-token-metadata-idl.json');
 
         test('throws when accessing a non-existent PDA', () => {
+            // @ts-expect-error - testing error message for non-existent PDA
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(DynamicInstructionsError);
+            // @ts-expect-error - testing error message for non-existent PDA
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(/PDA "nonExistentPda" not found in IDL/);
         });
 
         test('error message lists available PDAs', () => {
+            // @ts-expect-error - testing error message for non-existent PDA
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(/Available PDAs:/);
         });
 

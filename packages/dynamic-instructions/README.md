@@ -222,10 +222,10 @@ The same is available as a TypeScript function:
 
 ```typescript
 import { generateClientTypes } from '@hoodieshq/dynamic-instructions';
-import type { IdlRoot } from '@hoodieshq/dynamic-instructions';
+import type { RootNode } from 'codama';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const idl: IdlRoot = JSON.parse(readFileSync('./my-program-idl.json', 'utf-8'));
+const idl: RootNode = JSON.parse(readFileSync('./my-program-idl.json', 'utf-8'));
 const typesSource = generateClientTypes(idl);
 writeFileSync('./generated/my-program-idl-types.ts', typesSource);
 ```

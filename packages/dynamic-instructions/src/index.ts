@@ -16,4 +16,3 @@ export type {
 } from './features/program-client/create-program-client';
 
 export { generateClientTypes } from './cli/commands/generate-client-types/generate-client-types';
-export type { IdlRoot } from './cli/commands/generate-client-types/generate-client-types';
