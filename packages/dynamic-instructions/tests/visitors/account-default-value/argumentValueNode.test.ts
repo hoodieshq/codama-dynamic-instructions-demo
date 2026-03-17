@@ -27,15 +27,14 @@ describe('account-default-value: visitArgumentValue', () => {
     });
 
     test('should throw when argument cannot be converted to Address', async () => {
-        const visitors: [ReturnType<typeof makeVisitor>, string][] = [
-            [
-                makeVisitor({ argumentsInput: { myArg: 'not-a-valid-base58' } }),
-                'Argument myArg cannot be converted to Address for account testAccount',
-            ],
-            [makeVisitor({ argumentsInput: { myArg: { a: 42 } } }), 'Argument myArg is not a valid Address'],
+        const visitors: ReturnType<typeof makeVisitor>[] = [
+            makeVisitor({ argumentsInput: { myArg: 'not-a-valid-base58' } }),
+            makeVisitor({ argumentsInput: { myArg: { a: 42 } } }),
         ];
-        for (const [visitor, err] of visitors) {
-            await expect(visitor.visitArgumentValue(argumentValueNode('myArg'))).rejects.toThrow(new RegExp(err));
+        for (const visitor of visitors) {
+            await expect(visitor.visitArgumentValue(argumentValueNode('myArg'))).rejects.toThrow(
+                /Argument myArg is not a valid Address/,
+            );
         }
     });
 });
